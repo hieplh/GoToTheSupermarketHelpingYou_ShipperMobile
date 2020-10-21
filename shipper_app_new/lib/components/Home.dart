@@ -7,6 +7,8 @@ import 'package:http/http.dart' as http;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
+
+import 'OrderDetail.dart';
 // Future<Orders> getOders() async {
 //   final response = await http.get(
 //       'http://10.1.148.136:1234/smhu/api/shipper/98765/lat/10.780539/lng/106.651088');
@@ -34,7 +36,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   Set<Marker> markers = Set();
   Position _currentPosition;
   LatLng latlong = null;
-
+  var listOrderDetails = new List();
   _getCurrentLocation() async {
     final GoogleMapController controller = await _controller.future;
     final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
@@ -57,16 +59,19 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
       markers.add(Marker(
         markerId: MarkerId("VINTHAODIEN"),
         draggable: true,
-        position: new LatLng(10.978089,106.685200),
+        position: new LatLng(10.978089, 106.685200),
         infoWindow: InfoWindow(title: 'Vinmart Thảo Điền'),
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
       ));
       controller.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
           target: LatLng(10.97728, 106.68605439999999), zoom: 18.0)));
-    }).catchError((e) {
-      print(e);
     });
   }
+
+  Future<String> _calculation = Future<String>.delayed(
+    Duration(seconds: 1),
+    () => 'Data Loaded',
+  );
 
   _getOrders() {
     http
@@ -75,8 +80,16 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
         .then((response) {
       setState(() {
         Iterable list = json.decode(response.body);
-
         listOrders = list.map((model) => Orders.fromJson(model)).toList();
+        // var orderInList = json.decode(response.body).order.toString();
+
+        // Iterable marketList = json.decode(response.body)[0].order.market;
+        // Iterable listOrderDetails = json.decode(response.body)[0].order.details;
+
+        // listMarket = marketList.map((model) => Market.fromJson(model)).toList();
+        // listOrderDetails = listOrderDetails
+        //     .map((model) => OrderDetail.fromJson(model))
+        //     .toList();
       });
     });
   }
@@ -84,7 +97,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   @override
   void initState() {
     super.initState();
-    futureOrders = _getOrders();
+
     _getCurrentLocation();
   }
 
@@ -122,35 +135,39 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-          child: Stack(
-        children: [
-          GoogleMap(
-            initialCameraPosition:
-                CameraPosition(target: LatLng(10.801273, 106.733498), zoom: 10.0),
-            mapType: MapType.normal,
-            onMapCreated: (GoogleMapController controller) {
-              _controller.complete(controller);
-            },
-            markers: markers,
-            myLocationEnabled: true,
-          ),
-        ],
-      )),
-      // ListView.builder(
-      //   itemCount: listOrders.length,
-      //   itemBuilder: (context, index) {
-      //     return ListTile(
-      //       leading: FlutterLogo(),
-      //       title: Text(utf8.decode(latin1.encode(listOrders[index].distance),
-      //           allowMalformed: true)),
-      //       trailing: Icon(Icons.more_vert),
-      //       subtitle: Text(utf8.decode(
-      //           latin1.encode(listOrders[index].value.toString()),
-      //           allowMalformed: true)),
-      //     );
-      //   },
-      // ),
+      body: FutureBuilder<String>(
+          future: _calculation,
+          builder: (BuildContext context, AsyncSnapshot snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            } else {
+              List<Widget> _widgetOptions = <Widget>[
+                _buildMap(),
+                Card(
+                  child: Column(
+                    children: <Widget>[],
+                  ),
+                ),
+                _buildOrderReceive(),
+                Card(
+                  child: Column(
+                    children: <Widget>[],
+                  ),
+                ),
+                Card(
+                  child: Column(
+                    children: <Widget>[],
+                  ),
+                ),
+              ];
+              return Center(
+                child: _widgetOptions.elementAt(_selectedIndex),
+              );
+            }
+          }),
+
       // Center(
       //   child: FutureBuilder<List<Orders>>(
       //     future: _getOrders(),
@@ -236,6 +253,53 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
         selectedItemColor: const Color.fromRGBO(0, 141, 177, 1),
         onTap: _onItemTapped,
       ),
+    );
+  }
+
+  Widget _buildMap() {
+    _getCurrentLocation();
+    return Container(
+        child: Stack(
+      children: [
+        GoogleMap(
+          initialCameraPosition:
+              CameraPosition(target: LatLng(10.801273, 106.733498), zoom: 10.0),
+          mapType: MapType.normal,
+          onMapCreated: (GoogleMapController controller) {
+            _controller.complete(controller);
+          },
+          markers: markers,
+          // myLocationEnabled: true,
+        ),
+      ],
+    ));
+  }
+
+  Widget _buildOrderReceive() {
+    _getOrders();
+
+    return ListView.builder(
+      itemCount: listOrders.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+            leading: Icon(Icons.home),
+            title: Text(utf8.decode(latin1.encode(listOrders[index].distance),
+                allowMalformed: true)),
+            trailing: Icon(Icons.more_vert),
+            subtitle: Text(utf8.decode(
+                latin1.encode(listOrders[index].order.market.name),
+                allowMalformed: true)),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DetailScreen(
+                      orderObject: listOrders[index],
+                      detailObject: listOrders[index].order.detail),
+                ),
+              );
+            });
+      },
     );
   }
 }

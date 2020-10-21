@@ -3,7 +3,6 @@ import 'package:shipper_app_new/components/Home.dart';
 import 'package:shipper_app_new/main.dart';
 
 class LoginPage extends StatefulWidget {
-
   @override
   State<StatefulWidget> createState() => new _State();
 }
@@ -15,7 +14,6 @@ class _State extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
         body: Padding(
             padding: EdgeInsets.all(10),
             child: ListView(
@@ -52,7 +50,7 @@ class _State extends State<LoginPage> {
                   ),
                 ),
                 FlatButton(
-                  onPressed: (){
+                  onPressed: () {
                     //forgot password screen
                   },
                   textColor: Colors.blue,
@@ -68,27 +66,28 @@ class _State extends State<LoginPage> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => MyHomeWidget()),
+                          MaterialPageRoute(
+                              builder: (context) => MyHomeWidget()),
                         );
                       },
                     )),
                 Container(
                     child: Row(
-                      children: <Widget>[
-                        Text('Does not have account?'),
-                        FlatButton(
-                          textColor: Colors.blue,
-                          child: Text(
-                            'Sign in',
-                            style: TextStyle(fontSize: 20),
-                          ),
-                          onPressed: () {
-                            //signup screen
-                          },
-                        )
-                      ],
-                      mainAxisAlignment: MainAxisAlignment.center,
-                    ))
+                  children: <Widget>[
+                    Text('Does not have account?'),
+                    FlatButton(
+                      textColor: Colors.blue,
+                      child: Text(
+                        'Sign in',
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      onPressed: () {
+                        //signup screen
+                      },
+                    )
+                  ],
+                  mainAxisAlignment: MainAxisAlignment.center,
+                ))
               ],
             )));
   }

@@ -1,0 +1,278 @@
+import 'dart:convert';
+import 'package:geocoder/geocoder.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter/material.dart';
+import 'package:shipper_app_new/components/RouteMap.dart';
+import 'package:shipper_app_new/model/Orders.dart';
+import 'package:sweetalert/sweetalert.dart';
+import 'package:http/http.dart' as http;
+
+class DetailScreen extends StatelessWidget {
+  // Declare a field that holds the Todo.
+  final Orders orderObject;
+  final List<OrderDetail> detailObject;
+  // In the constructor, require a Todo.
+  DetailScreen({Key key, @required this.orderObject, this.detailObject})
+      : super(key: key);
+
+  updateOrders(BuildContext context) async {
+    String jsonTags = jsonEncode(detailObject);
+
+    Map<String, dynamic> data = {
+      "costDelivery": orderObject.order.costDelivery,
+      "costShopping": orderObject.order.costShopping,
+      "cust": '${orderObject.order.cust}',
+      "dateDelivery": "${orderObject.order.dateDelivery}",
+      "details": [
+        for (OrderDetail detail in orderObject.order.detail)
+          {
+            "food": utf8.decode(latin1.encode("${detail.food}"),
+                allowMalformed: true),
+            "id": "${detail.id}",
+            "image": "${detail.image}",
+            "priceOriginal": detail.priceOriginal,
+            "pricePaid": detail.pricePaid,
+            "saleOff": detail.saleOff,
+            "weight": detail.weight
+          }
+      ],
+      "id": "${orderObject.order.id}",
+      "lat": "10.780539",
+      "lng": "106.651088",
+      "market": {
+        "addr1": utf8.decode(latin1.encode("${orderObject.order.market.addr1}"),
+            allowMalformed: true),
+        "addr2": utf8.decode(latin1.encode("${orderObject.order.market.addr2}"),
+            allowMalformed: true),
+        "addr3": utf8.decode(latin1.encode("${orderObject.order.market.addr3}"),
+            allowMalformed: true),
+        "addr4": utf8.decode(latin1.encode("${orderObject.order.market.addr4}"),
+            allowMalformed: true),
+        "id": "${orderObject.order.market.id}",
+        "lat": "${orderObject.order.market.lat}",
+        "lng": "${orderObject.order.market.lng}",
+        "name": utf8.decode(latin1.encode("${orderObject.order.market.name}"),
+            allowMalformed: true),
+      },
+      "note": "phuong nguyen",
+      "shipper": "98765",
+      "status": 21,
+      "timeDelivery": "12:12:12",
+      "totalCost": orderObject.order.totalCost
+    };
+
+    // List<Orders> list;
+    // final response = await http.get('http://172.16.191.127:1234/smhu/api/shipper/98765/lat/10.780539/lng/106.651088');
+    // for (OrderDetail detail in orderObject.order.detail) {
+    //   listOrderDetails.add(detail);
+    // }
+
+    var url = 'http://25.72.134.12:1234/smhu/api/orders/update';
+    var response = await http.put(
+      Uri.encodeFull(url),
+      headers: {
+        'Content-type': 'application/json',
+        "Accept": "application/json",
+      },
+      encoding: Encoding.getByName("utf-8"),
+      body: '[' + jsonEncode(data) + ']',
+    );
+
+    if (response.statusCode == 200) {
+      // If the server did return a 200 OK response,
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => RouteMap()),
+      );
+    } else {
+      // If the server did not return a 200 OK response,
+      // SweetAlert.show(context,
+      //     subtitle: "Xác nhận không thành công", style: SweetAlertStyle.error);
+      // then throw an exception.
+      throw Exception(response.body);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Use the Todo to create the UI.
+
+    TimeOfDay now = TimeOfDay.now();
+    var totalWeight = 0.0;
+    var distanceString =
+        orderObject.distance.replaceAll(new RegExp(r'[^0-9]'), '');
+    var distanceKm = double.parse(distanceString) * 1.6.round();
+    final fromCoordinates = new Coordinates(
+        double.parse(orderObject.order.market.lat),
+        double.parse(orderObject.order.market.lng));
+    var fromPlace =
+        Geocoder.local.findAddressesFromCoordinates(fromCoordinates);
+    for (OrderDetail detail in this.orderObject.order.detail) {
+      totalWeight += detail.weight;
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Thông Tin Đơn Hàng"),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: ScrollPhysics(),
+          child: Column(
+            children: <Widget>[
+              ListView.builder(
+                physics: NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                itemCount: orderObject.order.detail.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    leading: Image.network(
+                        'https://breakthrough.org/wp-content/uploads/2018/10/default-placeholder-image-300x300.png'),
+                    title: Text(utf8.decode(
+                        latin1.encode(orderObject.order.detail[index].food),
+                        allowMalformed: true)),
+                    trailing: Text('1kg'),
+                    subtitle: Text(utf8.decode(
+                        latin1.encode(orderObject
+                            .order.detail[index].priceOriginal
+                            .toString()),
+                        allowMalformed: true)),
+                  );
+                },
+              ),
+              Card(
+                child: ListTile(
+                  leading: Icon(Icons.money),
+                  title: Text('Tổng tiền Sản Phẩm '),
+                  trailing: Text(
+                      orderObject.order.totalCost.round().toString() + ' vnd'),
+                ),
+              ),
+              Card(
+                child: ListTile(
+                  leading: Icon(Icons.local_shipping),
+                  title: Text('Tiền vận chuyển '),
+                  trailing: Text(
+                      orderObject.order.costDelivery.round().toString() +
+                          ' vnd'),
+                ),
+              ),
+              Card(
+                child: ListTile(
+                  leading: Icon(Icons.book_outlined),
+                  title: Text('Tiền công mua đồ '),
+                  trailing: Text(
+                      orderObject.order.costShopping.round().toString() +
+                          ' vnd'),
+                ),
+              ),
+              Card(
+                child: ListTile(
+                  leading: Icon(Icons.receipt),
+                  title: Text('Tiền được nhận '),
+                  trailing: Text(((orderObject.order.costShopping +
+                                  orderObject.order.costDelivery) /
+                              2)
+                          .round()
+                          .toString() +
+                      ' vnd'),
+                ),
+              ),
+              Card(
+                child: ListTile(
+                  leading: Icon(Icons.shop),
+                  title: Text('Tổng khối lượng '),
+                  trailing: Text(totalWeight.toString() + 'kg'),
+                ),
+              ),
+              Card(
+                child: ListTile(
+                  leading: Icon(Icons.directions_train),
+                  title: Text('Khoảng cách '),
+                  trailing: Text(distanceKm.toString() + ' km'),
+                ),
+              ),
+              Card(
+                child: ListTile(
+                  leading: Icon(Icons.album),
+                  title: Text('Đi Từ'),
+                  subtitle: Text(utf8.decode(
+                      latin1.encode(orderObject.order.market.name +
+                          " " +
+                          orderObject.order.market.addr1),
+                      allowMalformed: true)),
+                ),
+              ),
+              Card(
+                child: ListTile(
+                  leading: Icon(Icons.home),
+                  title: Text('Đến'),
+                  subtitle: Text(utf8.decode(
+                      latin1.encode(orderObject.order.market.addr2 +
+                          " " +
+                          orderObject.order.market.addr3),
+                      allowMalformed: true)),
+                ),
+              ),
+              Card(
+                child: ListTile(
+                  leading: Icon(Icons.access_alarm),
+                  title: Text('Khung giờ giao hàng'),
+                  subtitle: Text('17h:00' + ' - ' + " 18h:00"),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          SweetAlert.show(context,
+              title: "Just show a message",
+              subtitle: "Sweet alert is pretty",
+              style: SweetAlertStyle.confirm,
+              showCancelButton: true, onPress: (bool isConfirm) {
+            if (isConfirm) {
+              updateOrders(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => RouteMap()),
+              );
+            }
+          });
+        },
+        label: Text('Nhận Đơn Hàng'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  showAlertDialog(BuildContext context) {
+    // set up the buttons
+    Widget cancelButton = FlatButton(
+      child: Text("Cancel"),
+      onPressed: () {},
+    );
+    Widget continueButton = FlatButton(
+      child: Text("Continue"),
+      onPressed: () {},
+    );
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("AlertDialog"),
+      content: Text(
+          "Would you like to continue learning how to use Flutter alerts?"),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+}
