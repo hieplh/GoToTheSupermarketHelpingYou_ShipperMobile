@@ -35,6 +35,7 @@ dependencies:
   geocoder: ^0.2.1
   sweetalert: ^0.0.1
   flutter_polyline_points: ^0.2.4
+  steps: ^1.0.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

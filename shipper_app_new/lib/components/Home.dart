@@ -76,7 +76,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   _getOrders() {
     http
         .get(
-            'http://25.72.134.12:1234/smhu/api/shipper/98765/lat/10.800777/lng/106.732639')
+            'http://10.1.133.199:1234/smhu/api/shipper/98765/lat/10.800777/lng/106.732639')
         .then((response) {
       setState(() {
         Iterable list = json.decode(response.body);

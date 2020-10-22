@@ -2,10 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:shipper_app_new/model/Orders.dart';
 
 import 'dart:math' show cos, sqrt, asin;
 
+import 'Step.dart';
+
 class RouteMap extends StatefulWidget {
+  final List<OrderDetail> orderDetails;
+  RouteMap({Key key, @required this.orderDetails}) : super(key: key);
+
   @override
   _RouteMapState createState() => _RouteMapState();
 }
@@ -402,41 +408,6 @@ class _RouteMapState extends State<RouteMap> {
                             style: TextStyle(fontSize: 20.0),
                           ),
                           SizedBox(height: 10),
-                          _textField(
-                              label: 'Vị trí hiện tại',
-                              hint: 'Choose starting point',
-                              initialValue:
-                                  '1231 Quốc lộ 1A, Khu Phố 5, Bình Tân, Thành phố Hồ Chí Minh',
-                              prefixIcon: Icon(Icons.looks_one),
-                              suffixIcon: IconButton(
-                                icon: Icon(Icons.my_location),
-                                onPressed: () {
-                                  startAddressController.text = _currentAddress;
-                                  _startAddress = _currentAddress;
-                                },
-                              ),
-                              controller: startAddressController,
-                              width: width,
-                              locationCallback: (String value) {
-                                setState(() {
-                                  _startAddress = value;
-                                });
-                              }),
-                          SizedBox(height: 10),
-                          _textField(
-                              label: 'Điểm đến',
-                              hint: 'Choose destination',
-                              initialValue:
-                                  'Tòa nhà, 12 Đường Quốc Hương, Thảo Điền, Quận 2, Thành phố Hồ Chí Minh',
-                              prefixIcon: Icon(Icons.looks_two),
-                              controller: destinationAddressController,
-                              width: width,
-                              locationCallback: (String value) {
-                                setState(() {
-                                  _destinationAddress = value;
-                                });
-                              }),
-                          SizedBox(height: 10),
                           Visibility(
                             visible: _placeDistance == null ? false : true,
                             child: Text(
@@ -515,47 +486,19 @@ class _RouteMapState extends State<RouteMap> {
               ),
             ),
             // Show current location button
-            SafeArea(
-              child: Align(
-                alignment: Alignment.bottomRight,
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 10.0, bottom: 10.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    mainAxisSize: MainAxisSize.max,
-                    children: <Widget>[
-                      ClipOval(
-                        child: Material(
-                          color: Colors.orange[100], // button color
-                          child: InkWell(
-                            splashColor: Colors.orange, // inkwell color
-                            child: SizedBox(
-                              width: 56,
-                              height: 56,
-                              child: Icon(Icons.my_location),
-                            ),
-                            onTap: () {
-                              mapController.animateCamera(
-                                CameraUpdate.newCameraPosition(
-                                  CameraPosition(
-                                    target: LatLng(
-                                      _currentPosition.latitude,
-                                      _currentPosition.longitude,
-                                    ),
-                                    zoom: 18.0,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-              ),
-            ),
           ],
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () {
+            // print(widget.orderDetails.length.toString());
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => Steps(item: widget.orderDetails)),
+            );
+          },
+          label: Text('Đi chợ'),
+          backgroundColor: Colors.green,
         ),
       ),
     );

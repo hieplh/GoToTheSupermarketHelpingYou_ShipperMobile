@@ -67,7 +67,7 @@ class DetailScreen extends StatelessWidget {
     //   listOrderDetails.add(detail);
     // }
 
-    var url = 'http://25.72.134.12:1234/smhu/api/orders/update';
+    var url = 'http://10.1.133.199:1234/smhu/api/orders/update';
     var response = await http.put(
       Uri.encodeFull(url),
       headers: {
@@ -82,7 +82,9 @@ class DetailScreen extends StatelessWidget {
       // If the server did return a 200 OK response,
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => RouteMap()),
+        MaterialPageRoute(
+            builder: (context) =>
+                RouteMap(orderDetails: orderObject.order.detail)),
       );
     } else {
       // If the server did not return a 200 OK response,
@@ -234,10 +236,6 @@ class DetailScreen extends StatelessWidget {
               showCancelButton: true, onPress: (bool isConfirm) {
             if (isConfirm) {
               updateOrders(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => RouteMap()),
-              );
             }
           });
         },
