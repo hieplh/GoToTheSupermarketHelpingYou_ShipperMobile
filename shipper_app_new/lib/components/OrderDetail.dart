@@ -67,7 +67,7 @@ class DetailScreen extends StatelessWidget {
     //   listOrderDetails.add(detail);
     // }
 
-    var url = 'http://10.1.133.199:1234/smhu/api/orders/update';
+    var url = 'http://25.72.134.12:1234/smhu/api/orders/update';
     var response = await http.put(
       Uri.encodeFull(url),
       headers: {
@@ -116,6 +116,7 @@ class DetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text("Thông Tin Đơn Hàng"),
+        backgroundColor: Colors.lightGreenAccent,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -128,16 +129,19 @@ class DetailScreen extends StatelessWidget {
                 itemCount: orderObject.order.detail.length,
                 itemBuilder: (context, index) {
                   return ListTile(
-                    leading: Image.network(
-                        'https://breakthrough.org/wp-content/uploads/2018/10/default-placeholder-image-300x300.png'),
+                    leading:
+                        Image.network(orderObject.order.detail[index].image),
                     title: Text(utf8.decode(
                         latin1.encode(orderObject.order.detail[index].food),
                         allowMalformed: true)),
-                    trailing: Text('1kg'),
+                    trailing: Text(
+                        orderObject.order.detail[index].weight.toString() +
+                            " kg"),
                     subtitle: Text(utf8.decode(
                         latin1.encode(orderObject
-                            .order.detail[index].priceOriginal
-                            .toString()),
+                                .order.detail[index].priceOriginal
+                                .toString() +
+                            ' vnd'),
                         allowMalformed: true)),
                   );
                 },

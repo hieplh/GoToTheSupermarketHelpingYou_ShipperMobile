@@ -17,6 +17,9 @@ class RouteMap extends StatefulWidget {
 }
 
 class _RouteMapState extends State<RouteMap> {
+
+
+
   CameraPosition _initialLocation =
       CameraPosition(target: LatLng(10.741170, 106.602820));
   GoogleMapController mapController;
@@ -41,6 +44,7 @@ class _RouteMapState extends State<RouteMap> {
   PolylinePoints polylinePoints;
   Map<PolylineId, Polyline> polylines = {};
   List<LatLng> polylineCoordinates = [];
+
 
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -308,6 +312,7 @@ class _RouteMapState extends State<RouteMap> {
   void initState() {
     super.initState();
     _getCurrentLocation();
+    _calculateDistance();
   }
 
   @override
@@ -430,54 +435,7 @@ class _RouteMapState extends State<RouteMap> {
                             ),
                           ),
                           SizedBox(height: 5),
-                          RaisedButton(
-                            onPressed: (_startAddress != '' &&
-                                    _destinationAddress != '')
-                                ? () async {
-                                    setState(() {
-                                      if (markers.isNotEmpty) markers.clear();
-                                      if (polylines.isNotEmpty)
-                                        polylines.clear();
-                                      if (polylineCoordinates.isNotEmpty)
-                                        polylineCoordinates.clear();
-                                      _placeDistance = null;
-                                      _placeDuration = null;
-                                    });
 
-                                    _calculateDistance().then((isCalculated) {
-                                      if (isCalculated) {
-                                        _scaffoldKey.currentState.showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                                'Distance Calculated Sucessfully'),
-                                          ),
-                                        );
-                                      } else {
-                                        _scaffoldKey.currentState.showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                                'Error Calculating Distance'),
-                                          ),
-                                        );
-                                      }
-                                    });
-                                  }
-                                : null,
-                            color: Colors.red,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20.0),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                'Show Route'.toUpperCase(),
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20.0,
-                                ),
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                     ),

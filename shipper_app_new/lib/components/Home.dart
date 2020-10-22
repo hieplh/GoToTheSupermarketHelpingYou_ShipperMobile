@@ -76,7 +76,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   _getOrders() {
     http
         .get(
-            'http://10.1.133.199:1234/smhu/api/shipper/98765/lat/10.800777/lng/106.732639')
+            'http://25.72.134.12:1234/smhu/api/shipper/98765/lat/10.800777/lng/106.732639')
         .then((response) {
       setState(() {
         Iterable list = json.decode(response.body);
@@ -222,13 +222,13 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
             icon: Icon(
               Icons.location_on,
             ),
-            title: Text('Location'),
+            title: Text('Bản Đồ'),
           ),
           BottomNavigationBarItem(
             icon: Icon(
               Icons.notifications,
             ),
-            title: Text('Notification'),
+            title: Text('Thông Báo'),
           ),
           BottomNavigationBarItem(
             icon: Icon(
@@ -240,13 +240,13 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
             icon: Icon(
               Icons.assignment,
             ),
-            title: Text('Activity'),
+            title: Text('Lịch Sử'),
           ),
           BottomNavigationBarItem(
             icon: Icon(
               Icons.settings,
             ),
-            title: Text('Setting'),
+            title: Text('Cài Đặt'),
           ),
         ],
         currentIndex: _selectedIndex,
@@ -278,28 +278,37 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   Widget _buildOrderReceive() {
     _getOrders();
 
-    return ListView.builder(
-      itemCount: listOrders.length,
-      itemBuilder: (context, index) {
-        return ListTile(
-            leading: Icon(Icons.home),
-            title: Text(utf8.decode(latin1.encode(listOrders[index].distance),
-                allowMalformed: true)),
-            trailing: Icon(Icons.more_vert),
-            subtitle: Text(utf8.decode(
-                latin1.encode(listOrders[index].order.market.name),
-                allowMalformed: true)),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DetailScreen(
-                      orderObject: listOrders[index],
-                      detailObject: listOrders[index].order.detail),
-                ),
-              );
-            });
-      },
+    return Scaffold(
+      appBar: AppBar(
+          title: const Text('Đơn hàng có thể tiếp nhận'),
+          automaticallyImplyLeading: false,
+          backgroundColor: Colors.lightGreenAccent),
+      body: listOrders.length > 0
+          ? ListView.builder(
+              itemCount: listOrders.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                    leading: Icon(Icons.home),
+                    title: Text(utf8.decode(
+                        latin1.encode(listOrders[index].distance),
+                        allowMalformed: true)),
+                    trailing: Icon(Icons.more_vert),
+                    subtitle: Text(utf8.decode(
+                        latin1.encode(listOrders[index].order.market.name),
+                        allowMalformed: true)),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DetailScreen(
+                              orderObject: listOrders[index],
+                              detailObject: listOrders[index].order.detail),
+                        ),
+                      );
+                    });
+              },
+            )
+          : Center(child: const Text('Không có đơn hàng nào')),
     );
   }
 }
