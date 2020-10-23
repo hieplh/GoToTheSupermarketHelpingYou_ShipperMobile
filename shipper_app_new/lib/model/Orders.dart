@@ -19,6 +19,7 @@ class Order {
   String note;
   double costShopping;
   double costDelivery;
+  String addressDelivery;
   double totalCost;
   String dateDelivery;
   String timeDelivery;
@@ -35,7 +36,8 @@ class Order {
       this.costDelivery,
       this.totalCost,
       this.dateDelivery,
-      this.timeDelivery});
+      this.timeDelivery,
+      this.addressDelivery});
 
   factory Order.fromJson(Map<String, dynamic> json) {
     return Order(
@@ -48,6 +50,7 @@ class Order {
         totalCost: json['totalCost'],
         dateDelivery: json['dateDelivery'],
         timeDelivery: json['timeDelivery'],
+        addressDelivery: json['addressDelivery'],
         detail: List<OrderDetail>.from(
             json["details"].map((x) => OrderDetail.fromJson(x))));
   }

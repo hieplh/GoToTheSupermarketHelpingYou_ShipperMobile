@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:shipper_app_new/components/Home.dart';
-import 'package:shipper_app_new/main.dart';
 
 class LoginPage extends StatefulWidget {
   @override
   State<StatefulWidget> createState() => new _State();
 }
 
+@override
+initState() {}
+
 class _State extends State<LoginPage> {
-  TextEditingController nameController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
+  TextEditingController nameController =
+      TextEditingController(text: "092121901212");
+  TextEditingController passwordController =
+      TextEditingController(text: "12910211212");
 
   @override
   Widget build(BuildContext context) {
@@ -21,13 +25,7 @@ class _State extends State<LoginPage> {
                 Container(
                     alignment: Alignment.center,
                     padding: EdgeInsets.all(10),
-                    child: Text(
-                      'GO TO SUPERMARKET HELPING YOU',
-                      style: TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 30),
-                    )),
+                    child: Image.asset('assets/logo.png')),
                 Container(
                   padding: EdgeInsets.all(10),
                   child: TextField(
@@ -61,7 +59,7 @@ class _State extends State<LoginPage> {
                     padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
                     child: RaisedButton(
                       textColor: Colors.white,
-                      color: Colors.blue,
+                      color: Colors.green,
                       child: Text('Login'),
                       onPressed: () {
                         Navigator.push(

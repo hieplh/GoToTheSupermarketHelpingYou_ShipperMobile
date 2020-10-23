@@ -1,8 +1,7 @@
 import 'dart:convert';
 import 'package:geocoder/geocoder.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:shipper_app_new/components/RouteMap.dart';
+import 'package:shipper_app_new/components/RouteSupermarket.dart';
 import 'package:shipper_app_new/model/Orders.dart';
 import 'package:sweetalert/sweetalert.dart';
 import 'package:http/http.dart' as http;
@@ -20,6 +19,7 @@ class DetailScreen extends StatelessWidget {
 
     Map<String, dynamic> data = {
       "costDelivery": orderObject.order.costDelivery,
+      "addressDelivery": orderObject.order.addressDelivery,
       "costShopping": orderObject.order.costShopping,
       "cust": '${orderObject.order.cust}',
       "dateDelivery": "${orderObject.order.dateDelivery}",
@@ -55,7 +55,7 @@ class DetailScreen extends StatelessWidget {
             allowMalformed: true),
       },
       "note": "phuong nguyen",
-      "shipper": "98765",
+      "shipper": "shipper456",
       "status": 21,
       "timeDelivery": "12:12:12",
       "totalCost": orderObject.order.totalCost
@@ -66,8 +66,9 @@ class DetailScreen extends StatelessWidget {
     // for (OrderDetail detail in orderObject.order.detail) {
     //   listOrderDetails.add(detail);
     // }
-
-    var url = 'http://25.72.134.12:1234/smhu/api/orders/update';
+    // http: //25.72.134.12:1234/smhu/api/orders/update
+    // http: //smhu.ddns.net/smhu/api/orders/update
+    var url = 'http://smhu.ddns.net/smhu/api/orders/update';
     var response = await http.put(
       Uri.encodeFull(url),
       headers: {
@@ -83,15 +84,18 @@ class DetailScreen extends StatelessWidget {
       Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) =>
-                RouteMap(orderDetails: orderObject.order.detail)),
+            builder: (context) => RouteSupermarket(
+                  orderDetails: orderObject.order.detail,
+                  data: data,
+                )),
       );
     } else {
       // If the server did not return a 200 OK response,
       // SweetAlert.show(context,
       //     subtitle: "Xác nhận không thành công", style: SweetAlertStyle.error);
       // then throw an exception.
-      throw Exception(response.body);
+      throw Exception(
+          utf8.decode(latin1.encode(response.body), allowMalformed: true));
     }
   }
 
@@ -129,8 +133,8 @@ class DetailScreen extends StatelessWidget {
                 itemCount: orderObject.order.detail.length,
                 itemBuilder: (context, index) {
                   return ListTile(
-                    leading:
-                        Image.network(orderObject.order.detail[index].image),
+                    leading: Image.network(
+                        "https://breakthrough.org/wp-content/uploads/2018/10/default-placeholder-image.png"),
                     title: Text(utf8.decode(
                         latin1.encode(orderObject.order.detail[index].food),
                         allowMalformed: true)),
@@ -234,8 +238,7 @@ class DetailScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           SweetAlert.show(context,
-              title: "Just show a message",
-              subtitle: "Sweet alert is pretty",
+              title: "Tiếp nhận đơn hàng",
               style: SweetAlertStyle.confirm,
               showCancelButton: true, onPress: (bool isConfirm) {
             if (isConfirm) {

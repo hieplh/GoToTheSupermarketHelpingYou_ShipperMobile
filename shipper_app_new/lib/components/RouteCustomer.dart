@@ -1,25 +1,22 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:shipper_app_new/model/Orders.dart';
-
+import 'package:shipper_app_new/components/Home.dart';
+import 'package:http/http.dart' as http;
 import 'dart:math' show cos, sqrt, asin;
 
-import 'Step.dart';
-
-class RouteMap extends StatefulWidget {
-  final List<OrderDetail> orderDetails;
-  RouteMap({Key key, @required this.orderDetails}) : super(key: key);
+class RouteCustomer extends StatefulWidget {
+  final Map<String, dynamic> data;
+  RouteCustomer({Key key, this.data}) : super(key: key);
 
   @override
-  _RouteMapState createState() => _RouteMapState();
+  _RouteCustomerState createState() => _RouteCustomerState();
 }
 
-class _RouteMapState extends State<RouteMap> {
-
-
-
+class _RouteCustomerState extends State<RouteCustomer> {
   CameraPosition _initialLocation =
       CameraPosition(target: LatLng(10.741170, 106.602820));
   GoogleMapController mapController;
@@ -33,9 +30,9 @@ class _RouteMapState extends State<RouteMap> {
   final destinationAddressController = TextEditingController();
 
   String _startAddress =
-      '1231 Quốc lộ 1A, Khu Phố 5, Bình Tân, Thành phố Hồ Chí Minh';
-  String _destinationAddress =
       'Tòa nhà, 12 Đường Quốc Hương, Thảo Điền, Quận 2, Thành phố Hồ Chí Minh';
+  String _destinationAddress =
+      '669 HL2, Bình Trị Đông A, Bình Tân, Thành phố Hồ Chí Minh, Việt Nam';
   String _placeDistance;
   String _placeDuration;
 
@@ -45,8 +42,34 @@ class _RouteMapState extends State<RouteMap> {
   Map<PolylineId, Polyline> polylines = {};
   List<LatLng> polylineCoordinates = [];
 
-
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  _updateOrder() async {
+    var url = 'http://smhu.ddns.net/smhu/api/orders/update';
+    var response = await http.put(
+      Uri.encodeFull(url),
+      headers: {
+        'Content-type': 'application/json',
+        "Accept": "application/json",
+      },
+      encoding: Encoding.getByName("utf-8"),
+      body: '[' + jsonEncode(widget.data) + ']',
+    );
+
+    if (response.statusCode == 200) {
+      // If the server did return a 200 OK response,
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => MyHomeWidget()),
+      );
+    } else {
+      // If the server did not return a 200 OK response,
+      // SweetAlert.show(context,
+      //     subtitle: "Xác nhận không thành công", style: SweetAlertStyle.error);
+      // then throw an exception.
+      throw Exception(response.body);
+    }
+  }
 
   Widget _textField({
     TextEditingController controller,
@@ -132,12 +155,12 @@ class _RouteMapState extends State<RouteMap> {
 
       setState(() {
         _currentAddress =
-            "1231 Quốc lộ 1A, Khu Phố 5, Bình Tân, Thành phố Hồ Chí Minh";
+            "Tòa nhà, 12 Đường Quốc Hương, Thảo Điền, Quận 2, Thành phố Hồ Chí Minh";
         startAddressController.text =
-            "1231 Quốc lộ 1A, Khu Phố 5, Bình Tân, Thành phố Hồ Chí Minh";
+            "Tòa nhà, 12 Đường Quốc Hương, Thảo Điền, Quận 2, Thành phố Hồ Chí Minh";
 
         _destinationAddress =
-            'Tòa nhà, 12 Đường Quốc Hương, Thảo Điền, Quận 2, Thành phố Hồ Chí Minh';
+            '669 HL2, Bình Trị Đông A, Bình Tân, Thành phố Hồ Chí Minh, Việt Nam';
         destinationAddressController.text = _destinationAddress;
         _startAddress = _currentAddress;
       });
@@ -191,7 +214,7 @@ class _RouteMapState extends State<RouteMap> {
             title: 'Destination',
             snippet: _destinationAddress,
           ),
-          icon: BitmapDescriptor.defaultMarker,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
         );
 
         // Adding the markers to the list
@@ -435,7 +458,6 @@ class _RouteMapState extends State<RouteMap> {
                             ),
                           ),
                           SizedBox(height: 5),
-
                         ],
                       ),
                     ),
@@ -449,13 +471,9 @@ class _RouteMapState extends State<RouteMap> {
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () {
             // print(widget.orderDetails.length.toString());
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => Steps(item: widget.orderDetails)),
-            );
+            _updateOrder();
           },
-          label: Text('Đi chợ'),
+          label: Text('Hoàn Tất Giao Hàng'),
           backgroundColor: Colors.green,
         ),
       ),

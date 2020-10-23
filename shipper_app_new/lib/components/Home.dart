@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:shipper_app_new/model/History.dart';
 import 'package:shipper_app_new/model/Orders.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -9,16 +10,6 @@ import 'package:geolocator/geolocator.dart';
 import 'dart:async';
 
 import 'OrderDetail.dart';
-// Future<Orders> getOders() async {
-//   final response = await http.get(
-//       'http://10.1.148.136:1234/smhu/api/shipper/98765/lat/10.780539/lng/106.651088');
-//   if (response.statusCode == 200) {
-//     print(json.decode(response.body)[0]);
-//     return Orders.fromJson(json.decode(response.body)[0]);
-//   } else {
-//     throw Exception('fail');
-//   }
-// }
 
 class MyHomeWidget extends StatefulWidget {
   MyHomeWidget({Key key}) : super(key: key);
@@ -32,6 +23,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   Future<List<Orders>> futureOrders;
   int _selectedIndex = 0;
   var listOrders = new List<Orders>();
+  var listHistory = new List<History>();
   Completer<GoogleMapController> _controller = Completer();
   Set<Marker> markers = Set();
   Position _currentPosition;
@@ -74,22 +66,27 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   );
 
   _getOrders() {
+    // 'http://25.72.134.12:1234/smhu/api/shipper/98765/lat/10.800777/lng/106.732639'
+    //
     http
         .get(
-            'http://25.72.134.12:1234/smhu/api/shipper/98765/lat/10.800777/lng/106.732639')
+            'http://smhu.ddns.net/smhu/api/shipper/98765/lat/10.779534/lng/106.631451')
         .then((response) {
       setState(() {
         Iterable list = json.decode(response.body);
         listOrders = list.map((model) => Orders.fromJson(model)).toList();
-        // var orderInList = json.decode(response.body).order.toString();
+      });
+    });
+  }
 
-        // Iterable marketList = json.decode(response.body)[0].order.market;
-        // Iterable listOrderDetails = json.decode(response.body)[0].order.details;
-
-        // listMarket = marketList.map((model) => Market.fromJson(model)).toList();
-        // listOrderDetails = listOrderDetails
-        //     .map((model) => OrderDetail.fromJson(model))
-        //     .toList();
+  _getHistory() {
+    http
+        .get(
+            'http://smhu.ddns.net/smhu/api/histories/shipper/shipper456/page/1')
+        .then((response) {
+      setState(() {
+        Iterable list = json.decode(response.body);
+        listHistory = list.map((model) => History.fromJson(model)).toList();
       });
     });
   }
@@ -151,11 +148,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                   ),
                 ),
                 _buildOrderReceive(),
-                Card(
-                  child: Column(
-                    children: <Widget>[],
-                  ),
-                ),
+                _buildHistoryList(),
                 Card(
                   child: Column(
                     children: <Widget>[],
@@ -167,54 +160,6 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
               );
             }
           }),
-
-      // Center(
-      //   child: FutureBuilder<List<Orders>>(
-      //     future: _getOrders(),
-      //     builder: (context, AsyncSnapshot snapshot) {
-      //       if (snapshot.hasData) {
-      //         return Center(
-      //           child: Card(
-      //             color: Colors.amber,
-      //             child: Column(
-      //               mainAxisSize: MainAxisSize.min,
-      //               children: <Widget>[
-      //                 ListTile(
-      //                   leading: Icon(Icons.album),
-      //                   title: Text(utf8.decode(
-      //                       latin1.encode(snapshot.data.distance),
-      //                       allowMalformed: true)),
-      //                   subtitle: Text(snapshot.data.value.toString()),
-      //                 ),
-      //                 Row(
-      //                   mainAxisAlignment: MainAxisAlignment.end,
-      //                   children: <Widget>[
-      //                     RaisedButton(
-      //                       child: const Text('ACCEPT ORDERS'),
-      //                       onPressed: () {/* ... */},
-      //                     ),
-      //                     const SizedBox(width: 8),
-      //                     RaisedButton(
-      //                       child: const Text('REJECT'),
-      //                       onPressed: () {/* ... */},
-      //                     ),
-      //                     const SizedBox(width: 8),
-      //                   ],
-      //                 ),
-      //               ],
-      //             ),
-      //           ),
-      //         );
-      //       } else if (snapshot.hasError) {
-      //         return Text("${snapshot.error}");
-      //       }
-
-      //       // By default, show a loading spinner.
-      //       return CircularProgressIndicator();
-      //     },
-      //   ),
-      // ),,
-
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
@@ -309,6 +254,229 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
               },
             )
           : Center(child: const Text('Không có đơn hàng nào')),
+    );
+  }
+
+  Widget _buildHistoryList() {
+    _getHistory();
+
+    return Scaffold(
+      appBar: AppBar(
+          title: const Text('Lịch sử giao hàng'),
+          automaticallyImplyLeading: false,
+          backgroundColor: Colors.lightGreenAccent),
+      body: listHistory.length > 0
+          ? ListView.builder(
+              itemCount: listHistory.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                    leading: Icon(Icons.home),
+                    title: Text(utf8.decode(
+                        latin1.encode(listHistory[index].marketName),
+                        allowMalformed: true)),
+                    trailing: Icon(Icons.check),
+                    subtitle: Text(utf8.decode(
+                        latin1.encode(listHistory[index].addressDelivery),
+                        allowMalformed: true)),
+                    onTap: () {
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => DetailScreen(
+                      //         orderObject: listOrders[index],
+                      //         detailObject: listOrders[index].order.detail),
+                      //   ),
+                      // );
+                    });
+              },
+            )
+          : Center(child: const Text('Lịch sử trống')),
+    );
+  }
+
+  Widget _buildInfo() {
+    return Expanded(
+      flex: 1,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Expanded(
+            flex: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    width: 0.0,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              child: ListTile(
+                leading: CircleAvatar(
+                  radius: 30,
+                  backgroundColor: Colors.transparent,
+                ),
+                title: Text(
+                  'Phan Công Bình',
+                  style: TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 20.0,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: Text(
+                  'Profile',
+                  style: TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 15.0,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.keyboard_arrow_right,
+                  color: const Color.fromRGBO(0, 175, 82, 1),
+                  size: 40.0,
+                ),
+                onTap: () {
+                  //Navigator.pop(context);
+                },
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 0,
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.01,
+              color: const Color.fromRGBO(239, 239, 239, 1),
+            ),
+          ),
+          Expanded(
+            flex: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    width: 0.0,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              child: ListTile(
+                leading: Icon(
+                  Icons.question_answer,
+                  color: const Color.fromRGBO(0, 175, 82, 1),
+                ),
+                title: Text(
+                  'Support',
+                  style: TextStyle(
+                    fontFamily: 'Montserrat',
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.keyboard_arrow_right,
+                  color: const Color.fromRGBO(0, 175, 82, 1),
+                ),
+                onTap: () {},
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    width: 0.0,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              child: ListTile(
+                leading: Icon(
+                  Icons.account_balance_wallet,
+                  color: const Color.fromRGBO(0, 175, 82, 1),
+                ),
+                title: Text(
+                  'My Wallet',
+                  style: TextStyle(
+                    fontFamily: 'Montserrat',
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.keyboard_arrow_right,
+                  color: const Color.fromRGBO(0, 175, 82, 1),
+                ),
+                onTap: () {},
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    width: 0.0,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              child: ListTile(
+                leading: Icon(
+                  Icons.gavel,
+                  color: const Color.fromRGBO(0, 175, 82, 1),
+                ),
+                title: Text(
+                  'Policy',
+                  style: TextStyle(
+                    fontFamily: 'Montserrat',
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.keyboard_arrow_right,
+                  color: const Color.fromRGBO(0, 175, 82, 1),
+                ),
+                onTap: () {},
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    width: 0.0,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              child: ListTile(
+                leading: Icon(
+                  Icons.supervisor_account,
+                  color: const Color.fromRGBO(0, 175, 82, 1),
+                ),
+                title: Text(
+                  'About Us',
+                  style: TextStyle(
+                    fontFamily: 'Montserrat',
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.keyboard_arrow_right,
+                  color: const Color.fromRGBO(0, 175, 82, 1),
+                ),
+                onTap: () {},
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Container(
+              color: const Color.fromRGBO(239, 239, 239, 1),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
