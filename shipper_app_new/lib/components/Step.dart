@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:shipper_app_new/components/RouteCustomer.dart';
+import 'package:shipper_app_new/constant/constant.dart';
 import 'package:shipper_app_new/model/Orders.dart';
 import 'package:http/http.dart' as http;
 
@@ -129,7 +130,7 @@ class _StepsState extends State<Steps> {
   }
 
   _updateOrder() async {
-    var url = 'http://smhu.ddns.net/smhu/api/orders/update';
+    var url = API_ENDPOINT + 'orders/update';
     var response = await http.put(
       Uri.encodeFull(url),
       headers: {

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:geocoder/geocoder.dart';
 import 'package:flutter/material.dart';
 import 'package:shipper_app_new/components/RouteSupermarket.dart';
+import 'package:shipper_app_new/constant/constant.dart';
 import 'package:shipper_app_new/model/Orders.dart';
 import 'package:sweetalert/sweetalert.dart';
 import 'package:http/http.dart' as http;
@@ -68,7 +69,7 @@ class DetailScreen extends StatelessWidget {
     // }
     // http: //25.72.134.12:1234/smhu/api/orders/update
     // http: //smhu.ddns.net/smhu/api/orders/update
-    var url = 'http://smhu.ddns.net/smhu/api/orders/update';
+    var url = API_ENDPOINT + 'orders/update';
     var response = await http.put(
       Uri.encodeFull(url),
       headers: {
@@ -133,8 +134,7 @@ class DetailScreen extends StatelessWidget {
                 itemCount: orderObject.order.detail.length,
                 itemBuilder: (context, index) {
                   return ListTile(
-                    leading: Image.network(
-                        "https://breakthrough.org/wp-content/uploads/2018/10/default-placeholder-image.png"),
+                    leading: Image.network(LAZY_IMAGE),
                     title: Text(utf8.decode(
                         latin1.encode(orderObject.order.detail[index].food),
                         allowMalformed: true)),

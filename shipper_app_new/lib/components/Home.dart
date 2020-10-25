@@ -8,7 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
-
+import 'package:shipper_app_new/constant/constant.dart';
 import 'OrderDetail.dart';
 
 class MyHomeWidget extends StatefulWidget {
@@ -67,10 +67,9 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
 
   _getOrders() {
     // 'http://25.72.134.12:1234/smhu/api/shipper/98765/lat/10.800777/lng/106.732639'
-    //
+    //http://192.168.43.81/smhu/api/shipper/98765/lat/10.779534/lng/106.631451
     http
-        .get(
-            'http://smhu.ddns.net/smhu/api/shipper/98765/lat/10.779534/lng/106.631451')
+        .get(API_ENDPOINT + "shipper/98765/lat/10.847440/lng/106.796640")
         .then((response) {
       setState(() {
         Iterable list = json.decode(response.body);
@@ -82,7 +81,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   _getHistory() {
     http
         .get(
-            'http://smhu.ddns.net/smhu/api/histories/shipper/shipper456/page/1')
+            'http://192.168.43.81/smhu/api/histories/shipper/shipper456/page/1')
         .then((response) {
       setState(() {
         Iterable list = json.decode(response.body);

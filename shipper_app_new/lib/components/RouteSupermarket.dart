@@ -49,7 +49,7 @@ class _RouteSupermarketState extends State<RouteSupermarket> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   _updateOrder() async {
-    var url = 'http://smhu.ddns.net/smhu/api/orders/update';
+    var url = 'http://192.168.43.81/smhu/api/orders/update';
     var response = await http.put(
       Uri.encodeFull(url),
       headers: {
