@@ -8,9 +8,13 @@ import 'package:shipper_app_new/components/Home.dart';
 import 'package:http/http.dart' as http;
 import 'dart:math' show cos, sqrt, asin;
 
+import 'package:shipper_app_new/constant/constant.dart';
+import 'package:shipper_app_new/model/User.dart';
+
 class RouteCustomer extends StatefulWidget {
   final Map<String, dynamic> data;
-  RouteCustomer({Key key, this.data}) : super(key: key);
+  final User userData;
+  RouteCustomer({Key key, this.data, this.userData}) : super(key: key);
 
   @override
   _RouteCustomerState createState() => _RouteCustomerState();
@@ -45,7 +49,7 @@ class _RouteCustomerState extends State<RouteCustomer> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   _updateOrder() async {
-    var url = 'http://192.168.43.81/smhu/api/orders/update';
+    var url = API_ENDPOINT + 'orders/update';
     var response = await http.put(
       Uri.encodeFull(url),
       headers: {
@@ -58,10 +62,18 @@ class _RouteCustomerState extends State<RouteCustomer> {
 
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
-      Navigator.push(
+      Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => MyHomeWidget()),
+        MaterialPageRoute(
+            builder: (BuildContext context) =>
+                MyHomeWidget(userData: widget.userData)),
+        ModalRoute.withName('/'),
       );
+      // Navigator.push(
+      //   context,
+      //   MaterialPageRoute(
+      //       builder: (context) => MyHomeWidget(userData: widget.userData)),
+      // );
     } else {
       // If the server did not return a 200 OK response,
       // SweetAlert.show(context,
@@ -340,6 +352,7 @@ class _RouteCustomerState extends State<RouteCustomer> {
 
   @override
   Widget build(BuildContext context) {
+    print(widget.userData);
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
     return Container(

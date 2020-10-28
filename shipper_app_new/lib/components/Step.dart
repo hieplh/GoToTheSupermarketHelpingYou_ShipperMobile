@@ -5,11 +5,14 @@ import 'package:shipper_app_new/components/RouteCustomer.dart';
 import 'package:shipper_app_new/constant/constant.dart';
 import 'package:shipper_app_new/model/Orders.dart';
 import 'package:http/http.dart' as http;
+import 'package:shipper_app_new/model/User.dart';
 
 class Steps extends StatefulWidget {
   final List<OrderDetail> item;
+  final User userData;
   final Map<String, dynamic> data;
-  Steps({Key key, @required this.item, this.data}) : super(key: key);
+  Steps({Key key, @required this.item, this.data, this.userData})
+      : super(key: key);
 
   @override
   _StepsState createState() => _StepsState();
@@ -80,7 +83,9 @@ class _StepsState extends State<Steps> {
       appBar: AppBar(
         // Title
         title: Text("Tiến Trình"),
-        backgroundColor: Colors.lightGreenAccent,
+        backgroundColor: Colors.green,
+        automaticallyImplyLeading: false,
+        centerTitle: true,
       ),
       // Body
       body: Container(
@@ -145,9 +150,8 @@ class _StepsState extends State<Steps> {
       Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => RouteCustomer(
-                  data: widget.data,
-                )),
+            builder: (context) =>
+                RouteCustomer(data: widget.data, userData: widget.userData)),
       );
     } else {
       // If the server did not return a 200 OK response,
@@ -165,8 +169,7 @@ class _StepsState extends State<Steps> {
       itemCount: widget.item.length,
       itemBuilder: (context, index) {
         return ListTile(
-          leading: Image.network(
-              "https://breakthrough.org/wp-content/uploads/2018/10/default-placeholder-image.png"),
+          leading: Image.network(LAZY_IMAGE),
           title: Text(utf8.decode(latin1.encode(widget.item[index].food),
               allowMalformed: true)),
           trailing: Text(utf8.decode(

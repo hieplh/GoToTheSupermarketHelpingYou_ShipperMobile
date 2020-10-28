@@ -4,16 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:shipper_app_new/constant/constant.dart';
 import 'package:shipper_app_new/model/Orders.dart';
 import 'package:http/http.dart' as http;
+import 'package:shipper_app_new/model/User.dart';
 import 'dart:math' show cos, sqrt, asin;
 
 import 'Step.dart';
 
 class RouteSupermarket extends StatefulWidget {
   final List<OrderDetail> orderDetails;
+  final User userData;
   final Map<String, dynamic> data;
-  RouteSupermarket({Key key, @required this.orderDetails, this.data})
+  RouteSupermarket(
+      {Key key, @required this.orderDetails, this.data, this.userData})
       : super(key: key);
 
   @override
@@ -49,7 +53,7 @@ class _RouteSupermarketState extends State<RouteSupermarket> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   _updateOrder() async {
-    var url = 'http://192.168.43.81/smhu/api/orders/update';
+    var url = API_ENDPOINT + 'orders/update';
     var response = await http.put(
       Uri.encodeFull(url),
       headers: {
@@ -65,8 +69,10 @@ class _RouteSupermarketState extends State<RouteSupermarket> {
       Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) =>
-                Steps(item: widget.orderDetails, data: widget.data)),
+            builder: (context) => Steps(
+                item: widget.orderDetails,
+                data: widget.data,
+                userData: widget.userData)),
       );
     } else {
       // If the server did not return a 200 OK response,

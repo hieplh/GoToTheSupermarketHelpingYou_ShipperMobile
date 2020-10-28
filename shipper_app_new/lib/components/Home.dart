@@ -9,10 +9,12 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
 import 'package:shipper_app_new/constant/constant.dart';
+import 'package:shipper_app_new/model/User.dart';
 import 'OrderDetail.dart';
 
 class MyHomeWidget extends StatefulWidget {
-  MyHomeWidget({Key key}) : super(key: key);
+  final User userData;
+  MyHomeWidget({Key key, this.userData}) : super(key: key);
 
   @override
   _MyHomeWidgetState createState() => _MyHomeWidgetState();
@@ -66,10 +68,17 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   );
 
   _getOrders() {
+    print(API_ENDPOINT +
+        "shipper/" +
+        '${widget.userData.id}' +
+        "/lat/10.847440/lng/106.796640");
     // 'http://25.72.134.12:1234/smhu/api/shipper/98765/lat/10.800777/lng/106.732639'
     //http://192.168.43.81/smhu/api/shipper/98765/lat/10.779534/lng/106.631451
     http
-        .get(API_ENDPOINT + "shipper/98765/lat/10.847440/lng/106.796640")
+        .get(API_ENDPOINT +
+            "shipper/" +
+            '${widget.userData.id}' +
+            "/lat/10.847440/lng/106.796640")
         .then((response) {
       setState(() {
         Iterable list = json.decode(response.body);
@@ -80,8 +89,10 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
 
   _getHistory() {
     http
-        .get(
-            'http://192.168.43.81/smhu/api/histories/shipper/shipper456/page/1')
+        .get(API_ENDPOINT +
+            "histories/shipper/" +
+            '${widget.userData.id}' +
+            "/page/1")
         .then((response) {
       setState(() {
         Iterable list = json.decode(response.body);
@@ -148,11 +159,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                 ),
                 _buildOrderReceive(),
                 _buildHistoryList(),
-                Card(
-                  child: Column(
-                    children: <Widget>[],
-                  ),
-                ),
+                _buildInfo(),
               ];
               return Center(
                 child: _widgetOptions.elementAt(_selectedIndex),
@@ -220,25 +227,27 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   }
 
   Widget _buildOrderReceive() {
-    _getOrders();
-
     return Scaffold(
       appBar: AppBar(
           title: const Text('Đơn hàng có thể tiếp nhận'),
           automaticallyImplyLeading: false,
-          backgroundColor: Colors.lightGreenAccent),
+          centerTitle: true,
+          backgroundColor: Colors.green),
       body: listOrders.length > 0
           ? ListView.builder(
               itemCount: listOrders.length,
               itemBuilder: (context, index) {
                 return ListTile(
-                    leading: Icon(Icons.home),
+                    leading: Icon(Icons.add_shopping_cart_rounded),
                     title: Text(utf8.decode(
-                        latin1.encode(listOrders[index].distance),
-                        allowMalformed: true)),
-                    trailing: Icon(Icons.more_vert),
-                    subtitle: Text(utf8.decode(
                         latin1.encode(listOrders[index].order.market.name),
+                        allowMalformed: true)),
+                    trailing: Text(
+                        listOrders[index].order.totalCost.toString() + " vnd"),
+                    subtitle: Text(utf8.decode(
+                        latin1.encode((listOrders[index].value / 1000.round())
+                                .toString() +
+                            " km"),
                         allowMalformed: true)),
                     onTap: () {
                       Navigator.push(
@@ -246,6 +255,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                         MaterialPageRoute(
                           builder: (context) => DetailScreen(
                               orderObject: listOrders[index],
+                              userData: widget.userData,
                               detailObject: listOrders[index].order.detail),
                         ),
                       );
@@ -253,6 +263,13 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
               },
             )
           : Center(child: const Text('Không có đơn hàng nào')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _getOrders();
+        },
+        child: Icon(Icons.navigation),
+        backgroundColor: Colors.green,
+      ),
     );
   }
 
@@ -263,7 +280,8 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
       appBar: AppBar(
           title: const Text('Lịch sử giao hàng'),
           automaticallyImplyLeading: false,
-          backgroundColor: Colors.lightGreenAccent),
+          centerTitle: true,
+          backgroundColor: Colors.green),
       body: listHistory.length > 0
           ? ListView.builder(
               itemCount: listHistory.length,
@@ -294,188 +312,112 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   }
 
   Widget _buildInfo() {
-    return Expanded(
-      flex: 1,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          Expanded(
-            flex: 0,
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    width: 0.0,
-                    color: Colors.black,
-                  ),
+    return Scaffold(
+        appBar: AppBar(
+            automaticallyImplyLeading: false,
+            centerTitle: true,
+            title: const Text('Cài đặt'),
+            backgroundColor: Colors.green),
+        body: ListView(
+          padding: const EdgeInsets.all(8),
+          children: <Widget>[
+            ListTile(
+              leading: CircleAvatar(
+                backgroundImage: NetworkImage(
+                    "https://toppng.com/uploads/preview/roger-berry-avatar-placeholder-11562991561rbrfzlng6h.png"),
+              ),
+              title: Text(
+                utf8.decode(
+                    latin1.encode('${widget.userData.lastName} ' +
+                        '${widget.userData.middleName} ' +
+                        '${widget.userData.firstName} '),
+                    allowMalformed: true),
+                style: TextStyle(
+                  fontFamily: 'Montserrat',
+                  fontSize: 20.0,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              child: ListTile(
-                leading: CircleAvatar(
-                  radius: 30,
-                  backgroundColor: Colors.transparent,
+              subtitle: Text(
+                '${widget.userData.phone}',
+                style: TextStyle(
+                  fontFamily: 'Montserrat',
+                  fontSize: 15.0,
                 ),
-                title: Text(
-                  'Phan Công Bình',
-                  style: TextStyle(
-                    fontFamily: 'Montserrat',
-                    fontSize: 20.0,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                subtitle: Text(
-                  'Profile',
-                  style: TextStyle(
-                    fontFamily: 'Montserrat',
-                    fontSize: 15.0,
-                  ),
-                ),
-                trailing: Icon(
-                  Icons.keyboard_arrow_right,
-                  color: const Color.fromRGBO(0, 175, 82, 1),
-                  size: 40.0,
-                ),
-                onTap: () {
-                  //Navigator.pop(context);
-                },
               ),
+              onTap: () {
+                //Navigator.pop(context);
+              },
             ),
-          ),
-          Expanded(
-            flex: 0,
-            child: Container(
-              height: MediaQuery.of(context).size.height * 0.01,
-              color: const Color.fromRGBO(239, 239, 239, 1),
+            ListTile(
+              leading: Icon(
+                Icons.question_answer,
+                color: const Color.fromRGBO(0, 175, 82, 1),
+              ),
+              title: Text(
+                'Hỗ trợ',
+                style: TextStyle(
+                  fontFamily: 'Montserrat',
+                ),
+              ),
+              trailing: Icon(
+                Icons.keyboard_arrow_right,
+                color: const Color.fromRGBO(0, 175, 82, 1),
+              ),
+              onTap: () {},
             ),
-          ),
-          Expanded(
-            flex: 0,
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    width: 0.0,
-                    color: Colors.black,
-                  ),
+            ListTile(
+              leading: Icon(
+                Icons.account_balance_wallet,
+                color: const Color.fromRGBO(0, 175, 82, 1),
+              ),
+              title: Text(
+                'Ví của tôi',
+                style: TextStyle(
+                  fontFamily: 'Montserrat',
                 ),
               ),
-              child: ListTile(
-                leading: Icon(
-                  Icons.question_answer,
-                  color: const Color.fromRGBO(0, 175, 82, 1),
-                ),
-                title: Text(
-                  'Support',
-                  style: TextStyle(
-                    fontFamily: 'Montserrat',
-                  ),
-                ),
-                trailing: Icon(
-                  Icons.keyboard_arrow_right,
-                  color: const Color.fromRGBO(0, 175, 82, 1),
-                ),
-                onTap: () {},
+              trailing: Icon(
+                Icons.keyboard_arrow_right,
+                color: const Color.fromRGBO(0, 175, 82, 1),
               ),
+              onTap: () {},
             ),
-          ),
-          Expanded(
-            flex: 0,
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    width: 0.0,
-                    color: Colors.black,
-                  ),
+            ListTile(
+              leading: Icon(
+                Icons.gavel,
+                color: const Color.fromRGBO(0, 175, 82, 1),
+              ),
+              title: Text(
+                'Chính sách',
+                style: TextStyle(
+                  fontFamily: 'Montserrat',
                 ),
               ),
-              child: ListTile(
-                leading: Icon(
-                  Icons.account_balance_wallet,
-                  color: const Color.fromRGBO(0, 175, 82, 1),
-                ),
-                title: Text(
-                  'My Wallet',
-                  style: TextStyle(
-                    fontFamily: 'Montserrat',
-                  ),
-                ),
-                trailing: Icon(
-                  Icons.keyboard_arrow_right,
-                  color: const Color.fromRGBO(0, 175, 82, 1),
-                ),
-                onTap: () {},
+              trailing: Icon(
+                Icons.keyboard_arrow_right,
+                color: const Color.fromRGBO(0, 175, 82, 1),
               ),
+              onTap: () {},
             ),
-          ),
-          Expanded(
-            flex: 0,
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    width: 0.0,
-                    color: Colors.black,
-                  ),
+            ListTile(
+              leading: Icon(
+                Icons.location_city,
+                color: const Color.fromRGBO(0, 175, 82, 1),
+              ),
+              title: Text(
+                'GPS',
+                style: TextStyle(
+                  fontFamily: 'Montserrat',
                 ),
               ),
-              child: ListTile(
-                leading: Icon(
-                  Icons.gavel,
-                  color: const Color.fromRGBO(0, 175, 82, 1),
-                ),
-                title: Text(
-                  'Policy',
-                  style: TextStyle(
-                    fontFamily: 'Montserrat',
-                  ),
-                ),
-                trailing: Icon(
-                  Icons.keyboard_arrow_right,
-                  color: const Color.fromRGBO(0, 175, 82, 1),
-                ),
-                onTap: () {},
+              trailing: Icon(
+                Icons.keyboard_arrow_right,
+                color: const Color.fromRGBO(0, 175, 82, 1),
               ),
+              onTap: () {},
             ),
-          ),
-          Expanded(
-            flex: 0,
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    width: 0.0,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-              child: ListTile(
-                leading: Icon(
-                  Icons.supervisor_account,
-                  color: const Color.fromRGBO(0, 175, 82, 1),
-                ),
-                title: Text(
-                  'About Us',
-                  style: TextStyle(
-                    fontFamily: 'Montserrat',
-                  ),
-                ),
-                trailing: Icon(
-                  Icons.keyboard_arrow_right,
-                  color: const Color.fromRGBO(0, 175, 82, 1),
-                ),
-                onTap: () {},
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Container(
-              color: const Color.fromRGBO(239, 239, 239, 1),
-            ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ));
   }
 }

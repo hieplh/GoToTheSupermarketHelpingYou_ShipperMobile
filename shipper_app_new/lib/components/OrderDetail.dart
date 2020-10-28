@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shipper_app_new/components/RouteSupermarket.dart';
 import 'package:shipper_app_new/constant/constant.dart';
 import 'package:shipper_app_new/model/Orders.dart';
+import 'package:shipper_app_new/model/User.dart';
 import 'package:sweetalert/sweetalert.dart';
 import 'package:http/http.dart' as http;
 
@@ -11,8 +12,10 @@ class DetailScreen extends StatelessWidget {
   // Declare a field that holds the Todo.
   final Orders orderObject;
   final List<OrderDetail> detailObject;
+  final User userData;
   // In the constructor, require a Todo.
-  DetailScreen({Key key, @required this.orderObject, this.detailObject})
+  DetailScreen(
+      {Key key, @required this.orderObject, this.detailObject, this.userData})
       : super(key: key);
 
   updateOrders(BuildContext context) async {
@@ -56,7 +59,7 @@ class DetailScreen extends StatelessWidget {
             allowMalformed: true),
       },
       "note": "phuong nguyen",
-      "shipper": "shipper456",
+      "shipper": userData.id,
       "status": 21,
       "timeDelivery": "12:12:12",
       "totalCost": orderObject.order.totalCost
@@ -86,9 +89,9 @@ class DetailScreen extends StatelessWidget {
         context,
         MaterialPageRoute(
             builder: (context) => RouteSupermarket(
-                  orderDetails: orderObject.order.detail,
-                  data: data,
-                )),
+                orderDetails: orderObject.order.detail,
+                data: data,
+                userData: userData)),
       );
     } else {
       // If the server did not return a 200 OK response,
@@ -103,12 +106,12 @@ class DetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Use the Todo to create the UI.
-
+    print(userData);
     TimeOfDay now = TimeOfDay.now();
     var totalWeight = 0.0;
     var distanceString =
         orderObject.distance.replaceAll(new RegExp(r'[^0-9]'), '');
-    var distanceKm = double.parse(distanceString) * 1.6.round();
+    var distanceKm = (orderObject.value / 1000.0).round();
     final fromCoordinates = new Coordinates(
         double.parse(orderObject.order.market.lat),
         double.parse(orderObject.order.market.lng));
@@ -121,7 +124,8 @@ class DetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text("Thông Tin Đơn Hàng"),
-        backgroundColor: Colors.lightGreenAccent,
+        backgroundColor: Colors.green,
+        centerTitle: true,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -227,8 +231,8 @@ class DetailScreen extends StatelessWidget {
               Card(
                 child: ListTile(
                   leading: Icon(Icons.access_alarm),
-                  title: Text('Khung giờ giao hàng'),
-                  subtitle: Text('17h:00' + ' - ' + " 18h:00"),
+                  title: Text('Giao trước lúc'),
+                  subtitle: Text(orderObject.order.timeDelivery),
                 ),
               ),
             ],

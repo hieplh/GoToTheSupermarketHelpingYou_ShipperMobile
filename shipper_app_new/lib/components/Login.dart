@@ -1,5 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shipper_app_new/components/Home.dart';
+import 'package:http/http.dart' as http;
+import 'package:shipper_app_new/constant/constant.dart';
+import 'package:shipper_app_new/model/User.dart';
+import 'package:sweetalert/sweetalert.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -9,11 +15,43 @@ class LoginPage extends StatefulWidget {
 @override
 initState() {}
 
+_postLogin(String username, String password, BuildContext context) async {
+  User user = null;
+  var url = API_ENDPOINT + 'account/username';
+  var response = await http.post(Uri.parse(url),
+      headers: {
+        'Content-type': 'application/json',
+        "Accept": "application/json",
+      },
+      body: json.encode(
+          {"password": password, "role": "shipper", "username": username}));
+
+  if (response.statusCode == 200) {
+    user = User.fromJson(json.decode(response.body));
+    // If the server did return a 200 OK response,
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => MyHomeWidget(userData: user)),
+    );
+  } else {
+    // If the server did not return a 200 OK response,
+    // SweetAlert.show(context,
+    //     subtitle: "Xác nhận không thành công", style: SweetAlertStyle.error);
+    // then throw an exception.
+    SweetAlert.show(context,
+        title: "Login Failed",
+        subtitle: "Invalid username or password",
+        style: SweetAlertStyle.error);
+  }
+}
+
 class _State extends State<LoginPage> {
+  String username;
+  String password;
   TextEditingController nameController =
-      TextEditingController(text: "092121901212");
+      TextEditingController(text: "shipper123");
   TextEditingController passwordController =
-      TextEditingController(text: "12910211212");
+      TextEditingController(text: "12345678");
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +72,10 @@ class _State extends State<LoginPage> {
                       border: OutlineInputBorder(),
                       labelText: 'User Name',
                     ),
+                    onChanged: (val) {
+                      // (val) is looking at the value in the textbox.
+                      username = val;
+                    },
                   ),
                 ),
                 Container(
@@ -45,6 +87,10 @@ class _State extends State<LoginPage> {
                       border: OutlineInputBorder(),
                       labelText: 'Password',
                     ),
+                    onChanged: (val) {
+                      // (val) is looking at the value in the textbox.
+                      password = val;
+                    },
                   ),
                 ),
                 FlatButton(
@@ -62,11 +108,8 @@ class _State extends State<LoginPage> {
                       color: Colors.green,
                       child: Text('Login'),
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => MyHomeWidget()),
-                        );
+                        _postLogin(nameController.text, passwordController.text,
+                            context);
                       },
                     )),
                 Container(
