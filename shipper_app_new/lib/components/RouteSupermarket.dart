@@ -1,6 +1,8 @@
 import 'dart:convert';
-
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -43,7 +45,8 @@ class _RouteSupermarketState extends State<RouteSupermarket> {
       'Tòa nhà, 12 Đường Quốc Hương, Thảo Điền, Quận 2, Thành phố Hồ Chí Minh';
   String _placeDistance;
   String _placeDuration;
-
+  BitmapDescriptor marketIcon;
+  BitmapDescriptor shipperIcon;
   Set<Marker> markers = {};
 
   PolylinePoints polylinePoints;
@@ -51,6 +54,28 @@ class _RouteSupermarketState extends State<RouteSupermarket> {
   List<LatLng> polylineCoordinates = [];
 
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+  Future<Uint8List> getBytesFromAsset(String path, int width) async {
+    ByteData data = await rootBundle.load(path);
+    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(),
+        targetWidth: width);
+    ui.FrameInfo fi = await codec.getNextFrame();
+    return (await fi.image.toByteData(format: ui.ImageByteFormat.png))
+        .buffer
+        .asUint8List();
+  }
+
+  Future<BitmapDescriptor> getBitmapDescriptorFromAssetBytes(
+      String path, int width) async {
+    final Uint8List imageData = await getBytesFromAsset(path, width);
+    return BitmapDescriptor.fromBytes(imageData);
+  }
+
+  void setSourceAndDestinationIcons() async {
+    marketIcon =
+        await getBitmapDescriptorFromAssetBytes("assets/cart.png", 100);
+    shipperIcon =
+        await getBitmapDescriptorFromAssetBytes("assets/driving_pin.png", 100);
+  }
 
   _updateOrder() async {
     var url = API_ENDPOINT + 'orders/update';
@@ -212,7 +237,7 @@ class _RouteSupermarketState extends State<RouteSupermarket> {
             title: 'Start',
             snippet: _startAddress,
           ),
-          icon: BitmapDescriptor.defaultMarker,
+          icon: shipperIcon,
         );
 
         // Destination Location Marker
@@ -226,7 +251,7 @@ class _RouteSupermarketState extends State<RouteSupermarket> {
             title: 'Destination',
             snippet: _destinationAddress,
           ),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+          icon: marketIcon,
         );
 
         // Adding the markers to the list
@@ -346,6 +371,7 @@ class _RouteSupermarketState extends State<RouteSupermarket> {
   @override
   void initState() {
     super.initState();
+    setSourceAndDestinationIcons();
     _getCurrentLocation();
     _calculateDistance();
   }

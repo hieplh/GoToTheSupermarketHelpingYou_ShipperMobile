@@ -170,14 +170,16 @@ class _StepsState extends State<Steps> {
       itemBuilder: (context, index) {
         return ListTile(
           leading: Image.network(LAZY_IMAGE),
-          title: Text(utf8.decode(latin1.encode(widget.item[index].food),
+          title: Text(utf8.decode(latin1.encode(widget.item[index].foodId),
               allowMalformed: true)),
           trailing: Text(utf8.decode(
               latin1.encode(widget.item[index].weight.toString() + " kg"),
               allowMalformed: true)),
           subtitle: Text(utf8.decode(
-              latin1
-                  .encode(widget.item[index].priceOriginal.toString() + " vnd"),
+              latin1.encode(widget.item[index].priceOriginal
+                      .toString()
+                      .replaceAll(regex, "") +
+                  " vnd"),
               allowMalformed: true)),
         );
       },

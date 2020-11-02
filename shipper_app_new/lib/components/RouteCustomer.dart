@@ -11,6 +11,8 @@ import 'dart:math' show cos, sqrt, asin;
 import 'package:shipper_app_new/constant/constant.dart';
 import 'package:shipper_app_new/model/User.dart';
 
+import 'DeliverySuccess.dart';
+
 class RouteCustomer extends StatefulWidget {
   final Map<String, dynamic> data;
   final User userData;
@@ -66,7 +68,7 @@ class _RouteCustomerState extends State<RouteCustomer> {
         context,
         MaterialPageRoute(
             builder: (BuildContext context) =>
-                MyHomeWidget(userData: widget.userData)),
+                SuccessScreen(userData: widget.userData,data: widget.data,)),
         ModalRoute.withName('/'),
       );
       // Navigator.push(

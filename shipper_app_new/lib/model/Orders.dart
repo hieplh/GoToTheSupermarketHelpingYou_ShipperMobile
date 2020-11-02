@@ -1,13 +1,13 @@
 class Orders {
-  String distance;
+  String destination;
   int value;
   Order order;
 
-  Orders({this.distance, this.value, this.order});
+  Orders({this.destination, this.value, this.order});
 
   factory Orders.fromJson(Map<String, dynamic> json) {
     return Orders(
-        distance: json['distance'],
+        destination: json['distance'],
         value: json['value'],
         order: Order.fromJson(json['order']));
   }
@@ -92,7 +92,8 @@ class Market {
 
 class OrderDetail {
   String id;
-  String food;
+  String foodId;
+  String foodName;
   String image;
   double priceOriginal;
   double pricePaid;
@@ -101,7 +102,8 @@ class OrderDetail {
 
   OrderDetail({
     this.id,
-    this.food,
+    this.foodId,
+    this.foodName,
     this.image,
     this.priceOriginal,
     this.pricePaid,
@@ -112,7 +114,8 @@ class OrderDetail {
   factory OrderDetail.fromJson(Map<String, dynamic> json) {
     return OrderDetail(
       id: json['id'],
-      food: json['food'],
+      foodId: json['foodId'],
+      foodName: json['foodName'],
       image: json['image'],
       priceOriginal: json['priceOriginal'],
       pricePaid: json['pricePaid'],
@@ -123,7 +126,8 @@ class OrderDetail {
 
   Map toJson() => {
         "id": id,
-        "food": food,
+        "foodId": foodId,
+        "foodName": foodName,
         "image": image,
         "priceOriginal": priceOriginal,
         "pricePaid": pricePaid,

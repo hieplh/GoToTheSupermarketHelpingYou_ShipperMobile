@@ -30,8 +30,9 @@ class DetailScreen extends StatelessWidget {
       "details": [
         for (OrderDetail detail in orderObject.order.detail)
           {
-            "food": utf8.decode(latin1.encode("${detail.food}"),
+            "foodName": utf8.decode(latin1.encode("${detail.foodId}"),
                 allowMalformed: true),
+            "foodId": "${detail.foodId}",
             "id": "${detail.id}",
             "image": "${detail.image}",
             "priceOriginal": detail.priceOriginal,
@@ -109,8 +110,7 @@ class DetailScreen extends StatelessWidget {
     print(userData);
     TimeOfDay now = TimeOfDay.now();
     var totalWeight = 0.0;
-    var distanceString =
-        orderObject.distance.replaceAll(new RegExp(r'[^0-9]'), '');
+
     var distanceKm = (orderObject.value / 1000.0).round();
     final fromCoordinates = new Coordinates(
         double.parse(orderObject.order.market.lat),
@@ -140,7 +140,7 @@ class DetailScreen extends StatelessWidget {
                   return ListTile(
                     leading: Image.network(LAZY_IMAGE),
                     title: Text(utf8.decode(
-                        latin1.encode(orderObject.order.detail[index].food),
+                        latin1.encode(orderObject.order.detail[index].foodId),
                         allowMalformed: true)),
                     trailing: Text(
                         orderObject.order.detail[index].weight.toString() +
@@ -148,7 +148,8 @@ class DetailScreen extends StatelessWidget {
                     subtitle: Text(utf8.decode(
                         latin1.encode(orderObject
                                 .order.detail[index].priceOriginal
-                                .toString() +
+                                .toString()
+                                .replaceAll(regex, "") +
                             ' vnd'),
                         allowMalformed: true)),
                   );
@@ -156,10 +157,20 @@ class DetailScreen extends StatelessWidget {
               ),
               Card(
                 child: ListTile(
+                  leading: Icon(Icons.settings_applications),
+                  title: Text('Mã đơn hàng '),
+                  trailing: Text(orderObject.order.id),
+                ),
+              ),
+              Card(
+                child: ListTile(
                   leading: Icon(Icons.money),
                   title: Text('Tổng tiền Sản Phẩm '),
-                  trailing: Text(
-                      orderObject.order.totalCost.round().toString() + ' vnd'),
+                  trailing: Text(orderObject.order.totalCost
+                          .round()
+                          .toString()
+                          .replaceAll(regex, "") +
+                      ' vnd'),
                 ),
               ),
               Card(
@@ -175,9 +186,11 @@ class DetailScreen extends StatelessWidget {
                 child: ListTile(
                   leading: Icon(Icons.book_outlined),
                   title: Text('Tiền công mua đồ '),
-                  trailing: Text(
-                      orderObject.order.costShopping.round().toString() +
-                          ' vnd'),
+                  trailing: Text(orderObject.order.costShopping
+                          .round()
+                          .toString()
+                          .replaceAll(regex, "") +
+                      ' vnd'),
                 ),
               ),
               Card(
@@ -188,7 +201,8 @@ class DetailScreen extends StatelessWidget {
                                   orderObject.order.costDelivery) /
                               2)
                           .round()
-                          .toString() +
+                          .toString()
+                          .replaceAll(regex, "") +
                       ' vnd'),
                 ),
               ),

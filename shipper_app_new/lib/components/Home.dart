@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:shipper_app_new/model/History.dart';
@@ -11,6 +11,7 @@ import 'dart:async';
 import 'package:shipper_app_new/constant/constant.dart';
 import 'package:shipper_app_new/model/User.dart';
 import 'OrderDetail.dart';
+import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 
 class MyHomeWidget extends StatefulWidget {
   final User userData;
@@ -22,6 +23,13 @@ class MyHomeWidget extends StatefulWidget {
 
 /// This is the private State class that goes with MyStatefulWidget.
 class _MyHomeWidgetState extends State<MyHomeWidget> {
+  String title = "Title";
+  String helper = "helper";
+  int _counter = 0;
+  StreamController<int> _events;
+  String token_app;
+
+  FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   Future<List<Orders>> futureOrders;
   int _selectedIndex = 0;
   var listOrders = new List<Orders>();
@@ -46,19 +54,21 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
       markers.add(Marker(
         markerId: MarkerId("BIGCTHAODIEN"),
         draggable: true,
-        position: new LatLng(10.97726, 106.68605439999999),
-        infoWindow: InfoWindow(title: 'Big C Thảo Điền'),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+        position:
+            new LatLng(_currentPosition.latitude, _currentPosition.longitude),
+        infoWindow: InfoWindow(title: 'Vị trí hiện tại'),
+        icon: BitmapDescriptor.defaultMarker,
       ));
-      markers.add(Marker(
-        markerId: MarkerId("VINTHAODIEN"),
-        draggable: true,
-        position: new LatLng(10.978089, 106.685200),
-        infoWindow: InfoWindow(title: 'Vinmart Thảo Điền'),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-      ));
+      // markers.add(Marker(
+      //   markerId: MarkerId("VINTHAODIEN"),
+      //   draggable: true,
+      //   position: new LatLng(10.978089, 106.685200),
+      //   infoWindow: InfoWindow(title: 'Vinmart Thảo Điền'),
+      //   icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+      // ));
       controller.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
-          target: LatLng(10.97728, 106.68605439999999), zoom: 18.0)));
+          target: LatLng(_currentPosition.latitude, _currentPosition.longitude),
+          zoom: 16.0)));
     });
   }
 
@@ -68,18 +78,17 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   );
 
   _getOrders() {
-    print(API_ENDPOINT +
-        "shipper/" +
-        '${widget.userData.id}' +
-        "/lat/10.847440/lng/106.796640");
+    print(API_ENDPOINT + "shipper/" + '${widget.userData.id}');
+    // print(API_ENDPOINT +
+    // "shipper/" +
+    // '${widget.userData.id}' +
+    // "/lat/10.847440/lng/106.796640");
     // 'http://25.72.134.12:1234/smhu/api/shipper/98765/lat/10.800777/lng/106.732639'
     //http://192.168.43.81/smhu/api/shipper/98765/lat/10.779534/lng/106.631451
     http
-        .get(API_ENDPOINT +
-            "shipper/" +
-            '${widget.userData.id}' +
-            "/lat/10.847440/lng/106.796640")
+        .get(API_ENDPOINT + "shipper/" + '${widget.userData.id}')
         .then((response) {
+      print(response.body);
       setState(() {
         Iterable list = json.decode(response.body);
         listOrders = list.map((model) => Orders.fromJson(model)).toList();
@@ -101,11 +110,121 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
     });
   }
 
+  Timer _timer;
+  void _startTimer() {
+    _counter = 10;
+    if (_timer != null) {
+      _timer.cancel();
+    }
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      //setState(() {
+      (_counter > 0) ? _counter-- : _timer.cancel();
+      //});
+      print(_counter);
+      _events.add(_counter);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
 
     _getCurrentLocation();
+
+    _firebaseMessaging.getToken().then((token) {
+      token_app = token.substring(2);
+      print(token_app);
+    });
+
+    _firebaseMessaging.configure(
+      onMessage: (message) async {
+        print(message);
+
+        _events = new StreamController<int>();
+        _events.add(10);
+        _startTimer();
+        Timer _timer;
+        BuildContext dialogContext;
+        showDialog(
+            context: context,
+            builder: (BuildContext builderContext) {
+              dialogContext = context;
+              _timer = Timer(Duration(seconds: 10), () {
+                Navigator.of(context).pop();
+              });
+
+              return AlertDialog(
+                title: Text("Thông báo"),
+                content: StreamBuilder<int>(
+                    stream: _events.stream,
+                    builder:
+                        (BuildContext context, AsyncSnapshot<int> snapshot) {
+                      return Container(
+                          height: 300,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: <Widget>[
+                              Text("Có đơn hàng mới gần đây"),
+                              Text("Bạn có muốn tiếp nhận ?"),
+                              new Expanded(
+                                  child: new Align(
+                                      alignment: Alignment.bottomCenter,
+                                      child: new Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: <Widget>[
+                                          Text('${snapshot.data.toString()}',
+                                              style: TextStyle(
+                                                  color: Colors.red,
+                                                  fontSize: 30)),
+                                        ],
+                                      )))
+                            ],
+                          ));
+                    }),
+                actions: <Widget>[
+                  TextButton(
+                    child: Text('Chấp nhận'),
+                    onPressed: () {
+                      _getOrders();
+                      Navigator.pop(dialogContext);
+                    },
+                  ),
+                  TextButton(
+                    child: Text('Từ chối '),
+                    onPressed: () {},
+                  ),
+                ],
+              );
+            }).then((val) {
+          if (_timer.isActive) {
+            _timer.cancel();
+          }
+        });
+      },
+      onResume: (message) async {
+        // setState(() {
+        //   title = message["data"]["title"];
+        //   helper = "You have open the application from notification";
+        // });
+      },
+    );
+
+    Timer.periodic(new Duration(seconds: 5), (timer) {
+      _updatePos();
+    });
+  }
+
+  _updatePos() {
+    http
+        .get(API_ENDPOINT +
+            "shipper/" +
+            '${widget.userData.id}' +
+            "/lat/10.848833/lng/106.752591/" +
+            '${token_app}')
+        .then((response) {
+      print(response.body);
+    });
   }
 
   static const TextStyle optionStyle =
@@ -152,11 +271,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
             } else {
               List<Widget> _widgetOptions = <Widget>[
                 _buildMap(),
-                Card(
-                  child: Column(
-                    children: <Widget>[],
-                  ),
-                ),
+                _buildNotify(),
                 _buildOrderReceive(),
                 _buildHistoryList(),
                 _buildInfo(),
@@ -226,6 +341,28 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
     ));
   }
 
+  Widget _buildNotify() {
+    return Scaffold(
+      appBar: AppBar(
+          automaticallyImplyLeading: false,
+          title: Text("Thông báo"),
+          centerTitle: true,
+          backgroundColor: Colors.green),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(helper),
+            Text(
+              '$title',
+              style: Theme.of(context).textTheme.display1,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildOrderReceive() {
     return Scaffold(
       appBar: AppBar(
@@ -242,8 +379,12 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                     title: Text(utf8.decode(
                         latin1.encode(listOrders[index].order.market.name),
                         allowMalformed: true)),
-                    trailing: Text(
-                        listOrders[index].order.totalCost.toString() + " vnd"),
+                    trailing: Text(listOrders[index]
+                            .order
+                            .totalCost
+                            .toString()
+                            .replaceAll(regex, "") +
+                        " vnd"),
                     subtitle: Text(utf8.decode(
                         latin1.encode((listOrders[index].value / 1000.round())
                                 .toString() +
@@ -263,13 +404,13 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
               },
             )
           : Center(child: const Text('Không có đơn hàng nào')),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _getOrders();
-        },
-        child: Icon(Icons.navigation),
-        backgroundColor: Colors.green,
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () {
+      //     _getOrders();
+      //   },
+      //   child: Icon(Icons.navigation),
+      //   backgroundColor: Colors.green,
+      // ),
     );
   }
 

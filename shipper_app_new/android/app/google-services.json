@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "633190669198",
+    "firebase_url": "https://gothetosupermarkethelpingyou.firebaseio.com",
+    "project_id": "gothetosupermarkethelpingyou",
+    "storage_bucket": "gothetosupermarkethelpingyou.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:633190669198:android:4359ed5d9fe18286ba22df",
+        "android_client_info": {
+          "package_name": "com.example.shipper_app_new"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "633190669198-0qma7smuutveamjlatgfth4di7ac8uuj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.shipper_app_new",
+            "certificate_hash": "7889e5c2a8b2de1cde39a5d41a755297782f1733"
+          }
+        },
+        {
+          "client_id": "633190669198-sprlakt1rcq52fbp4hbiisrqi02ubcer.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyClB7XRL6kiABJPKYSd9KYvpHzVIQ6bQhM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "633190669198-sprlakt1rcq52fbp4hbiisrqi02ubcer.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
