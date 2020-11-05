@@ -7,12 +7,14 @@ import 'package:shipper_app_new/model/Orders.dart';
 import 'package:shipper_app_new/model/User.dart';
 import 'package:sweetalert/sweetalert.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 class DetailScreen extends StatelessWidget {
   // Declare a field that holds the Todo.
   final Orders orderObject;
   final List<OrderDetail> detailObject;
   final User userData;
+  final oCcy = new NumberFormat("#,##0", "en_US");
   // In the constructor, require a Todo.
   DetailScreen(
       {Key key, @required this.orderObject, this.detailObject, this.userData})
@@ -86,14 +88,15 @@ class DetailScreen extends StatelessWidget {
 
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => RouteSupermarket(
-                orderDetails: orderObject.order.detail,
-                data: data,
-                userData: userData)),
-      );
+
+      Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+              builder: (context) => RouteSupermarket(
+                  des: orderObject.destination,
+                  orderDetails: orderObject.order.detail,
+                  data: data,
+                  userData: userData)),
+          (Route<dynamic> route) => false);
     } else {
       // If the server did not return a 200 OK response,
       // SweetAlert.show(context,
@@ -166,11 +169,8 @@ class DetailScreen extends StatelessWidget {
                 child: ListTile(
                   leading: Icon(Icons.money),
                   title: Text('Tổng tiền Sản Phẩm '),
-                  trailing: Text(orderObject.order.totalCost
-                          .round()
-                          .toString()
-                          .replaceAll(regex, "") +
-                      ' vnd'),
+                  trailing:
+                      Text(oCcy.format(orderObject.order.totalCost) + ' vnd'),
                 ),
               ),
               Card(
@@ -178,31 +178,24 @@ class DetailScreen extends StatelessWidget {
                   leading: Icon(Icons.local_shipping),
                   title: Text('Tiền vận chuyển '),
                   trailing: Text(
-                      orderObject.order.costDelivery.round().toString() +
-                          ' vnd'),
+                      oCcy.format(orderObject.order.costDelivery) + ' vnd'),
                 ),
               ),
               Card(
                 child: ListTile(
                   leading: Icon(Icons.book_outlined),
                   title: Text('Tiền công mua đồ '),
-                  trailing: Text(orderObject.order.costShopping
-                          .round()
-                          .toString()
-                          .replaceAll(regex, "") +
-                      ' vnd'),
+                  trailing: Text(
+                      oCcy.format(orderObject.order.costShopping) + ' vnd'),
                 ),
               ),
               Card(
                 child: ListTile(
                   leading: Icon(Icons.receipt),
                   title: Text('Tiền được nhận '),
-                  trailing: Text(((orderObject.order.costShopping +
-                                  orderObject.order.costDelivery) /
-                              2)
-                          .round()
-                          .toString()
-                          .replaceAll(regex, "") +
+                  trailing: Text(oCcy.format(((orderObject.order.costShopping +
+                              orderObject.order.costDelivery) /
+                          2)) +
                       ' vnd'),
                 ),
               ),

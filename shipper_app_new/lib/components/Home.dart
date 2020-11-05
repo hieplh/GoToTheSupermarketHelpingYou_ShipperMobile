@@ -6,12 +6,12 @@ import 'package:shipper_app_new/model/History.dart';
 import 'package:shipper_app_new/model/Orders.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart';
 import 'dart:async';
+import 'package:location/location.dart';
 import 'package:shipper_app_new/constant/constant.dart';
 import 'package:shipper_app_new/model/User.dart';
 import 'OrderDetail.dart';
-import 'package:circular_countdown_timer/circular_countdown_timer.dart';
+import 'package:intl/intl.dart';
 
 class MyHomeWidget extends StatefulWidget {
   final User userData;
@@ -26,9 +26,10 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   String title = "Title";
   String helper = "helper";
   int _counter = 0;
+  final oCcy = new NumberFormat("#,##0", "en_US");
   StreamController<int> _events;
   String token_app;
-
+  Location location;
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   Future<List<Orders>> futureOrders;
   int _selectedIndex = 0;
@@ -36,40 +37,11 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   var listHistory = new List<History>();
   Completer<GoogleMapController> _controller = Completer();
   Set<Marker> markers = Set();
-  Position _currentPosition;
-  LatLng latlong = null;
+  // Position _currentPosition;
+  LocationData currentLocation;
   var listOrderDetails = new List();
   _getCurrentLocation() async {
-    final GoogleMapController controller = await _controller.future;
-    final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
-
-    geolocator
-        .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
-        .then((Position position) {
-      setState(() {
-        _currentPosition = position;
-      });
-
-      latlong = new LatLng(position.latitude, position.longitude);
-      markers.add(Marker(
-        markerId: MarkerId("BIGCTHAODIEN"),
-        draggable: true,
-        position:
-            new LatLng(_currentPosition.latitude, _currentPosition.longitude),
-        infoWindow: InfoWindow(title: 'Vị trí hiện tại'),
-        icon: BitmapDescriptor.defaultMarker,
-      ));
-      // markers.add(Marker(
-      //   markerId: MarkerId("VINTHAODIEN"),
-      //   draggable: true,
-      //   position: new LatLng(10.978089, 106.685200),
-      //   infoWindow: InfoWindow(title: 'Vinmart Thảo Điền'),
-      //   icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-      // ));
-      controller.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
-          target: LatLng(_currentPosition.latitude, _currentPosition.longitude),
-          zoom: 16.0)));
-    });
+    currentLocation = await location.getLocation();
   }
 
   Future<String> _calculation = Future<String>.delayed(
@@ -110,6 +82,47 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
     });
   }
 
+  void showMarker() {
+    // get a LatLng for the source location
+    // from the LocationData currentLocation object
+    var pinPosition =
+        LatLng(currentLocation.latitude, currentLocation.longitude);
+    // get a LatLng out of the LocationData object
+
+    markers.add(Marker(
+        markerId: MarkerId('currentLocation'),
+        position: pinPosition,
+        icon: BitmapDescriptor.defaultMarker));
+    // destination pin
+  }
+
+  void updateMarkerOnMap() async {
+    // create a new CameraPosition instance
+    // every time the location changes, so the camera
+    // follows the pin as it moves with an animation
+    CameraPosition cPosition = CameraPosition(
+      zoom: 16,
+      target: LatLng(currentLocation.latitude, currentLocation.longitude),
+    );
+    final GoogleMapController controller = await _controller.future;
+    controller.animateCamera(CameraUpdate.newCameraPosition(cPosition));
+    // do this inside the setState() so Flutter gets notified
+    // that a widget update is due
+    setState(() {
+      // updated position
+      var pinPosition =
+          LatLng(currentLocation.latitude, currentLocation.longitude);
+
+      // the trick is to remove the marker (by id)
+      // and add it again at the updated location
+      markers.removeWhere((m) => m.markerId.value == 'currentLocation');
+      markers.add(Marker(
+          markerId: MarkerId('currentLocation'),
+          position: pinPosition, // updated position
+          icon: BitmapDescriptor.defaultMarker));
+    });
+  }
+
   Timer _timer;
   void _startTimer() {
     _counter = 10;
@@ -129,11 +142,16 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   void initState() {
     super.initState();
 
+    location = new Location();
     _getCurrentLocation();
+    location.onLocationChanged().listen((LocationData cLoc) async {
+      currentLocation = cLoc;
+
+      updateMarkerOnMap();
+    });
 
     _firebaseMessaging.getToken().then((token) {
       token_app = token.substring(2);
-      print(token_app);
     });
 
     _firebaseMessaging.configure(
@@ -192,7 +210,9 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                   ),
                   TextButton(
                     child: Text('Từ chối '),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pop(dialogContext);
+                    },
                   ),
                 ],
               );
@@ -212,6 +232,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
 
     Timer.periodic(new Duration(seconds: 5), (timer) {
       _updatePos();
+      print(token_app);
     });
   }
 
@@ -220,10 +241,14 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
         .get(API_ENDPOINT +
             "shipper/" +
             '${widget.userData.id}' +
-            "/lat/10.848833/lng/106.752591/" +
+            "/lat/" +
+            '${currentLocation.latitude}' +
+            "/lng/" +
+            '${currentLocation.longitude}' +
+            '/' +
             '${token_app}')
         .then((response) {
-      print(response.body);
+      print("OK");
     });
   }
 
@@ -323,16 +348,23 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   }
 
   Widget _buildMap() {
-    _getCurrentLocation();
+    CameraPosition initialCameraPosition =
+        CameraPosition(zoom: 16, target: LatLng(10.8414, 106.7462));
+    if (currentLocation != null) {
+      initialCameraPosition = CameraPosition(
+          target: LatLng(currentLocation.latitude, currentLocation.longitude),
+          zoom: 16);
+    }
+
     return Container(
         child: Stack(
       children: [
         GoogleMap(
-          initialCameraPosition:
-              CameraPosition(target: LatLng(10.801273, 106.733498), zoom: 10.0),
+          initialCameraPosition: initialCameraPosition,
           mapType: MapType.normal,
           onMapCreated: (GoogleMapController controller) {
             _controller.complete(controller);
+            showMarker();
           },
           markers: markers,
           // myLocationEnabled: true,
@@ -379,12 +411,9 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                     title: Text(utf8.decode(
                         latin1.encode(listOrders[index].order.market.name),
                         allowMalformed: true)),
-                    trailing: Text(listOrders[index]
-                            .order
-                            .totalCost
-                            .toString()
-                            .replaceAll(regex, "") +
-                        " vnd"),
+                    trailing: Text(
+                        oCcy.format(listOrders[index].order.totalCost) +
+                            " vnd"),
                     subtitle: Text(utf8.decode(
                         latin1.encode((listOrders[index].value / 1000.round())
                                 .toString() +
@@ -404,13 +433,13 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
               },
             )
           : Center(child: const Text('Không có đơn hàng nào')),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () {
-      //     _getOrders();
-      //   },
-      //   child: Icon(Icons.navigation),
-      //   backgroundColor: Colors.green,
-      // ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _getOrders();
+        },
+        child: Icon(Icons.navigation),
+        backgroundColor: Colors.green,
+      ),
     );
   }
 

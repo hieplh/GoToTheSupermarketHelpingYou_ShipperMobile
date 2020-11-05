@@ -6,12 +6,16 @@ import 'package:shipper_app_new/constant/constant.dart';
 import 'package:shipper_app_new/model/Orders.dart';
 import 'package:http/http.dart' as http;
 import 'package:shipper_app_new/model/User.dart';
+import 'package:intl/intl.dart';
 
 class Steps extends StatefulWidget {
   final List<OrderDetail> item;
   final User userData;
+  final String des;
+
+  final oCcy = new NumberFormat("#,##0", "en_US");
   final Map<String, dynamic> data;
-  Steps({Key key, @required this.item, this.data, this.userData})
+  Steps({Key key, @required this.item, this.data, this.userData, this.des})
       : super(key: key);
 
   @override
@@ -19,9 +23,18 @@ class Steps extends StatefulWidget {
 }
 
 class _StepsState extends State<Steps> {
+  final oCcy = new NumberFormat("#,##0", "en_US");
+  double totalCost = 0;
   @override
   void initState() {
     super.initState();
+    _getTotalCost();
+  }
+
+  _getTotalCost() {
+    for (OrderDetail detail in widget.item) {
+      totalCost += detail.priceOriginal;
+    }
   }
 
   int current_step = 0;
@@ -62,7 +75,7 @@ class _StepsState extends State<Steps> {
           isActive: true),
       Step(
           title: Text("Thanh Toán"),
-          content: Text("Tổng tiền : " + " 300000 vnd"),
+          content: Text("Tổng tiền : " + oCcy.format(totalCost) + " vnd"),
           state: StepState.indexed,
           isActive: true),
       // Step(
@@ -150,8 +163,8 @@ class _StepsState extends State<Steps> {
       Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) =>
-                RouteCustomer(data: widget.data, userData: widget.userData)),
+            builder: (context) => RouteCustomer(
+                data: widget.data, userData: widget.userData, des: widget.des)),
       );
     } else {
       // If the server did not return a 200 OK response,
@@ -163,6 +176,7 @@ class _StepsState extends State<Steps> {
   }
 
   Widget _buildOrderReceive() {
+    // final patternFormat = new NumberFormat("#,##0", "en_US");
     return ListView.builder(
       physics: NeverScrollableScrollPhysics(),
       shrinkWrap: true,
@@ -176,10 +190,8 @@ class _StepsState extends State<Steps> {
               latin1.encode(widget.item[index].weight.toString() + " kg"),
               allowMalformed: true)),
           subtitle: Text(utf8.decode(
-              latin1.encode(widget.item[index].priceOriginal
-                      .toString()
-                      .replaceAll(regex, "") +
-                  " vnd"),
+              latin1.encode(
+                  oCcy.format(widget.item[index].priceOriginal) + " vnd"),
               allowMalformed: true)),
         );
       },
