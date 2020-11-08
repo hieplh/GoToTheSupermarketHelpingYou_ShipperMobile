@@ -7,7 +7,7 @@ class Orders {
 
   factory Orders.fromJson(Map<String, dynamic> json) {
     return Orders(
-        destination: json['distance'],
+        destination: json['destination'],
         value: json['value'],
         order: Order.fromJson(json['order']));
   }

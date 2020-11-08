@@ -18,11 +18,9 @@ const LatLng SOURCE_LOCATION = LatLng(10.8414, 106.7462);
 const LatLng DEST_LOCATION = LatLng(10.822787, 106.770953);
 
 class RouteCustomer extends StatefulWidget {
-  final Map<String, dynamic> data;
+  final List<Map<String, dynamic>> data;
   final User userData;
-  final String des;
-  RouteCustomer({Key key, this.data, this.userData, this.des})
-      : super(key: key);
+  RouteCustomer({Key key, this.data, this.userData}) : super(key: key);
   @override
   RouteCustomerState createState() => RouteCustomerState();
 }
@@ -89,7 +87,7 @@ class RouteCustomerState extends State<RouteCustomer> {
         "Accept": "application/json",
       },
       encoding: Encoding.getByName("utf-8"),
-      body: '[' + jsonEncode(widget.data) + ']',
+      body: jsonEncode(widget.data),
     );
 
     if (response.statusCode == 200) {
@@ -133,7 +131,7 @@ class RouteCustomerState extends State<RouteCustomer> {
 
   void setInitialLocation() async {
     // print("Dia chi giao hang " + widget.des);
-    final query = utf8.decode(latin1.encode(widget.data['addressDelivery']),
+    final query = utf8.decode(latin1.encode(widget.data[0]['addressDelivery']),
         allowMalformed: true);
     var addresses = await Geocoder.local.findAddressesFromQuery(query);
     var first = addresses.first;

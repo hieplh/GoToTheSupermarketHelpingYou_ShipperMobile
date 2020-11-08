@@ -39,6 +39,9 @@ dependencies:
   firebase_messaging: ^6.0.9
   circular_countdown_timer: ^0.0.7
   intl: "^0.16.1"
+  carousel_slider: ^2.3.1
+  flutter_swiper: ^1.1.6
+  grouped_list: ^3.5.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

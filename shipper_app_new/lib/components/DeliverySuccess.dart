@@ -4,7 +4,7 @@ import 'package:shipper_app_new/model/User.dart';
 
 class SuccessScreen extends StatelessWidget {
   final User userData;
-  final Map<String, dynamic> data;
+  final List<Map<String, dynamic>> data;
   const SuccessScreen({Key key, this.data, this.userData}) : super(key: key);
 
   @override

@@ -20,15 +20,14 @@ const LatLng SOURCE_LOCATION = LatLng(10.8414, 106.7462);
 class RouteSupermarket extends StatefulWidget {
   final List<OrderDetail> orderDetails;
   final User userData;
-  final String des;
-  final Map<String, dynamic> data;
-  RouteSupermarket(
-      {Key key,
-      @required this.orderDetails,
-      this.data,
-      this.userData,
-      this.des})
-      : super(key: key);
+
+  final List<Map<String, dynamic>> data;
+  RouteSupermarket({
+    Key key,
+    @required this.orderDetails,
+    this.data,
+    this.userData,
+  }) : super(key: key);
   @override
   RouteSupermarketState createState() => RouteSupermarketState();
 }
@@ -60,6 +59,7 @@ class RouteSupermarketState extends State<RouteSupermarket> {
     // create an instance of Location
     location = new Location();
     polylinePoints = PolylinePoints();
+    setSourceAndDestinationIcons();
 
     // subscribe to changes in the user's location
     // by "listening" to the location's onLocationChanged event
@@ -73,7 +73,7 @@ class RouteSupermarketState extends State<RouteSupermarket> {
       updatePinOnMap();
     });
     // set custom marker pins
-    setSourceAndDestinationIcons();
+
     // set the initial location
     setInitialLocation();
   }
@@ -85,8 +85,8 @@ class RouteSupermarketState extends State<RouteSupermarket> {
       sourceIcon = onValue;
     });
 
-    BitmapDescriptor.fromAssetImage(ImageConfiguration(devicePixelRatio: 2.0),
-            'assets/cart.png')
+    BitmapDescriptor.fromAssetImage(
+            ImageConfiguration(devicePixelRatio: 2.0), 'assets/cart.png')
         .then((onValue) {
       destinationIcon = onValue;
     });
@@ -101,7 +101,7 @@ class RouteSupermarketState extends State<RouteSupermarket> {
         "Accept": "application/json",
       },
       encoding: Encoding.getByName("utf-8"),
-      body: '[' + jsonEncode(widget.data) + ']',
+      body: jsonEncode(widget.data),
     );
 
     if (response.statusCode == 200) {
@@ -110,10 +110,10 @@ class RouteSupermarketState extends State<RouteSupermarket> {
         context,
         MaterialPageRoute(
             builder: (context) => Steps(
-                item: widget.orderDetails,
-                data: widget.data,
-                userData: widget.userData,
-                des: widget.des)),
+                  item: widget.orderDetails,
+                  data: widget.data,
+                  userData: widget.userData,
+                )),
       );
     } else {
       // If the server did not return a 200 OK response,
@@ -125,8 +125,8 @@ class RouteSupermarketState extends State<RouteSupermarket> {
   }
 
   void setInitialLocation() async {
-    final latDes = double.parse(widget.data['market']['lat']);
-    final longDes = double.parse(widget.data['market']['lng']);
+    final latDes = double.parse(widget.data[0]['market']['lat']);
+    final longDes = double.parse(widget.data[0]['market']['lng']);
 
     // print("phuong " + latDes.toString());
 
@@ -224,7 +224,6 @@ class RouteSupermarketState extends State<RouteSupermarket> {
     _markers.add(Marker(
         markerId: MarkerId('destPin'),
         position: destPosition,
-
         icon: destinationIcon));
     // set the route lines on the map from source to destination
     // for more info follow this tutorial

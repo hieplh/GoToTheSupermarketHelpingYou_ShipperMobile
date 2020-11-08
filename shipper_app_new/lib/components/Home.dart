@@ -12,6 +12,7 @@ import 'package:shipper_app_new/constant/constant.dart';
 import 'package:shipper_app_new/model/User.dart';
 import 'OrderDetail.dart';
 import 'package:intl/intl.dart';
+import 'package:grouped_list/grouped_list.dart';
 
 class MyHomeWidget extends StatefulWidget {
   final User userData;
@@ -403,42 +404,83 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
           centerTitle: true,
           backgroundColor: Colors.green),
       body: listOrders.length > 0
-          ? ListView.builder(
-              itemCount: listOrders.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                    leading: Icon(Icons.add_shopping_cart_rounded),
-                    title: Text(utf8.decode(
-                        latin1.encode(listOrders[index].order.market.name),
-                        allowMalformed: true)),
-                    trailing: Text(
-                        oCcy.format(listOrders[index].order.totalCost) +
-                            " vnd"),
-                    subtitle: Text(utf8.decode(
-                        latin1.encode((listOrders[index].value / 1000.round())
-                                .toString() +
-                            " km"),
-                        allowMalformed: true)),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DetailScreen(
-                              orderObject: listOrders[index],
-                              userData: widget.userData,
-                              detailObject: listOrders[index].order.detail),
-                        ),
-                      );
-                    });
+          ? GroupedListView<dynamic, String>(
+              elements: listOrders,
+              groupBy: (element) => utf8.decode(
+                  latin1.encode(element.order.market.name),
+                  allowMalformed: true),
+              groupComparator: (value1, value2) => value2.compareTo(value1),
+              order: GroupedListOrder.DESC,
+              useStickyGroupSeparators: true,
+              groupSeparatorBuilder: (String value) => Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  value,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
+              itemBuilder: (c, element) {
+                return Card(
+                  elevation: 8.0,
+                  margin:
+                      new EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+                  child: Container(
+                    child: ListTile(
+                      contentPadding: EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
+                      leading: Icon(Icons.add_shopping_cart_rounded),
+                      title: Text(element.order.id),
+                      subtitle: Text(
+                          (element.value / 1000.round()).toString() + " km"),
+                      trailing:
+                          Text(oCcy.format(element.order.totalCost) + " vnd"),
+                    ),
+                  ),
+                );
               },
             )
           : Center(child: const Text('Không có đơn hàng nào')),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _getOrders();
-        },
-        child: Icon(Icons.navigation),
-        backgroundColor: Colors.green,
+      floatingActionButton: Stack(
+        children: <Widget>[
+          Positioned(
+            bottom: 80.0,
+            right: 10.0,
+            child: FloatingActionButton(
+              heroTag: 'save',
+              onPressed: () {
+                // What you want to do
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DetailScreen(
+                      list: listOrders,
+                      userData: widget.userData,
+                    ),
+                  ),
+                );
+              },
+              child: Icon(Icons.save),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(5.0),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 10.0,
+            right: 10.0,
+            child: FloatingActionButton(
+              heroTag: 'close',
+              onPressed: () {
+                _getOrders();
+              },
+              child: Icon(Icons.get_app_rounded),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(5.0),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

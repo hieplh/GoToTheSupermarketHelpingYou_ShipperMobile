@@ -14,7 +14,7 @@ class Steps extends StatefulWidget {
   final String des;
 
   final oCcy = new NumberFormat("#,##0", "en_US");
-  final Map<String, dynamic> data;
+  final List<Map<String, dynamic>> data;
   Steps({Key key, @required this.item, this.data, this.userData, this.des})
       : super(key: key);
 
@@ -156,15 +156,15 @@ class _StepsState extends State<Steps> {
         "Accept": "application/json",
       },
       encoding: Encoding.getByName("utf-8"),
-      body: '[' + jsonEncode(widget.data) + ']',
+      body: jsonEncode(widget.data),
     );
 
     if (response.statusCode == 200) {
       Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => RouteCustomer(
-                data: widget.data, userData: widget.userData, des: widget.des)),
+            builder: (context) =>
+                RouteCustomer(data: widget.data, userData: widget.userData)),
       );
     } else {
       // If the server did not return a 200 OK response,
