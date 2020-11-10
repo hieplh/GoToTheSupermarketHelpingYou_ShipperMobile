@@ -43,8 +43,6 @@ class DetailScreenState extends State<DetailScreen> {
             },
         ],
         "id": "${orders.order.id}",
-        "lat": "10.780539",
-        "lng": "106.651088",
         "market": {
           "addr1": utf8.decode(latin1.encode("${orders.order.market.addr1}"),
               allowMalformed: true),
@@ -233,9 +231,7 @@ class DetailScreenState extends State<DetailScreen> {
                         title: Text('Đến'),
                         subtitle: Text(utf8.decode(
                             latin1.encode(
-                                widget.list[index].order.market.addr2 +
-                                    " " +
-                                    widget.list[index].order.market.addr3),
+                                widget.list[index].order.addressDelivery),
                             allowMalformed: true)),
                       ),
                     ),

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -60,6 +61,8 @@ class RouteCustomerState extends State<RouteCustomer> {
     // create an instance of Location
     location = new Location();
     polylinePoints = PolylinePoints();
+    setSourceAndDestinationIcons();
+    setInitialLocation();
 
     // subscribe to changes in the user's location
     // by "listening" to the location's onLocationChanged event
@@ -73,9 +76,17 @@ class RouteCustomerState extends State<RouteCustomer> {
       updatePinOnMap();
     });
     // set custom marker pins
-    setSourceAndDestinationIcons();
+
     // set the initial location
-    setInitialLocation();
+  }
+
+  double calculateDistance(lat1, lon1, lat2, lon2) {
+    var p = 0.017453292519943295;
+    var c = cos;
+    var a = 0.5 -
+        c((lat2 - lat1) * p) / 2 +
+        c(lat1 * p) * c(lat2 * p) * (1 - c((lon2 - lon1) * p)) / 2;
+    return 12742 * asin(sqrt(a));
   }
 
   _updateOrder() async {
@@ -116,37 +127,89 @@ class RouteCustomerState extends State<RouteCustomer> {
   }
 
   void setSourceAndDestinationIcons() async {
-    BitmapDescriptor.fromAssetImage(
-            ImageConfiguration(devicePixelRatio: 2.0), 'assets/driving_pin.png')
-        .then((onValue) {
-      sourceIcon = onValue;
-    });
-
     BitmapDescriptor.fromAssetImage(ImageConfiguration(devicePixelRatio: 2.0),
             'assets/destination_map_marker.png')
         .then((onValue) {
       destinationIcon = onValue;
     });
+    BitmapDescriptor.fromAssetImage(
+            ImageConfiguration(devicePixelRatio: 2.0), 'assets/driving_pin.png')
+        .then((onValue) {
+      sourceIcon = onValue;
+    });
   }
 
   void setInitialLocation() async {
-    // print("Dia chi giao hang " + widget.des);
-    final query = utf8.decode(latin1.encode(widget.data[0]['addressDelivery']),
-        allowMalformed: true);
-    var addresses = await Geocoder.local.findAddressesFromQuery(query);
-    var first = addresses.first;
-    print("Dia chi giao hang : " +
-        first.coordinates.latitude.toString() +
-        first.coordinates.longitude.toString());
-    // set the initial location by pulling the user's
-    // current location from the location's getLocation()
     currentLocation = await location.getLocation();
+    var pinPosition =
+        LatLng(currentLocation.latitude, currentLocation.longitude);
+    // get a LatLng out of the LocationData object
+    // var destPosition =
+    //     LatLng(destinationLocation.latitude, destinationLocation.longitude);
 
-    // hard-coded destination for this example
+    // add the initial source location pin
+    _markers.add(Marker(
+        markerId: MarkerId('sourcePin'),
+        position: pinPosition,
+        icon: sourceIcon));
+
+    for (var i = 0; i < widget.data.length; i++) {
+      var addressFromMap = widget.data[i].values.toList();
+      final query =
+          utf8.decode(latin1.encode(addressFromMap[1]), allowMalformed: true);
+      var addresses = await Geocoder.local.findAddressesFromQuery(query);
+      var first = addresses.first;
+      var destPosition =
+          LatLng(first.coordinates.latitude, first.coordinates.longitude);
+      _markers.add(Marker(
+          markerId: MarkerId('destPin$i'),
+          position: destPosition,
+          icon: BitmapDescriptor.defaultMarker));
+    }
+
+    // print("Dia chi giao hang " + widget.des);
+
+    // print("Dia chi giao hang : " +
+    //     first.coordinates.latitude.toString() +
+    //     first.coordinates.longitude.toString());
+    // // set the initial location by pulling the user's
+    // // current location from the location's getLocation()
+    // currentLocation = await location.getLocation();
+
+    // // hard-coded destination for this example
+    // destinationLocation = LocationData.fromMap({
+    //   "latitude": first.coordinates.latitude,
+    //   "longitude": first.coordinates.longitude
+    // });
+
+    List<Marker> listmarkers = _markers
+        .where((marker) => marker.markerId.value != 'sourcePin')
+        .toList();
+
+    print("Set marker la ${listmarkers.length}");
     destinationLocation = LocationData.fromMap({
-      "latitude": first.coordinates.latitude,
-      "longitude": first.coordinates.longitude
+      "latitude": listmarkers[0].position.latitude,
+      "longitude": listmarkers[0].position.longitude
     });
+    double minDistance = calculateDistance(
+        currentLocation.latitude,
+        currentLocation.longitude,
+        listmarkers[0].position.latitude,
+        listmarkers[0].position.longitude);
+
+    for (var i = 0; i < listmarkers.length; i++) {
+      if (calculateDistance(
+              currentLocation.latitude,
+              currentLocation.longitude,
+              listmarkers[i].position.latitude,
+              listmarkers[i].position.longitude) <
+          minDistance) {
+        destinationLocation = LocationData.fromMap({
+          "latitude": listmarkers[i].position.latitude,
+          "longitude": listmarkers[i].position.longitude
+        });
+      }
+    }
   }
 
   @override
@@ -199,22 +262,7 @@ class RouteCustomerState extends State<RouteCustomer> {
   void showPinsOnMap() {
     // get a LatLng for the source location
     // from the LocationData currentLocation object
-    var pinPosition =
-        LatLng(currentLocation.latitude, currentLocation.longitude);
-    // get a LatLng out of the LocationData object
-    var destPosition =
-        LatLng(destinationLocation.latitude, destinationLocation.longitude);
 
-    // add the initial source location pin
-    _markers.add(Marker(
-        markerId: MarkerId('sourcePin'),
-        position: pinPosition,
-        icon: sourceIcon));
-    // destination pin
-    _markers.add(Marker(
-        markerId: MarkerId('destPin'),
-        position: destPosition,
-        icon: destinationIcon));
     // set the route lines on the map from source to destination
     // for more info follow this tutorial
     setPolylines();
@@ -244,6 +292,57 @@ class RouteCustomerState extends State<RouteCustomer> {
   }
 
   void updatePinOnMap() async {
+    if (calculateDistance(currentLocation.latitude, currentLocation.longitude,
+            destinationLocation.latitude, destinationLocation.longitude) <
+        0.05) {
+      print(calculateDistance(
+          currentLocation.latitude,
+          currentLocation.longitude,
+          destinationLocation.latitude,
+          destinationLocation.longitude));
+      _markers.removeWhere((m) =>
+          m.position.latitude == destinationLocation.latitude &&
+          m.position.longitude == destinationLocation.longitude);
+      polylineCoordinates.removeWhere(
+          (element) => element.latitude == destinationLocation.latitude);
+
+      List<Marker> listmarkers = _markers
+          .where((marker) => marker.markerId.value != 'sourcePin')
+          .toList();
+
+      if (listmarkers.length == 1) {
+        destinationLocation = LocationData.fromMap({
+          "latitude": listmarkers[0].position.latitude,
+          "longitude": listmarkers[0].position.longitude
+        });
+      } else {
+        destinationLocation = LocationData.fromMap({
+          "latitude": listmarkers[0].position.latitude,
+          "longitude": listmarkers[0].position.longitude
+        });
+        double minDistance = calculateDistance(
+            currentLocation.latitude,
+            currentLocation.longitude,
+            listmarkers[0].position.latitude,
+            listmarkers[0].position.longitude);
+
+        for (var i = 0; i < listmarkers.length; i++) {
+          if (calculateDistance(
+                  currentLocation.latitude,
+                  currentLocation.longitude,
+                  listmarkers[i].position.latitude,
+                  listmarkers[i].position.longitude) <
+              minDistance) {
+            destinationLocation = LocationData.fromMap({
+              "latitude": listmarkers[i].position.latitude,
+              "longitude": listmarkers[i].position.longitude
+            });
+          }
+        }
+      }
+
+      // setPolylines();
+    }
     setPolylines();
 
     // create a new CameraPosition instance

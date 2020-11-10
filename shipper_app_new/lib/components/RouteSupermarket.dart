@@ -59,6 +59,7 @@ class RouteSupermarketState extends State<RouteSupermarket> {
     // create an instance of Location
     location = new Location();
     polylinePoints = PolylinePoints();
+    setInitialLocation();
     setSourceAndDestinationIcons();
 
     // subscribe to changes in the user's location
@@ -75,20 +76,18 @@ class RouteSupermarketState extends State<RouteSupermarket> {
     // set custom marker pins
 
     // set the initial location
-    setInitialLocation();
   }
 
   void setSourceAndDestinationIcons() async {
     BitmapDescriptor.fromAssetImage(
-            ImageConfiguration(devicePixelRatio: 2.0), 'assets/driving_pin.png')
-        .then((onValue) {
-      sourceIcon = onValue;
-    });
-
-    BitmapDescriptor.fromAssetImage(
             ImageConfiguration(devicePixelRatio: 2.0), 'assets/cart.png')
         .then((onValue) {
       destinationIcon = onValue;
+    });
+    BitmapDescriptor.fromAssetImage(
+            ImageConfiguration(devicePixelRatio: 2.0), 'assets/driving_pin.png')
+        .then((onValue) {
+      sourceIcon = onValue;
     });
   }
 
@@ -137,58 +136,6 @@ class RouteSupermarketState extends State<RouteSupermarket> {
     // hard-coded destination for this example
     destinationLocation =
         LocationData.fromMap({"latitude": latDes, "longitude": longDes});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    CameraPosition initialCameraPosition =
-        CameraPosition(zoom: CAMERA_ZOOM, target: SOURCE_LOCATION);
-    if (currentLocation != null) {
-      initialCameraPosition = CameraPosition(
-          target: LatLng(currentLocation.latitude, currentLocation.longitude),
-          zoom: CAMERA_ZOOM);
-    }
-    return Scaffold(
-      body: Stack(
-        children: <Widget>[
-          GoogleMap(
-              myLocationEnabled: true,
-              compassEnabled: true,
-              tiltGesturesEnabled: false,
-              markers: _markers,
-              polylines: _polylines,
-              mapType: MapType.normal,
-              initialCameraPosition: initialCameraPosition,
-              onTap: (LatLng loc) {
-                pinPillPosition = -100;
-              },
-              onMapCreated: (GoogleMapController controller) {
-                _controller.complete(controller);
-                // my map has completed being created;
-                // i'm ready to show the pins on the map
-                showPinsOnMap();
-              }),
-
-          // MapPinPillComponent(
-          //     pinPillPosition: pinPillPosition,
-          //     currentlySelectedPin: currentlySelectedPin)
-        ],
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // print(widget.orderDetails.length.toString());
-          _updateOrder();
-        },
-        label: Text('Đi đến siêu thị hoàn tất'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-
-  void showPinsOnMap() {
-    // get a LatLng for the source location
-    // from the LocationData currentLocation object
     var pinPosition =
         LatLng(currentLocation.latitude, currentLocation.longitude);
     // get a LatLng out of the LocationData object
@@ -220,11 +167,65 @@ class RouteSupermarketState extends State<RouteSupermarket> {
         //   });
         // },
         icon: sourceIcon));
-    // destination pin
+
     _markers.add(Marker(
         markerId: MarkerId('destPin'),
         position: destPosition,
         icon: destinationIcon));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    CameraPosition initialCameraPosition =
+        CameraPosition(zoom: CAMERA_ZOOM, target: SOURCE_LOCATION);
+    if (currentLocation != null) {
+      initialCameraPosition = CameraPosition(
+          target: LatLng(currentLocation.latitude, currentLocation.longitude),
+          zoom: CAMERA_ZOOM);
+    }
+    return Scaffold(
+      body: Stack(
+        children: <Widget>[
+          GoogleMap(
+            myLocationEnabled: true,
+            compassEnabled: true,
+            tiltGesturesEnabled: false,
+            polylines: _polylines,
+            mapType: MapType.normal,
+            initialCameraPosition: initialCameraPosition,
+            onTap: (LatLng loc) {
+              pinPillPosition = -100;
+            },
+            onMapCreated: (GoogleMapController controller) {
+              _controller.complete(controller);
+              // my map has completed being created;
+              // i'm ready to show the pins on the map
+              showPinsOnMap();
+            },
+            markers: _markers,
+          ),
+
+          // MapPinPillComponent(
+          //     pinPillPosition: pinPillPosition,
+          //     currentlySelectedPin: currentlySelectedPin)
+        ],
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          // print(widget.orderDetails.length.toString());
+          _updateOrder();
+        },
+        label: Text('Đi đến siêu thị hoàn tất'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void showPinsOnMap() {
+    // get a LatLng for the source location
+    // from the LocationData currentLocation object
+
     // set the route lines on the map from source to destination
     // for more info follow this tutorial
     setPolylines();
