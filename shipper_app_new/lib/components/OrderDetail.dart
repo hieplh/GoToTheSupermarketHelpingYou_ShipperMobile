@@ -130,24 +130,21 @@ class DetailScreenState extends State<DetailScreen> {
                       physics: NeverScrollableScrollPhysics(),
                       shrinkWrap: true,
                       itemCount: widget.list[index].order.detail.length,
-                      itemBuilder: (context, index) {
+                      itemBuilder: (context, indexList) {
                         return ListTile(
-                          leading: Image.network(LAZY_IMAGE),
+                          leading: Image.network(
+                              widget.list[index].order.detail[indexList].image),
                           title: Text(utf8.decode(
                               latin1.encode(widget
-                                  .list[index].order.detail[index].foodId),
+                                  .list[index].order.detail[indexList].foodId),
                               allowMalformed: true)),
                           trailing: Text(widget
-                                  .list[index].order.detail[index].weight
+                                  .list[index].order.detail[indexList].weight
                                   .toString() +
                               " kg"),
-                          subtitle: Text(utf8.decode(
-                              latin1.encode(widget.list[index].order
-                                      .detail[index].priceOriginal
-                                      .toString()
-                                      .replaceAll(regex, "") +
-                                  ' vnd'),
-                              allowMalformed: true)),
+                          subtitle: Text(oCcy.format(widget.list[index].order
+                                  .detail[indexList].priceOriginal) +
+                              " vnd"),
                         );
                       },
                     ),

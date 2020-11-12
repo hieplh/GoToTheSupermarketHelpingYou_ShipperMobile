@@ -166,6 +166,9 @@ class RouteCustomerState extends State<RouteCustomer> {
           position: destPosition,
           icon: BitmapDescriptor.defaultMarker));
     }
+    print(
+        "Vi tri hien tai '$currentLocation.latitude'+'$currentLocation.longitude'+'$destinationLocation.latitude" +
+            "$destinationLocation.longitude'");
 
     // print("Dia chi giao hang " + widget.des);
 

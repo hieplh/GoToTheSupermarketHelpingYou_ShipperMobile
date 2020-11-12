@@ -249,7 +249,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
             '/' +
             '${token_app}')
         .then((response) {
-      print("OK");
+      print('OK');
     });
   }
 
@@ -446,8 +446,10 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
           Positioned(
             bottom: 80.0,
             right: 10.0,
-            child: FloatingActionButton(
+            child: FloatingActionButton.extended(
               heroTag: 'save',
+              label: Text('Giao Hàng'),
+              backgroundColor: Colors.green,
               onPressed: () {
                 // What you want to do
                 Navigator.push(
@@ -460,10 +462,10 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                   ),
                 );
               },
-              child: Icon(Icons.save),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(5.0),
-              ),
+              // child: Icon(Icons.save),
+              // shape: RoundedRectangleBorder(
+              //   borderRadius: BorderRadius.circular(5.0),
+              // ),
             ),
           ),
           Positioned(
@@ -471,6 +473,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
             right: 10.0,
             child: FloatingActionButton(
               heroTag: 'close',
+              backgroundColor: Colors.green,
               onPressed: () {
                 _getOrders();
               },
