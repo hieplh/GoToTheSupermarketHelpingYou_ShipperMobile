@@ -66,6 +66,7 @@ flutter:
     - assets/friend1.jpg
     - assets/friend2.jpg
     - assets/cart.png
+    - assets/veget.png
     
 
   # An image asset can refer to one or more resolution-specific "variants", see

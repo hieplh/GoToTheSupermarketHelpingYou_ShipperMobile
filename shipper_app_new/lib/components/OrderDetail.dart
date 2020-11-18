@@ -246,19 +246,21 @@ class DetailScreenState extends State<DetailScreen> {
           },
           itemCount: widget.list.length,
           pagination: new SwiperPagination(
+              alignment: Alignment.bottomLeft,
               builder: new DotSwiperPaginationBuilder(
-            color: Colors.grey,
-            activeColor: Colors.green,
-            size: 20,
-            activeSize: 20,
-          )),
+                color: Colors.grey,
+                activeColor: Colors.green,
+                size: 20,
+                activeSize: 20,
+              )),
+          viewportFraction: widget.list.length == 1 ? 0.9 : 0.8,
           control: new SwiperControl(color: Colors.green),
           scale: 0.9),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           updateOrders();
         },
-        label: Text('Nhận Đơn Hàng'),
+        label: Text('Tiến hành giao hàng'),
         backgroundColor: Colors.green,
       ),
     );

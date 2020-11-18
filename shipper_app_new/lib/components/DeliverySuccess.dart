@@ -21,7 +21,7 @@ class SuccessScreen extends StatelessWidget {
           Text(
             "GIAO HÀNG THÀNH CÔNG",
             style: TextStyle(
-              fontSize: 30,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),

@@ -1,4 +1,4 @@
-const String API_ENDPOINT = "http://192.168.1.5:1234/smhu/api/";
+const String API_ENDPOINT = "http://192.168.1.8:1234/smhu/api/";
 //http://192.168.1.4:1234/smhu/api/
 //http://smhu.ddns.net/smhu/api/
 // 192.168.1.200

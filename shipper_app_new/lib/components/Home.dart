@@ -12,6 +12,7 @@ import 'package:shipper_app_new/constant/constant.dart';
 import 'package:shipper_app_new/model/User.dart';
 import 'OrderDetail.dart';
 import 'package:intl/intl.dart';
+import 'package:sweetalert/sweetalert.dart';
 import 'package:grouped_list/grouped_list.dart';
 
 class MyHomeWidget extends StatefulWidget {
@@ -61,7 +62,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
     http
         .get(API_ENDPOINT + "shipper/" + '${widget.userData.id}')
         .then((response) {
-      print(response.body);
+      print("Response don hang " + response.body);
       setState(() {
         Iterable list = json.decode(response.body);
         listOrders = list.map((model) => Orders.fromJson(model)).toList();
@@ -168,9 +169,9 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
             context: context,
             builder: (BuildContext builderContext) {
               dialogContext = context;
-              _timer = Timer(Duration(seconds: 10), () {
-                Navigator.of(context).pop();
-              });
+              // _timer = Timer(Duration(seconds: 10), () {
+              //   Navigator.of(context).pop();
+              // });
 
               return AlertDialog(
                 title: Text("Thông báo"),
@@ -185,6 +186,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                             children: <Widget>[
                               Text("Có đơn hàng mới gần đây"),
                               Text("Bạn có muốn tiếp nhận ?"),
+                              Image.asset('assets/veget.png',height: 150,width: 150,),
                               new Expanded(
                                   child: new Align(
                                       alignment: Alignment.bottomCenter,
@@ -197,7 +199,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                                                   color: Colors.red,
                                                   fontSize: 30)),
                                         ],
-                                      )))
+                                      ))),
                             ],
                           ));
                     }),
@@ -233,7 +235,6 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
 
     Timer.periodic(new Duration(seconds: 5), (timer) {
       _updatePos();
-      print(token_app);
     });
   }
 
@@ -248,9 +249,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
             '${currentLocation.longitude}' +
             '/' +
             '${token_app}')
-        .then((response) {
-      print('OK');
-    });
+        .then((response) {});
   }
 
   static const TextStyle optionStyle =
@@ -286,64 +285,67 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: FutureBuilder<String>(
-          future: _calculation,
-          builder: (BuildContext context, AsyncSnapshot snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-            } else {
-              List<Widget> _widgetOptions = <Widget>[
-                _buildMap(),
-                _buildNotify(),
-                _buildOrderReceive(),
-                _buildHistoryList(),
-                _buildInfo(),
-              ];
-              return Center(
-                child: _widgetOptions.elementAt(_selectedIndex),
-              );
-            }
-          }),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.location_on,
+    return WillPopScope(
+      onWillPop: () => Future.value(false),
+      child: Scaffold(
+        body: FutureBuilder<String>(
+            future: _calculation,
+            builder: (BuildContext context, AsyncSnapshot snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(
+                  child: CircularProgressIndicator(),
+                );
+              } else {
+                List<Widget> _widgetOptions = <Widget>[
+                  _buildMap(),
+                  _buildNotify(),
+                  _buildOrderReceive(),
+                  // _buildHistoryList(),
+                  _buildInfo(),
+                ];
+                return Center(
+                  child: _widgetOptions.elementAt(_selectedIndex),
+                );
+              }
+            }),
+        bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.location_on,
+              ),
+              title: Text('Bản Đồ'),
             ),
-            title: Text('Bản Đồ'),
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.notifications,
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.notifications,
+              ),
+              title: Text('Thông Báo'),
             ),
-            title: Text('Thông Báo'),
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.location_searching,
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.location_searching,
+              ),
+              title: Text(''),
             ),
-            title: Text(''),
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.assignment,
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.assignment,
+              ),
+              title: Text('Lịch Sử'),
             ),
-            title: Text('Lịch Sử'),
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.settings,
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.settings,
+              ),
+              title: Text('Cài Đặt'),
             ),
-            title: Text('Cài Đặt'),
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: const Color.fromRGBO(0, 141, 177, 1),
-        onTap: _onItemTapped,
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: const Color.fromRGBO(0, 141, 177, 1),
+          onTap: _onItemTapped,
+        ),
       ),
     );
   }
@@ -384,13 +386,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(helper),
-            Text(
-              '$title',
-              style: Theme.of(context).textTheme.display1,
-            ),
-          ],
+          children: <Widget>[],
         ),
       ),
     );
@@ -448,19 +444,26 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
             right: 10.0,
             child: FloatingActionButton.extended(
               heroTag: 'save',
-              label: Text('Giao Hàng'),
+              label: Text('Xem chi tiết'),
               backgroundColor: Colors.green,
               onPressed: () {
-                // What you want to do
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DetailScreen(
-                      list: listOrders,
-                      userData: widget.userData,
+                if (listOrders.length > 0) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DetailScreen(
+                        list: listOrders,
+                        userData: widget.userData,
+                      ),
                     ),
-                  ),
-                );
+                  );
+                } else {
+                  SweetAlert.show(context,
+                      title: "Thông báo",
+                      subtitle: "Hiện tại chưa có đơn hàng ",
+                      style: SweetAlertStyle.error);
+                }
+                // What you want to do
               },
               // child: Icon(Icons.save),
               // shape: RoundedRectangleBorder(
@@ -527,6 +530,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   }
 
   Widget _buildInfo() {
+    final oCcy = new NumberFormat("#,##0", "en_US");
     return Scaffold(
         appBar: AppBar(
             automaticallyImplyLeading: false,
@@ -575,10 +579,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                   fontFamily: 'Montserrat',
                 ),
               ),
-              trailing: Icon(
-                Icons.keyboard_arrow_right,
-                color: const Color.fromRGBO(0, 175, 82, 1),
-              ),
+              trailing: Text("0918681111"),
               onTap: () {},
             ),
             ListTile(
@@ -592,10 +593,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                   fontFamily: 'Montserrat',
                 ),
               ),
-              trailing: Icon(
-                Icons.keyboard_arrow_right,
-                color: const Color.fromRGBO(0, 175, 82, 1),
-              ),
+              trailing: Text(oCcy.format(widget.userData.wallet) + " vnd"),
               onTap: () {},
             ),
             ListTile(
@@ -605,23 +603,6 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
               ),
               title: Text(
                 'Chính sách',
-                style: TextStyle(
-                  fontFamily: 'Montserrat',
-                ),
-              ),
-              trailing: Icon(
-                Icons.keyboard_arrow_right,
-                color: const Color.fromRGBO(0, 175, 82, 1),
-              ),
-              onTap: () {},
-            ),
-            ListTile(
-              leading: Icon(
-                Icons.location_city,
-                color: const Color.fromRGBO(0, 175, 82, 1),
-              ),
-              title: Text(
-                'GPS',
                 style: TextStyle(
                   fontFamily: 'Montserrat',
                 ),
