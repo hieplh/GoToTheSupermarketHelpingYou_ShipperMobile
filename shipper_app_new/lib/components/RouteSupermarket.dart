@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -9,8 +10,11 @@ import 'package:shipper_app_new/model/Orders.dart';
 import 'package:shipper_app_new/model/User.dart';
 import 'dart:async';
 import 'package:http/http.dart' as http;
+import 'package:shipper_app_new/model/pin_pill_info.dart';
+import 'package:sweetalert/sweetalert.dart';
 
 import 'Step.dart';
+import 'map_pin_pill.dart';
 
 const double CAMERA_ZOOM = 15;
 
@@ -33,6 +37,7 @@ class RouteSupermarket extends StatefulWidget {
 }
 
 class RouteSupermarketState extends State<RouteSupermarket> {
+  double distanceToSupermarket;
   Completer<GoogleMapController> _controller = Completer();
   Set<Marker> _markers = Set<Marker>();
 // for my drawn routes on the map
@@ -51,6 +56,15 @@ class RouteSupermarketState extends State<RouteSupermarket> {
 // wrapper around the location API
   Location location;
   double pinPillPosition = -100;
+  PinInformation currentlySelectedPin = PinInformation(
+      pinPath: '',
+      avatarPath: '',
+      location: LatLng(0, 0),
+      distance: 0.00,
+      locationName: '',
+      labelColor: Colors.grey);
+
+  PinInformation destinationPinInfo;
 
   @override
   void initState() {
@@ -72,6 +86,13 @@ class RouteSupermarketState extends State<RouteSupermarket> {
       currentLocation = cLoc;
 
       updatePinOnMap();
+      setState(() {
+        distanceToSupermarket = (calculateDistance(
+            currentLocation.longitude,
+            currentLocation.latitude,
+            destinationLocation.latitude,
+            destinationLocation.longitude));
+      });
     });
     // set custom marker pins
 
@@ -92,35 +113,51 @@ class RouteSupermarketState extends State<RouteSupermarket> {
   }
 
   _updateOrder() async {
-    var url = API_ENDPOINT + 'orders/update';
-    var response = await http.put(
-      Uri.encodeFull(url),
-      headers: {
-        'Content-type': 'application/json',
-        "Accept": "application/json",
-      },
-      encoding: Encoding.getByName("utf-8"),
-      body: jsonEncode(widget.data),
-    );
-
-    if (response.statusCode == 200) {
-      // If the server did return a 200 OK response,
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => Steps(
-                  item: widget.orderDetails,
-                  data: widget.data,
-                  userData: widget.userData,
-                )),
+    if (calculateDistance(currentLocation.latitude, currentLocation.longitude,
+            destinationLocation.latitude, destinationLocation.longitude) <
+        0.05) {
+      var url = API_ENDPOINT + 'orders/update';
+      var response = await http.put(
+        Uri.encodeFull(url),
+        headers: {
+          'Content-type': 'application/json',
+          "Accept": "application/json",
+        },
+        encoding: Encoding.getByName("utf-8"),
+        body: jsonEncode(widget.data),
       );
+
+      if (response.statusCode == 200) {
+        // If the server did return a 200 OK response,
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => Steps(
+                    item: widget.orderDetails,
+                    data: widget.data,
+                    userData: widget.userData,
+                  )),
+        );
+      } else {
+        // If the server did not return a 200 OK response,
+        // SweetAlert.show(context,
+        //     subtitle: "Xác nhận không thành công", style: SweetAlertStyle.error);
+        // then throw an exception.
+        throw Exception(response.body);
+      }
     } else {
-      // If the server did not return a 200 OK response,
-      // SweetAlert.show(context,
-      //     subtitle: "Xác nhận không thành công", style: SweetAlertStyle.error);
-      // then throw an exception.
-      throw Exception(response.body);
+      SweetAlert.show(context,
+          title: "Chưa đi đến siêu thị !", style: SweetAlertStyle.error);
     }
+  }
+
+  double calculateDistance(lat1, lon1, lat2, lon2) {
+    var p = 0.017453292519943295;
+    var c = cos;
+    var a = 0.5 -
+        c((lat2 - lat1) * p) / 2 +
+        c(lat1 * p) * c(lat2 * p) * (1 - c((lon2 - lon1) * p)) / 2;
+    return 12742 * asin(sqrt(a));
   }
 
   void setInitialLocation() async {
@@ -141,6 +178,11 @@ class RouteSupermarketState extends State<RouteSupermarket> {
     // get a LatLng out of the LocationData object
     var destPosition =
         LatLng(destinationLocation.latitude, destinationLocation.longitude);
+    distanceToSupermarket = (calculateDistance(
+        currentLocation.latitude,
+        currentLocation.longitude,
+        destinationLocation.latitude,
+        destinationLocation.longitude));
 
     // sourcePinInfo = PinInformation(
     //     locationName: "Start Location",
@@ -172,6 +214,13 @@ class RouteSupermarketState extends State<RouteSupermarket> {
         markerId: MarkerId('destPin'),
         position: destPosition,
         icon: destinationIcon));
+    currentlySelectedPin = PinInformation(
+        locationName: widget.data[0]['market']['name'],
+        location: SOURCE_LOCATION,
+        pinPath: "assets/destination_map_marker.png",
+        avatarPath: "assets/cart.png",
+        distance: distanceToSupermarket,
+        labelColor: Colors.purple);
   }
 
   @override
@@ -183,41 +232,42 @@ class RouteSupermarketState extends State<RouteSupermarket> {
           target: LatLng(currentLocation.latitude, currentLocation.longitude),
           zoom: CAMERA_ZOOM);
     }
-    return Scaffold(
-      body: Stack(
-        children: <Widget>[
-          GoogleMap(
-            myLocationEnabled: true,
-            compassEnabled: true,
-            tiltGesturesEnabled: false,
-            polylines: _polylines,
-            mapType: MapType.normal,
-            initialCameraPosition: initialCameraPosition,
-            onTap: (LatLng loc) {
-              pinPillPosition = -100;
-            },
-            onMapCreated: (GoogleMapController controller) {
-              _controller.complete(controller);
-              // my map has completed being created;
-              // i'm ready to show the pins on the map
-              showPinsOnMap();
-            },
-            markers: _markers,
-          ),
-
-          // MapPinPillComponent(
-          //     pinPillPosition: pinPillPosition,
-          //     currentlySelectedPin: currentlySelectedPin)
-        ],
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // print(widget.orderDetails.length.toString());
-          _updateOrder();
-        },
-        label: Text('Đi đến siêu thị hoàn tất'),
-        backgroundColor: Colors.green,
+    return WillPopScope(
+      onWillPop: () => Future.value(false),
+      child: Scaffold(
+        body: Stack(
+          children: <Widget>[
+            GoogleMap(
+              myLocationEnabled: true,
+              compassEnabled: true,
+              tiltGesturesEnabled: false,
+              polylines: _polylines,
+              mapType: MapType.normal,
+              initialCameraPosition: initialCameraPosition,
+              onTap: (LatLng loc) {
+                pinPillPosition = -100;
+              },
+              onMapCreated: (GoogleMapController controller) {
+                _controller.complete(controller);
+                // my map has completed being created;
+                // i'm ready to show the pins on the map
+                showPinsOnMap();
+              },
+              markers: _markers,
+            ),
+            MapPinPillComponent(
+                pinPillPosition: 0, currentlySelectedPin: currentlySelectedPin)
+          ],
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () {
+            // print(widget.orderDetails.length.toString());
+            _updateOrder();
+          },
+          label: Text('Đi đến siêu thị hoàn tất'),
+          backgroundColor: Colors.green,
+        ),
       ),
     );
   }

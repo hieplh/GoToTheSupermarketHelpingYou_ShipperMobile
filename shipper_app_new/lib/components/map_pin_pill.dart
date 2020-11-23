@@ -20,7 +20,7 @@ class MapPinPillComponentState extends State<MapPinPillComponent> {
   Widget build(BuildContext context) {
 
     return AnimatedPositioned(
-        bottom: widget.pinPillPosition,
+        top: widget.pinPillPosition,
         right: 0,
         left: 0,
         duration: Duration(milliseconds: 200),
@@ -52,17 +52,17 @@ class MapPinPillComponentState extends State<MapPinPillComponent> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
-                          Text(widget.currentlySelectedPin.locationName, style: TextStyle(color: widget.currentlySelectedPin.labelColor)),
-                          Text('Latitude: ${widget.currentlySelectedPin.location.latitude.toString()}', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                          Text('Longitude: ${widget.currentlySelectedPin.location.longitude.toString()}', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          Text(widget.currentlySelectedPin.locationName, style: TextStyle(fontSize: 14)),
+                          Text('Khoảng cách: ${widget.currentlySelectedPin.distance.toStringAsFixed(2)}' + " km", style: TextStyle(fontSize: 16, color: Colors.red)),
+                          // Text('Longitude: ${widget.currentlySelectedPin.location.longitude.toString()}', style: TextStyle(fontSize: 12, color: Colors.grey)),
                         ],
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: EdgeInsets.all(15),
-                    child: Image.asset(widget.currentlySelectedPin.pinPath, width: 50, height: 50),
-                  )
+                  // Padding(
+                  //   padding: EdgeInsets.all(15),
+                  //   child: Image.asset(widget.currentlySelectedPin.pinPath, width: 50, height: 50),
+                  // )
                 ],
               ),
             ),

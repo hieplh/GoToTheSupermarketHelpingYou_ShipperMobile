@@ -7,6 +7,7 @@ class PinInformation {
   LatLng location;
   String locationName;
   Color labelColor;
+  double distance;
 
-  PinInformation({this.pinPath, this.avatarPath, this.location, this.locationName, this.labelColor});
+  PinInformation({this.pinPath, this.avatarPath, this.location, this.locationName, this.labelColor,this.distance});
 }

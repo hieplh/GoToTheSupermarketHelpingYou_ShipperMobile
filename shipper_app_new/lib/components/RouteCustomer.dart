@@ -5,13 +5,18 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:flutter/material.dart';
+import 'package:shipper_app_new/components/camera.dart';
 import 'package:shipper_app_new/constant/constant.dart';
+import 'package:shipper_app_new/model/Orders.dart';
 import 'package:shipper_app_new/model/User.dart';
 import 'package:geocoder/geocoder.dart';
 import 'package:shipper_app_new/model/pin_pill_info.dart';
 import 'dart:async';
 import 'DeliverySuccess.dart';
 import 'package:http/http.dart' as http;
+import 'package:sweetalert/sweetalert.dart';
+
+import 'map_pin_pill.dart';
 
 const double CAMERA_ZOOM = 14;
 
@@ -29,6 +34,7 @@ class RouteCustomer extends StatefulWidget {
 class RouteCustomerState extends State<RouteCustomer> {
   Completer<GoogleMapController> _controller = Completer();
   Set<Marker> _markers = Set<Marker>();
+  double distanceToAddressDelivery;
 // for my drawn routes on the map
   Set<Polyline> _polylines = Set<Polyline>();
   List<LatLng> polylineCoordinates = [];
@@ -37,6 +43,7 @@ class RouteCustomerState extends State<RouteCustomer> {
 // for my custom marker pins
   BitmapDescriptor sourceIcon;
   BitmapDescriptor destinationIcon;
+  int countUpdate = 0;
 // the user's initial location and current location
 // as it moves
   LocationData currentLocation;
@@ -49,8 +56,14 @@ class RouteCustomerState extends State<RouteCustomer> {
       pinPath: '',
       avatarPath: '',
       location: LatLng(0, 0),
+      distance: 0.00,
       locationName: '',
       labelColor: Colors.grey);
+  List<String> addressDelivery = new List<String>();
+  List<String> orderID = new List<String>();
+  int currentIndex = 0;
+  String currentOrderId = '';
+  String addressNearby = '';
   PinInformation sourcePinInfo;
   PinInformation destinationPinInfo;
 
@@ -74,6 +87,13 @@ class RouteCustomerState extends State<RouteCustomer> {
       currentLocation = cLoc;
 
       updatePinOnMap();
+      // setState(() {
+      //   distanceToAddressDelivery = calculateDistance(
+      //       currentLocation.latitude,
+      //       currentLocation.longitude,
+      //       destinationLocation.latitude,
+      //       destinationLocation.longitude);
+      // });
     });
     // set custom marker pins
 
@@ -157,12 +177,14 @@ class RouteCustomerState extends State<RouteCustomer> {
       var addressFromMap = widget.data[i].values.toList();
       final query =
           utf8.decode(latin1.encode(addressFromMap[1]), allowMalformed: true);
+      addressDelivery.add(query);
+      orderID.add(addressFromMap[6]);
       var addresses = await Geocoder.local.findAddressesFromQuery(query);
       var first = addresses.first;
       var destPosition =
           LatLng(first.coordinates.latitude, first.coordinates.longitude);
       _markers.add(Marker(
-          markerId: MarkerId('destPin$i'),
+          markerId: MarkerId(addressFromMap[6]),
           position: destPosition,
           icon: BitmapDescriptor.defaultMarker));
     }
@@ -194,6 +216,9 @@ class RouteCustomerState extends State<RouteCustomer> {
       "latitude": listmarkers[0].position.latitude,
       "longitude": listmarkers[0].position.longitude
     });
+    // addressNearby = addressDelivery[0];
+    // currentOrderId = orderID[0];
+
     double minDistance = calculateDistance(
         currentLocation.latitude,
         currentLocation.longitude,
@@ -211,12 +236,40 @@ class RouteCustomerState extends State<RouteCustomer> {
           "latitude": listmarkers[i].position.latitude,
           "longitude": listmarkers[i].position.longitude
         });
+        // addressNearby = addressDelivery[i];
+        // currentOrderId = orderID[i];
       }
     }
+    // setState(() {
+    //   distanceToAddressDelivery = calculateDistance(
+    //       currentLocation.latitude,
+    //       currentLocation.longitude,
+    //       destinationLocation.latitude,
+    //       destinationLocation.longitude);
+    //   currentlySelectedPin = PinInformation(
+    //       locationName: addressNearby,
+    //       location: SOURCE_LOCATION,
+    //       pinPath: "assets/destination_map_marker.png",
+    //       avatarPath: "assets/destination_map_marker.png",
+    //       distance: distanceToAddressDelivery,
+    //       labelColor: Colors.purple);
+    // });
   }
 
   @override
   Widget build(BuildContext context) {
+    // distanceToAddressDelivery = calculateDistance(
+    //     currentLocation.latitude,
+    //     currentLocation.longitude,
+    //     destinationLocation.latitude,
+    //     destinationLocation.longitude);
+    // currentlySelectedPin = PinInformation(
+    //     locationName: addressNearby,
+    //     location: SOURCE_LOCATION,
+    //     pinPath: "assets/destination_map_marker.png",
+    //     avatarPath: "assets/destination_map_marker.png",
+    //     distance: distanceToAddressDelivery,
+    //     labelColor: Colors.purple);
     CameraPosition initialCameraPosition =
         CameraPosition(zoom: CAMERA_ZOOM, target: SOURCE_LOCATION);
     if (currentLocation != null) {
@@ -244,17 +297,32 @@ class RouteCustomerState extends State<RouteCustomer> {
                 // i'm ready to show the pins on the map
                 showPinsOnMap();
               }),
-
           // MapPinPillComponent(
-          //     pinPillPosition: pinPillPosition,
-          //     currentlySelectedPin: currentlySelectedPin)
+          //     pinPillPosition: 0, currentlySelectedPin: currentlySelectedPin),
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           // print(widget.orderDetails.length.toString());
-          _updateOrder();
+          // _updateOrder();
+          List<Marker> listmarkers = _markers
+              .where((marker) => marker.markerId.value != 'sourcePin')
+              .toList();
+          if (listmarkers.length == 0) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                  builder: (BuildContext context) => SuccessScreen(
+                        userData: widget.userData,
+                        data: widget.data,
+                      )),
+              ModalRoute.withName('/'),
+            );
+          } else {
+            SweetAlert.show(context,
+                title: "Chưa giao đủ đơn hàng !", style: SweetAlertStyle.error);
+          }
         },
         label: Text('Hoàn Tất Giao Hàng'),
         backgroundColor: Colors.green,
@@ -294,57 +362,144 @@ class RouteCustomerState extends State<RouteCustomer> {
     }
   }
 
+  _showMaterialDialog(Map<String, dynamic> od) {
+    showDialog(
+        context: context,
+        builder: (_) => new AlertDialog(
+              title: new Text("Thông báo"),
+              content: new Text('Đã tới địa điểm giao của đơn hàng ${od['id']}'
+                  '\n'
+                  '\nXin vui lòng chụp hình mặt hàng trước khi chuyển giao cho khách '
+              ),
+              actions: <Widget>[
+                FlatButton(
+                  child: Text('Chụp hình'),
+                  onPressed: () async {
+                    var url = API_ENDPOINT + 'orders/update';
+                    var response = await http.put(
+                      Uri.encodeFull(url),
+                      headers: {
+                        'Content-type': 'application/json',
+                        "Accept": "application/json",
+                      },
+                      encoding: Encoding.getByName("utf-8"),
+                      body: '[' + jsonEncode(od) + ']',
+                    );
+                    print("Loi la ${response.statusCode}");
+                    if (response.statusCode == 200) {
+                      setState(() {
+                        countUpdate++;
+                      });
+                      Navigator.of(context).pop();
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => CameraScreen()));
+                    }
+                  },
+                )
+              ],
+            ));
+  }
+
   void updatePinOnMap() async {
     if (calculateDistance(currentLocation.latitude, currentLocation.longitude,
             destinationLocation.latitude, destinationLocation.longitude) <
         0.05) {
-      print(calculateDistance(
-          currentLocation.latitude,
-          currentLocation.longitude,
-          destinationLocation.latitude,
-          destinationLocation.longitude));
-      _markers.removeWhere((m) =>
-          m.position.latitude == destinationLocation.latitude &&
-          m.position.longitude == destinationLocation.longitude);
-      polylineCoordinates.removeWhere(
-          (element) => element.latitude == destinationLocation.latitude);
+      if (_markers.length > 1) {
+        Marker tmp = _markers.firstWhere((element) =>
+            element.position.latitude == destinationLocation.latitude);
 
-      List<Marker> listmarkers = _markers
-          .where((marker) => marker.markerId.value != 'sourcePin')
-          .toList();
+        currentOrderId = tmp.markerId.value;
+        _markers.removeWhere((m) =>
+            m.position.latitude == destinationLocation.latitude &&
+            m.position.longitude == destinationLocation.longitude);
+        polylineCoordinates.removeWhere(
+            (element) => element.latitude == destinationLocation.latitude);
 
-      if (listmarkers.length == 1) {
-        destinationLocation = LocationData.fromMap({
-          "latitude": listmarkers[0].position.latitude,
-          "longitude": listmarkers[0].position.longitude
-        });
-      } else {
-        destinationLocation = LocationData.fromMap({
-          "latitude": listmarkers[0].position.latitude,
-          "longitude": listmarkers[0].position.longitude
-        });
-        double minDistance = calculateDistance(
-            currentLocation.latitude,
-            currentLocation.longitude,
-            listmarkers[0].position.latitude,
-            listmarkers[0].position.longitude);
+        List<Marker> listmarkers = _markers
+            .where((marker) => marker.markerId.value != 'sourcePin')
+            .toList();
+        if (listmarkers.length == 0) {
+          List<Map<String, dynamic>> rs = widget.data
+              .where((element) => element.values.toList()[6] == currentOrderId)
+              .toList();
 
-        for (var i = 0; i < listmarkers.length; i++) {
-          if (calculateDistance(
-                  currentLocation.latitude,
-                  currentLocation.longitude,
-                  listmarkers[i].position.latitude,
-                  listmarkers[i].position.longitude) <
-              minDistance) {
-            destinationLocation = LocationData.fromMap({
-              "latitude": listmarkers[i].position.latitude,
-              "longitude": listmarkers[i].position.longitude
-            });
+          _showMaterialDialog(rs[0]);
+          polylineCoordinates.clear();
+        } else if (listmarkers.length == 1) {
+          destinationLocation = LocationData.fromMap({
+            "latitude": listmarkers[0].position.latitude,
+            "longitude": listmarkers[0].position.longitude
+          });
+
+          List<Map<String, dynamic>> rs = widget.data
+              .where((element) => element.values.toList()[6] == currentOrderId)
+              .toList();
+
+          _showMaterialDialog(rs[0]);
+          // addressNearby = addressDelivery[0];
+          // currentOrderId = orderID[0];
+        } else {
+          destinationLocation = LocationData.fromMap({
+            "latitude": listmarkers[0].position.latitude,
+            "longitude": listmarkers[0].position.longitude
+          });
+
+          // addressNearby = addressDelivery[0];
+          // currentOrderId = orderID[0];
+
+          double minDistance = calculateDistance(
+              currentLocation.latitude,
+              currentLocation.longitude,
+              listmarkers[0].position.latitude,
+              listmarkers[0].position.longitude);
+
+          for (var i = 0; i < listmarkers.length; i++) {
+            if (calculateDistance(
+                    currentLocation.latitude,
+                    currentLocation.longitude,
+                    listmarkers[i].position.latitude,
+                    listmarkers[i].position.longitude) <
+                minDistance) {
+              destinationLocation = LocationData.fromMap({
+                "latitude": listmarkers[i].position.latitude,
+                "longitude": listmarkers[i].position.longitude
+              });
+              currentOrderId = listmarkers[i].markerId.value;
+
+              // addressNearby = addressDelivery[i];
+              // currentIndex = i;
+              // currentOrderId = orderID[i];
+            }
           }
+
+          List<Map<String, dynamic>> rs = widget.data
+              .where((element) => element.values.toList()[6] == currentOrderId)
+              .toList();
+
+          _showMaterialDialog(rs[0]);
+          // setState(() {
+          //   distanceToAddressDelivery = calculateDistance(
+          //       currentLocation.latitude,
+          //       currentLocation.longitude,
+          //       destinationLocation.latitude,
+          //       destinationLocation.longitude);
+          //   currentlySelectedPin = PinInformation(
+          //       locationName: addressNearby,
+          //       location: SOURCE_LOCATION,
+          //       pinPath: "assets/destination_map_marker.png",
+          //       avatarPath: "assets/destination_map_marker.png",
+          //       distance: distanceToAddressDelivery,
+          //       labelColor: Colors.purple);
+          // });
         }
+      } else {
+        polylineCoordinates.clear();
       }
 
       // setPolylines();
+      // if (countUpdate != widget.data.length) {
+
+      // }
+
     }
     setPolylines();
 

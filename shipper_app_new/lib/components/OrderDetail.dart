@@ -132,8 +132,10 @@ class DetailScreenState extends State<DetailScreen> {
                       itemCount: widget.list[index].order.detail.length,
                       itemBuilder: (context, indexList) {
                         return ListTile(
-                          leading: Image.network(
-                              widget.list[index].order.detail[indexList].image),
+                          leading: FadeInImage.assetNetwork(
+                              placeholder: LAZY_IMAGE,
+                              image: widget
+                                  .list[index].order.detail[indexList].image),
                           title: Text(utf8.decode(
                               latin1.encode(widget
                                   .list[index].order.detail[indexList].foodId),

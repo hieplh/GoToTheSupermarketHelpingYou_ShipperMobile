@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:shipper_app_new/components/Login.dart';
 
+import 'components/RestarApp.dart';
+
 void main() {
-  runApp(MyApp());
+  runApp(RestarApp(
+    child: MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:shipper_app_new/components/RestarApp.dart';
 import 'package:shipper_app_new/model/History.dart';
 import 'package:shipper_app_new/model/Orders.dart';
 import 'package:http/http.dart' as http;
@@ -10,6 +11,7 @@ import 'dart:async';
 import 'package:location/location.dart';
 import 'package:shipper_app_new/constant/constant.dart';
 import 'package:shipper_app_new/model/User.dart';
+import 'Login.dart';
 import 'OrderDetail.dart';
 import 'package:intl/intl.dart';
 import 'package:sweetalert/sweetalert.dart';
@@ -41,6 +43,8 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   Set<Marker> markers = Set();
   // Position _currentPosition;
   LocationData currentLocation;
+  Timer _clockTimer;
+
   var listOrderDetails = new List();
   _getCurrentLocation() async {
     currentLocation = await location.getLocation();
@@ -169,9 +173,9 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
             context: context,
             builder: (BuildContext builderContext) {
               dialogContext = context;
-              // _timer = Timer(Duration(seconds: 10), () {
-              //   Navigator.of(context).pop();
-              // });
+              _timer = Timer(Duration(seconds: 10), () {
+                Navigator.of(context).pop();
+              });
 
               return AlertDialog(
                 title: Text("Thông báo"),
@@ -186,7 +190,11 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                             children: <Widget>[
                               Text("Có đơn hàng mới gần đây"),
                               Text("Bạn có muốn tiếp nhận ?"),
-                              Image.asset('assets/veget.png',height: 150,width: 150,),
+                              Image.asset(
+                                'assets/veget.png',
+                                height: 150,
+                                width: 150,
+                              ),
                               new Expanded(
                                   child: new Align(
                                       alignment: Alignment.bottomCenter,
@@ -233,12 +241,21 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
       },
     );
 
-    Timer.periodic(new Duration(seconds: 5), (timer) {
+    _clockTimer = Timer.periodic(new Duration(seconds: 5), (timer) {
       _updatePos();
     });
   }
 
   _updatePos() {
+    print(API_ENDPOINT +
+        "shipper/" +
+        '${widget.userData.id}' +
+        "/lat/" +
+        '${currentLocation.latitude}' +
+        "/lng/" +
+        '${currentLocation.longitude}' +
+        '/' +
+        '${token_app}');
     http
         .get(API_ENDPOINT +
             "shipper/" +
@@ -300,7 +317,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                   _buildMap(),
                   _buildNotify(),
                   _buildOrderReceive(),
-                  // _buildHistoryList(),
+                  _buildHistoryList(),
                   _buildInfo(),
                 ];
                 return Center(
@@ -395,7 +412,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   Widget _buildOrderReceive() {
     return Scaffold(
       appBar: AppBar(
-          title: const Text('Đơn hàng có thể tiếp nhận'),
+          title: const Text('Đơn hàng hiện tại'),
           automaticallyImplyLeading: false,
           centerTitle: true,
           backgroundColor: Colors.green),
@@ -425,7 +442,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                     child: ListTile(
                       contentPadding: EdgeInsets.symmetric(
                           horizontal: 20.0, vertical: 10.0),
-                      leading: Icon(Icons.add_shopping_cart_rounded),
+                      leading: Image.asset("assets/order.jpg"),
                       title: Text(element.order.id),
                       subtitle: Text(
                           (element.value / 1000.round()).toString() + " km"),
@@ -613,7 +630,39 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
               ),
               onTap: () {},
             ),
+            ListTile(
+              leading: Icon(
+                Icons.add_to_home_screen,
+                color: const Color.fromRGBO(0, 175, 82, 1),
+              ),
+              title: Text(
+                'Đăng xuất',
+                style: TextStyle(
+                  fontFamily: 'Montserrat',
+                ),
+              ),
+              trailing: Icon(
+                Icons.keyboard_arrow_right,
+                color: const Color.fromRGBO(0, 175, 82, 1),
+              ),
+              onTap: () {
+                SweetAlert.show(context,
+                    title: "Chú ý",
+                    subtitle: "Bạn có muốn đăng xuất khỏi ứng dụng ? ",
+                    style: SweetAlertStyle.confirm,
+                    showCancelButton: true, onPress: (bool isConfirm) {
+                  if (isConfirm) {
+                    _clockTimer.cancel();
+                    RestarApp.restartApp(context);
+                  }
+                });
+              },
+            ),
           ],
         ));
   }
+}
+
+class SignOut {
+  static bool number = false;
 }

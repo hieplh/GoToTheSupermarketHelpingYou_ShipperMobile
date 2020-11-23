@@ -44,80 +44,85 @@ class _StepsState extends State<Steps> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // Appbar
-      appBar: AppBar(
-        // Title
-        title: Text("Tiến Trình"),
-        backgroundColor: Colors.green,
-        automaticallyImplyLeading: false,
-        centerTitle: true,
-      ),
-      // Body
-      body: Container(
-        child: ListView.builder(
-          physics: NeverScrollableScrollPhysics(),
-          shrinkWrap: true,
-          itemCount: widget.data.length,
-          itemBuilder: (BuildContext context, int indexSwipper) {
-            return Container(
-                margin: new EdgeInsets.all(10),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    Card(
-                      child: ListTile(
-                        leading: Icon(Icons.add_shopping_cart_rounded),
-                        title: Text("Mã đơn hàng :  " +
-                            widget.data[indexSwipper].values.toList()[6] +
-                            "  " +
-                            countChecked.toString()),
-                      ),
-                    ),
-                    ListView.builder(
-                      physics: NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      itemCount:
-                          widget.data[indexSwipper].values.toList()[5].length,
-                      itemBuilder: (context, index) {
-                        return CheckItem(
-                            data: widget.data[indexSwipper].values.toList()[5]
-                                [index]);
-                      },
-                    ),
-                    _builTotalCost(indexSwipper),
-                  ],
-                ));
-          },
-
-          // pagination: new SwiperPagination(
-          //     alignment: Alignment.bottomLeft,
-          //     builder: new DotSwiperPaginationBuilder(
-          //       color: Colors.grey,
-          //       activeColor: Colors.green,
-          //       size: 20,
-          //       activeSize: 20,
-          //     )),
-          // control: new SwiperControl(color: Colors.green),
+    return WillPopScope(
+      onWillPop: () => Future.value(false),
+      child: Scaffold(
+        // Appbar
+        appBar: AppBar(
+          // Title
+          title: Text("Tiến Trình"),
+          backgroundColor: Colors.green,
+          automaticallyImplyLeading: false,
+          centerTitle: true,
         ),
-      ),
+        // Body
+        body: Container(
+          child: ListView.builder(
+            physics: NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            itemCount: widget.data.length,
+            itemBuilder: (BuildContext context, int indexSwipper) {
+              return Container(
+                  margin: new EdgeInsets.all(10),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: <Widget>[
+                      Card(
+                        child: ListTile(
+                          leading: Icon(Icons.add_shopping_cart_rounded),
+                          title: Text("Mã đơn hàng :  " +
+                              widget.data[indexSwipper].values.toList()[6] +
+                              "  " +
+                              countChecked.toString()),
+                        ),
+                      ),
+                      ListView.builder(
+                        physics: NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount:
+                        widget.data[indexSwipper].values.toList()[5].length,
+                        itemBuilder: (context, index) {
+                          return CheckItem(
+                              data: widget.data[indexSwipper].values.toList()[5]
+                              [index]);
+                        },
+                      ),
+                      _builTotalCost(indexSwipper),
+                    ],
+                  ));
+            },
 
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // print(widget.data.toString());
+            // pagination: new SwiperPagination(
+            //     alignment: Alignment.bottomLeft,
+            //     builder: new DotSwiperPaginationBuilder(
+            //       color: Colors.grey,
+            //       activeColor: Colors.green,
+            //       size: 20,
+            //       activeSize: 20,
+            //     )),
+            // control: new SwiperControl(color: Colors.green),
+          ),
+        ),
 
-        if(Global.number == widget.item.length){
-          _updateOrder();
-        } else {
-          SweetAlert.show(context,
-              title: "Chưa mua đủ đồ !",
-              style: SweetAlertStyle.error);
-        }
-        },
-        label: Text('Hoàn Tất Mua Hàng'),
-        backgroundColor: Colors.green,
-      ),
-    );
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () {
+            // // print(widget.data.toString());
+            // print("So luong item la " + Global.number.toString());
+            // if(Global.number == widget.item.length){
+            // SweetAlert.show(context,
+            //     title: "Số lượng đã check : ${Global.number}",
+            //     style: SweetAlertStyle.error);
+              _updateOrder();
+            // } else {
+            //   SweetAlert.show(context,
+            //       title: "Chưa mua đủ đồ !",
+            //       style: SweetAlertStyle.error);
+            // }
+          },
+          label: Text('Hoàn Tất Mua Hàng'),
+          backgroundColor: Colors.green,
+        ),
+      ),);
   }
 
   _updateOrder() async {
@@ -157,9 +162,11 @@ class _StepsState extends State<Steps> {
       itemCount: widget.data[indexListDetail].values.toList()[5].length,
       itemBuilder: (context, index) {
         return ListTile(
-          leading: Image.network(widget.data[indexListDetail].values
-              .toList()[5][index]['image']
-              .toString()),
+          leading: FadeInImage.assetNetwork(
+              placeholder: LAZY_IMAGE,
+              image: widget.data[indexListDetail].values
+                  .toList()[5][index]['image']
+                  .toString()),
           title: Text(utf8.decode(
               latin1.encode(widget.data[indexListDetail].values
                   .toList()[5][index]['foodId']
