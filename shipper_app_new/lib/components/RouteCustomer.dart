@@ -110,7 +110,7 @@ class RouteCustomerState extends State<RouteCustomer> {
   }
 
   _updateOrder() async {
-    var url = API_ENDPOINT + 'orders/update';
+    var url = GlobalVariable.API_ENDPOINT + 'orders/update';
     var response = await http.put(
       Uri.encodeFull(url),
       headers: {
@@ -375,7 +375,7 @@ class RouteCustomerState extends State<RouteCustomer> {
                 FlatButton(
                   child: Text('Chụp hình'),
                   onPressed: () async {
-                    var url = API_ENDPOINT + 'orders/update';
+                    var url = GlobalVariable.API_ENDPOINT + 'orders/update';
                     var response = await http.put(
                       Uri.encodeFull(url),
                       headers: {
@@ -387,11 +387,11 @@ class RouteCustomerState extends State<RouteCustomer> {
                     );
                     print("Loi la ${response.statusCode}");
                     if (response.statusCode == 200) {
-                      setState(() {
-                        countUpdate++;
-                      });
+
                       Navigator.of(context).pop();
                       Navigator.push(context, MaterialPageRoute(builder: (context) => CameraScreen()));
+                    } else {
+                      
                     }
                   },
                 )

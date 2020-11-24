@@ -9,6 +9,7 @@ import 'package:shipper_app_new/model/User.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:sweetalert/sweetalert.dart';
+
 class Steps extends StatefulWidget {
   final List<OrderDetail> item;
   final User userData;
@@ -69,22 +70,26 @@ class _StepsState extends State<Steps> {
                     children: <Widget>[
                       Card(
                         child: ListTile(
-                          leading: Icon(Icons.add_shopping_cart_rounded),
-                          title: Text("Mã đơn hàng :  " +
-                              widget.data[indexSwipper].values.toList()[6] +
-                              "  " +
-                              countChecked.toString()),
+                          leading: Text(
+                            "Đơn hàng",
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          title: Text(
+                              widget.data[indexSwipper].values.toList()[6],
+                              style:
+                                  TextStyle(fontSize: 16, color: Colors.red)),
                         ),
                       ),
                       ListView.builder(
                         physics: NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
                         itemCount:
-                        widget.data[indexSwipper].values.toList()[5].length,
+                            widget.data[indexSwipper].values.toList()[5].length,
                         itemBuilder: (context, index) {
                           return CheckItem(
                               data: widget.data[indexSwipper].values.toList()[5]
-                              [index]);
+                                  [index]);
                         },
                       ),
                       _builTotalCost(indexSwipper),
@@ -108,25 +113,22 @@ class _StepsState extends State<Steps> {
           onPressed: () {
             // // print(widget.data.toString());
             // print("So luong item la " + Global.number.toString());
-            // if(Global.number == widget.item.length){
-            // SweetAlert.show(context,
-            //     title: "Số lượng đã check : ${Global.number}",
-            //     style: SweetAlertStyle.error);
+            if (Global.number.round() == widget.item.length) {
               _updateOrder();
-            // } else {
-            //   SweetAlert.show(context,
-            //       title: "Chưa mua đủ đồ !",
-            //       style: SweetAlertStyle.error);
-            // }
+            } else {
+              SweetAlert.show(context,
+                  title: "Chưa mua đủ đồ !", style: SweetAlertStyle.error);
+            }
           },
           label: Text('Hoàn Tất Mua Hàng'),
           backgroundColor: Colors.green,
         ),
-      ),);
+      ),
+    );
   }
 
   _updateOrder() async {
-    var url = API_ENDPOINT + 'orders/update';
+    var url = GlobalVariable.API_ENDPOINT + 'orders/update';
     var response = await http.put(
       Uri.encodeFull(url),
       headers: {
@@ -163,7 +165,7 @@ class _StepsState extends State<Steps> {
       itemBuilder: (context, index) {
         return ListTile(
           leading: FadeInImage.assetNetwork(
-              placeholder: LAZY_IMAGE,
+              placeholder: GlobalVariable.LAZY_IMAGE,
               image: widget.data[indexListDetail].values
                   .toList()[5][index]['image']
                   .toString()),

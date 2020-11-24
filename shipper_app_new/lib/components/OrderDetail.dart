@@ -68,7 +68,7 @@ class DetailScreenState extends State<DetailScreen> {
     }
     print(jsonEncode(data));
 
-    var url = API_ENDPOINT + 'orders/update';
+    var url = GlobalVariable.API_ENDPOINT + 'orders/update';
     var response = await http.put(
       Uri.encodeFull(url),
       headers: {
@@ -132,10 +132,7 @@ class DetailScreenState extends State<DetailScreen> {
                       itemCount: widget.list[index].order.detail.length,
                       itemBuilder: (context, indexList) {
                         return ListTile(
-                          leading: FadeInImage.assetNetwork(
-                              placeholder: LAZY_IMAGE,
-                              image: widget
-                                  .list[index].order.detail[indexList].image),
+                          leading: Image.network(GlobalVariable.LAZY_IMAGE),
                           title: Text(utf8.decode(
                               latin1.encode(widget
                                   .list[index].order.detail[indexList].foodId),
@@ -207,9 +204,7 @@ class DetailScreenState extends State<DetailScreen> {
                       child: ListTile(
                         leading: Icon(Icons.directions_train),
                         title: Text('Khoảng cách '),
-                        trailing: Text((widget.list[index].value / 1000)
-                                .round()
-                                .toString() +
+                        trailing: Text("" +
                             ' km'),
                       ),
                     ),

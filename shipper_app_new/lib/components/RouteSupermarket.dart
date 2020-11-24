@@ -116,7 +116,7 @@ class RouteSupermarketState extends State<RouteSupermarket> {
     if (calculateDistance(currentLocation.latitude, currentLocation.longitude,
             destinationLocation.latitude, destinationLocation.longitude) <
         0.05) {
-      var url = API_ENDPOINT + 'orders/update';
+      var url = GlobalVariable.API_ENDPOINT + 'orders/update';
       var response = await http.put(
         Uri.encodeFull(url),
         headers: {
@@ -126,7 +126,7 @@ class RouteSupermarketState extends State<RouteSupermarket> {
         encoding: Encoding.getByName("utf-8"),
         body: jsonEncode(widget.data),
       );
-
+      print("Response code la ${response.statusCode}");
       if (response.statusCode == 200) {
         // If the server did return a 200 OK response,
         Navigator.push(

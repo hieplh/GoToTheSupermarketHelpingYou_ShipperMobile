@@ -12,12 +12,11 @@ class LoginPage extends StatefulWidget {
   State<StatefulWidget> createState() => new _State();
 }
 
-@override
-initState() {}
+
 
 _postLogin(String username, String password, BuildContext context) async {
   User user = null;
-  var url = API_ENDPOINT + 'account/username';
+  var url = GlobalVariable.API_ENDPOINT + 'account/username';
   var response = await http.post(Uri.parse(url),
       headers: {
         'Content-type': 'application/json',
@@ -46,12 +45,19 @@ _postLogin(String username, String password, BuildContext context) async {
 }
 
 class _State extends State<LoginPage> {
+  String _text = "initial";
+  TextEditingController _c;
   String username;
   String password;
   TextEditingController nameController =
       TextEditingController(text: "shipper123");
   TextEditingController passwordController =
       TextEditingController(text: "12345678");
+  @override
+  initState() {
+    _c = new TextEditingController();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,9 +102,40 @@ class _State extends State<LoginPage> {
                 FlatButton(
                   onPressed: () {
                     //forgot password screen
+
                   },
                   textColor: Colors.blue,
                   child: Text('Forgot Password'),
+                ),
+                FlatButton(
+                  onPressed: () {
+                    //forgot password screen
+                    showDialog(
+                        child: new Dialog(
+                          child: new Column(
+                            children: <Widget>[
+                              new TextField(
+                                decoration:
+                                new InputDecoration(hintText: "Update IP"),
+                                controller: _c,
+                              ),
+                              new FlatButton(
+                                child: new Text("Save"),
+                                onPressed: () {
+                                  setState(() {
+                                    this._text = _c.text;
+                                  });
+                                  GlobalVariable.API_ENDPOINT = this._text;
+                                  Navigator.pop(context);
+                                },
+                              )
+                            ],
+                          ),
+                        ),
+                        context: context);
+                  },
+                  textColor: Colors.blue,
+                  child: Text('Update IP'),
                 ),
                 Container(
                     height: 50,
@@ -112,23 +149,23 @@ class _State extends State<LoginPage> {
                             context);
                       },
                     )),
-                Container(
-                    child: Row(
-                  children: <Widget>[
-                    Text('Does not have account?'),
-                    FlatButton(
-                      textColor: Colors.blue,
-                      child: Text(
-                        'Sign in',
-                        style: TextStyle(fontSize: 20),
-                      ),
-                      onPressed: () {
-                        //signup screen
-                      },
-                    )
-                  ],
-                  mainAxisAlignment: MainAxisAlignment.center,
-                ))
+                // Container(
+                //     child: Row(
+                //   children: <Widget>[
+                //     Text('Does not have account?'),
+                //     FlatButton(
+                //       textColor: Colors.blue,
+                //       child: Text(
+                //         'Sign in',
+                //         style: TextStyle(fontSize: 20),
+                //       ),
+                //       onPressed: () {
+                //         //signup screen
+                //       },
+                //     )
+                //   ],
+                //   mainAxisAlignment: MainAxisAlignment.center,
+                // ))
               ],
             )));
   }

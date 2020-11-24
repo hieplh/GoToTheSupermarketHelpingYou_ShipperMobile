@@ -11,6 +11,7 @@ import 'dart:async';
 import 'package:location/location.dart';
 import 'package:shipper_app_new/constant/constant.dart';
 import 'package:shipper_app_new/model/User.dart';
+import 'HistoryDetail.dart';
 import 'Login.dart';
 import 'OrderDetail.dart';
 import 'package:intl/intl.dart';
@@ -56,7 +57,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   );
 
   _getOrders() {
-    print(API_ENDPOINT + "shipper/" + '${widget.userData.id}');
+    print(GlobalVariable.API_ENDPOINT + "shipper/" + '${widget.userData.id}');
     // print(API_ENDPOINT +
     // "shipper/" +
     // '${widget.userData.id}' +
@@ -64,7 +65,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
     // 'http://25.72.134.12:1234/smhu/api/shipper/98765/lat/10.800777/lng/106.732639'
     //http://192.168.43.81/smhu/api/shipper/98765/lat/10.779534/lng/106.631451
     http
-        .get(API_ENDPOINT + "shipper/" + '${widget.userData.id}')
+        .get(GlobalVariable.API_ENDPOINT + "shipper/" + '${widget.userData.id}')
         .then((response) {
       print("Response don hang " + response.body);
       setState(() {
@@ -76,7 +77,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
 
   _getHistory() {
     http
-        .get(API_ENDPOINT +
+        .get(GlobalVariable.API_ENDPOINT +
             "histories/shipper/" +
             '${widget.userData.id}' +
             "/page/1")
@@ -247,7 +248,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   }
 
   _updatePos() {
-    print(API_ENDPOINT +
+    print(GlobalVariable.API_ENDPOINT +
         "shipper/" +
         '${widget.userData.id}' +
         "/lat/" +
@@ -257,7 +258,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
         '/' +
         '${token_app}');
     http
-        .get(API_ENDPOINT +
+        .get(GlobalVariable.API_ENDPOINT +
             "shipper/" +
             '${widget.userData.id}' +
             "/lat/" +
@@ -435,20 +436,52 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
               ),
               itemBuilder: (c, element) {
                 return Card(
-                  elevation: 8.0,
-                  margin:
-                      new EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
-                  child: Container(
-                    child: ListTile(
-                      contentPadding: EdgeInsets.symmetric(
-                          horizontal: 20.0, vertical: 10.0),
-                      leading: Image.asset("assets/order.jpg"),
-                      title: Text(element.order.id),
-                      subtitle: Text(
-                          (element.value / 1000.round()).toString() + " km"),
-                      trailing:
-                          Text(oCcy.format(element.order.totalCost) + " vnd"),
-                    ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      ListTile(
+                        leading: Image.asset("assets/order.jpg"),
+                        title: Text(element.order.id),
+                        trailing:
+                            Text(oCcy.format(element.order.totalCost) + " vnd"),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: <Widget>[
+                          TextButton(
+                            child: const Text('HỦY',
+                                style: TextStyle(color: Colors.red)),
+                            onPressed: () {
+                              // SweetAlert.show(context,
+                              //     title: "Chú ý",
+                              //     subtitle: "Bạn có muốn đăng xuất khỏi ứng dụng ? ",
+                              //     style: SweetAlertStyle.confirm,
+                              //     showCancelButton: true, onPress: (bool isConfirm) {
+                              //       if (isConfirm) {
+                              //         _clockTimer.cancel();
+                              //         RestarApp.restartApp(context);
+                              //       }
+                              //     });
+                              // http
+                              //     .delete(API_ENDPOINT +
+                              //         element.order.id +
+                              //         'shipper' +
+                              //         widget.userData.id)
+                              //     .then((response) {
+                              //      String tmp = element.order.id;
+                              //       List newOrders = listOrders.removeWhere((elemen) => elemen.order.id == tmp);
+                              //   setState(() {
+                              //     Iterable list = json.decode(response.body);
+                              //     listHistory = list
+                              //         .map((model) => History.fromJson(model))
+                              //         .toList();
+                              //   });
+                              // });
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 );
               },
@@ -524,21 +557,23 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                 return ListTile(
                     leading: Icon(Icons.home),
                     title: Text(utf8.decode(
-                        latin1.encode(listHistory[index].marketName),
+                        latin1.encode(listHistory[index].id),
                         allowMalformed: true)),
-                    trailing: Icon(Icons.check),
+                    trailing: Text(
+                        oCcy.format(listHistory[index].totalCost) + " vnd"),
                     subtitle: Text(utf8.decode(
-                        latin1.encode(listHistory[index].addressDelivery),
-                        allowMalformed: true)),
+                            latin1.encode(listHistory[index].marketName),
+                            allowMalformed: true) +
+                        '\n' +
+                        '${utf8.decode(latin1.encode(listHistory[index].addressDelivery), allowMalformed: true)}'),
                     onTap: () {
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) => DetailScreen(
-                      //         orderObject: listOrders[index],
-                      //         detailObject: listOrders[index].order.detail),
-                      //   ),
-                      // );
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              HistoryDetail(orderID: listHistory[index].id),
+                        ),
+                      );
                     });
               },
             )
