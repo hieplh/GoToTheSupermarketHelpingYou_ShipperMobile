@@ -34,7 +34,7 @@ class RouteCustomer extends StatefulWidget {
 class RouteCustomerState extends State<RouteCustomer> {
   Completer<GoogleMapController> _controller = Completer();
   Set<Marker> _markers = Set<Marker>();
-  double distanceToAddressDelivery;
+  double distanceToAddressDelivery = 0.00;
 // for my drawn routes on the map
   Set<Polyline> _polylines = Set<Polyline>();
   List<LatLng> polylineCoordinates = [];
@@ -63,6 +63,7 @@ class RouteCustomerState extends State<RouteCustomer> {
   List<String> orderID = new List<String>();
   int currentIndex = 0;
   String currentOrderId = '';
+  String orderIdFromMarker = '';
   String addressNearby = '';
   PinInformation sourcePinInfo;
   PinInformation destinationPinInfo;
@@ -163,11 +164,6 @@ class RouteCustomerState extends State<RouteCustomer> {
     currentLocation = await location.getLocation();
     var pinPosition =
         LatLng(currentLocation.latitude, currentLocation.longitude);
-    // get a LatLng out of the LocationData object
-    // var destPosition =
-    //     LatLng(destinationLocation.latitude, destinationLocation.longitude);
-
-    // add the initial source location pin
     _markers.add(Marker(
         markerId: MarkerId('sourcePin'),
         position: pinPosition,
@@ -177,8 +173,6 @@ class RouteCustomerState extends State<RouteCustomer> {
       var addressFromMap = widget.data[i].values.toList();
       final query =
           utf8.decode(latin1.encode(addressFromMap[1]), allowMalformed: true);
-      addressDelivery.add(query);
-      orderID.add(addressFromMap[6]);
       var addresses = await Geocoder.local.findAddressesFromQuery(query);
       var first = addresses.first;
       var destPosition =
@@ -188,38 +182,17 @@ class RouteCustomerState extends State<RouteCustomer> {
           position: destPosition,
           icon: BitmapDescriptor.defaultMarker));
     }
-    print(
-        "Vi tri hien tai '$currentLocation.latitude'+'$currentLocation.longitude'+'$destinationLocation.latitude" +
-            "$destinationLocation.longitude'");
-
-    // print("Dia chi giao hang " + widget.des);
-
-    // print("Dia chi giao hang : " +
-    //     first.coordinates.latitude.toString() +
-    //     first.coordinates.longitude.toString());
-    // // set the initial location by pulling the user's
-    // // current location from the location's getLocation()
-    // currentLocation = await location.getLocation();
-
-    // // hard-coded destination for this example
-    // destinationLocation = LocationData.fromMap({
-    //   "latitude": first.coordinates.latitude,
-    //   "longitude": first.coordinates.longitude
-    // });
 
     List<Marker> listmarkers = _markers
         .where((marker) => marker.markerId.value != 'sourcePin')
         .toList();
 
-    print("Set marker la ${listmarkers.length}");
-    destinationLocation = LocationData.fromMap({
+    destinationLocation = await LocationData.fromMap({
       "latitude": listmarkers[0].position.latitude,
       "longitude": listmarkers[0].position.longitude
     });
-    // addressNearby = addressDelivery[0];
-    // currentOrderId = orderID[0];
 
-    double minDistance = calculateDistance(
+    double minDistance = await calculateDistance(
         currentLocation.latitude,
         currentLocation.longitude,
         listmarkers[0].position.latitude,
@@ -236,24 +209,24 @@ class RouteCustomerState extends State<RouteCustomer> {
           "latitude": listmarkers[i].position.latitude,
           "longitude": listmarkers[i].position.longitude
         });
-        // addressNearby = addressDelivery[i];
-        // currentOrderId = orderID[i];
       }
     }
-    // setState(() {
-    //   distanceToAddressDelivery = calculateDistance(
-    //       currentLocation.latitude,
-    //       currentLocation.longitude,
-    //       destinationLocation.latitude,
-    //       destinationLocation.longitude);
-    //   currentlySelectedPin = PinInformation(
-    //       locationName: addressNearby,
-    //       location: SOURCE_LOCATION,
-    //       pinPath: "assets/destination_map_marker.png",
-    //       avatarPath: "assets/destination_map_marker.png",
-    //       distance: distanceToAddressDelivery,
-    //       labelColor: Colors.purple);
-    // });
+    Marker tmpMarker = _markers.firstWhere(
+        (element) => element.position.latitude == destinationLocation.latitude);
+
+    String initID = tmpMarker.markerId.value;
+    Map<String, dynamic> tmpMap = widget.data
+        .where((element) => element.values.toList()[6] == initID)
+        .first;
+    setState(() {
+      orderIdFromMarker = initID;
+      addressNearby = tmpMap.values.toList()[1];
+      distanceToAddressDelivery = calculateDistance(
+          currentLocation.latitude,
+          currentLocation.longitude,
+          destinationLocation.latitude,
+          destinationLocation.longitude);
+    });
   }
 
   @override
@@ -297,6 +270,72 @@ class RouteCustomerState extends State<RouteCustomer> {
                 // i'm ready to show the pins on the map
                 showPinsOnMap();
               }),
+          AnimatedPositioned(
+            top: 0,
+            right: 0,
+            left: 0,
+            duration: Duration(milliseconds: 200),
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                margin: EdgeInsets.all(20),
+                height: 130,
+                decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.all(Radius.circular(50)),
+                    boxShadow: <BoxShadow>[
+                      BoxShadow(
+                          blurRadius: 20,
+                          offset: Offset.zero,
+                          color: Colors.grey.withOpacity(0.5))
+                    ]),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Container(
+                      width: 50,
+                      height: 50,
+                      margin: EdgeInsets.only(left: 10),
+                      child: ClipOval(
+                          child: Image.asset(
+                              "assets/destination_map_marker.png",
+                              fit: BoxFit.cover)),
+                    ),
+                    Expanded(
+                      child: Container(
+                        margin: EdgeInsets.only(left: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Text(orderIdFromMarker,
+                                style: TextStyle(
+                                    fontSize: 16, color: Colors.green)),
+                            Text(
+                                utf8.decode(latin1.encode(addressNearby),
+                                    allowMalformed: true),
+                                style: TextStyle(fontSize: 14,fontWeight: FontWeight.bold)),
+                            Text(
+                                'Khoảng cách: ${distanceToAddressDelivery.toStringAsFixed(2)}' +
+                                    " km",
+                                style:
+                                    TextStyle(fontSize: 16, color: Colors.red)),
+                            TextButton(onPressed: () {}, child: Text('HỦY')),
+                            // Text('Longitude: ${widget.currentlySelectedPin.location.longitude.toString()}', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Padding(
+                    //   padding: EdgeInsets.all(15),
+                    //   child: Image.asset(widget.currentlySelectedPin.pinPath, width: 50, height: 50),
+                    // )
+                  ],
+                ),
+              ),
+            ),
+          )
           // MapPinPillComponent(
           //     pinPillPosition: 0, currentlySelectedPin: currentlySelectedPin),
         ],
@@ -362,41 +401,90 @@ class RouteCustomerState extends State<RouteCustomer> {
     }
   }
 
-  _showMaterialDialog(Map<String, dynamic> od) {
-    showDialog(
-        context: context,
-        builder: (_) => new AlertDialog(
-              title: new Text("Thông báo"),
-              content: new Text('Đã tới địa điểm giao của đơn hàng ${od['id']}'
-                  '\n'
-                  '\nXin vui lòng chụp hình mặt hàng trước khi chuyển giao cho khách '
-              ),
-              actions: <Widget>[
-                FlatButton(
-                  child: Text('Chụp hình'),
-                  onPressed: () async {
-                    var url = GlobalVariable.API_ENDPOINT + 'orders/update';
-                    var response = await http.put(
-                      Uri.encodeFull(url),
-                      headers: {
-                        'Content-type': 'application/json',
-                        "Accept": "application/json",
-                      },
-                      encoding: Encoding.getByName("utf-8"),
-                      body: '[' + jsonEncode(od) + ']',
-                    );
-                    print("Loi la ${response.statusCode}");
-                    if (response.statusCode == 200) {
-
-                      Navigator.of(context).pop();
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => CameraScreen()));
-                    } else {
-                      
-                    }
-                  },
-                )
-              ],
-            ));
+  _showMaterialDialog(Map<String, dynamic> od) async {
+    bool checkDuplicate = false;
+    List address = List();
+    await widget.data.forEach((u) {
+      if (address.contains(u["addressDelivery"]))
+        checkDuplicate = true;
+      else {
+        checkDuplicate = false;
+        address.add(u["addressDelivery"]);
+      }
+    });
+    print("Co trung khong : ${checkDuplicate}");
+    if (await checkDuplicate == true) {
+      // var listIdOrder = widget.data.reduce((value, element) =>
+      //     value["addressDelivery"] + ',' + element["addressDelivery"]);
+      showDialog(
+          context: context,
+          builder: (_) => new AlertDialog(
+                title: new Text("Thông báo"),
+                content: new Text('Đã tới địa điểm giao của đơn hàng'
+                    '\n'
+                    '\nXin vui lòng chụp hình mặt hàng trước khi chuyển giao cho khách '),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text('Chụp hình'),
+                    onPressed: () async {
+                      var url = GlobalVariable.API_ENDPOINT + 'orders/update';
+                      var response = await http.put(
+                        Uri.encodeFull(url),
+                        headers: {
+                          'Content-type': 'application/json',
+                          "Accept": "application/json",
+                        },
+                        encoding: Encoding.getByName("utf-8"),
+                        body: jsonEncode(widget.data),
+                      );
+                      print("Loi la ${response.statusCode}");
+                      if (response.statusCode == 200) {
+                        Navigator.of(context).pop();
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => CameraScreen()));
+                      } else {}
+                    },
+                  )
+                ],
+              ));
+    } else {
+      showDialog(
+          context: context,
+          builder: (_) => new AlertDialog(
+                title: new Text("Thông báo"),
+                content: new Text(
+                    'Đã tới địa điểm giao của đơn hàng ${od['id']}'
+                    '\n'
+                    '\nXin vui lòng chụp hình mặt hàng trước khi chuyển giao cho khách '),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text('Chụp hình'),
+                    onPressed: () async {
+                      var url = GlobalVariable.API_ENDPOINT + 'orders/update';
+                      var response = await http.put(
+                        Uri.encodeFull(url),
+                        headers: {
+                          'Content-type': 'application/json',
+                          "Accept": "application/json",
+                        },
+                        encoding: Encoding.getByName("utf-8"),
+                        body: '[' + jsonEncode(od) + ']',
+                      );
+                      print("Loi la ${response.statusCode}");
+                      if (response.statusCode == 200) {
+                        Navigator.of(context).pop();
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => CameraScreen()));
+                      } else {}
+                    },
+                  )
+                ],
+              ));
+    }
   }
 
   void updatePinOnMap() async {
@@ -435,6 +523,7 @@ class RouteCustomerState extends State<RouteCustomer> {
               .toList();
 
           _showMaterialDialog(rs[0]);
+
           // addressNearby = addressDelivery[0];
           // currentOrderId = orderID[0];
         } else {
@@ -476,6 +565,7 @@ class RouteCustomerState extends State<RouteCustomer> {
               .toList();
 
           _showMaterialDialog(rs[0]);
+
           // setState(() {
           //   distanceToAddressDelivery = calculateDistance(
           //       currentLocation.latitude,
@@ -514,8 +604,22 @@ class RouteCustomerState extends State<RouteCustomer> {
     controller.animateCamera(CameraUpdate.newCameraPosition(cPosition));
     // do this inside the setState() so Flutter gets notified
     // that a widget update is due
+    Marker tmpMarker = _markers.firstWhere(
+            (element) => element.position.latitude == destinationLocation.latitude);
+
+    String initID = tmpMarker.markerId.value;
+    Map<String, dynamic> tmpMap = widget.data
+        .where((element) => element.values.toList()[6] == initID)
+        .first;
     setState(() {
       // updated position
+      orderIdFromMarker = initID;
+      addressNearby = tmpMap.values.toList()[1];
+      distanceToAddressDelivery = calculateDistance(
+          currentLocation.latitude,
+          currentLocation.longitude,
+          destinationLocation.latitude,
+          destinationLocation.longitude);
       var pinPosition =
           LatLng(currentLocation.latitude, currentLocation.longitude);
 

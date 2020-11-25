@@ -72,6 +72,7 @@ flutter:
     - assets/cart.png
     - assets/veget.png
     - assets/order.jpg
+    - assets/supermarket.png
     
 
   # An image asset can refer to one or more resolution-specific "variants", see

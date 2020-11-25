@@ -29,9 +29,14 @@ class _StepsState extends State<Steps> {
   bool _isChecked = false;
   double totalCost = 0;
   int countChecked = 0;
+  List<Map<String, dynamic>> tmp = new List();
+  int totalItem = 0;
+
   @override
   void initState() {
     super.initState();
+    tmp = widget.data;
+    totalItem = widget.item.length;
     _getTotalCost();
   }
 
@@ -61,7 +66,7 @@ class _StepsState extends State<Steps> {
           child: ListView.builder(
             physics: NeverScrollableScrollPhysics(),
             shrinkWrap: true,
-            itemCount: widget.data.length,
+            itemCount: tmp.length,
             itemBuilder: (BuildContext context, int indexSwipper) {
               return Container(
                   margin: new EdgeInsets.all(10),
@@ -75,20 +80,56 @@ class _StepsState extends State<Steps> {
                             style: TextStyle(
                                 fontSize: 18, fontWeight: FontWeight.bold),
                           ),
-                          title: Text(
-                              widget.data[indexSwipper].values.toList()[6],
-                              style:
-                                  TextStyle(fontSize: 16, color: Colors.red)),
+                          title: Text(tmp[indexSwipper].values.toList()[6],
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold)),
+                          trailing: TextButton(
+                            child: Text('HỦY',
+                                style: TextStyle(color: Colors.red)),
+                            onPressed: () {
+                              SweetAlert.show(context,
+                                  title: "Chú ý",
+                                  subtitle: "Bạn có muốn hủy đơn hàng ? ",
+                                  style: SweetAlertStyle.confirm,
+                                  showCancelButton: true,
+                                  onPress: (bool isConfirm) {
+                                if (isConfirm) {
+                                  http
+                                      .delete(GlobalVariable.API_ENDPOINT +
+                                          'delete/' +
+                                          tmp[indexSwipper].values.toList()[6] +
+                                          '/shipper/' +
+                                          widget.userData.id)
+                                      .then((response) {
+                                    if (response.statusCode == 200) {
+                                      setState(() {
+                                        tmp.removeWhere((element) =>
+                                            element.values.toList()[6] ==
+                                            tmp[indexSwipper]
+                                                .values
+                                                .toList()[6]);
+                                      });
+                                    } else {
+                                      // SweetAlert.show(context,
+                                      //     title: '${response.statusCode}',
+                                      //     style: SweetAlertStyle.error);
+                                    }
+                                  });
+                                }
+                              });
+                            },
+                          ),
                         ),
                       ),
                       ListView.builder(
                         physics: NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
-                        itemCount:
-                            widget.data[indexSwipper].values.toList()[5].length,
+                        itemCount: tmp[indexSwipper].values.toList()[5].length,
                         itemBuilder: (context, index) {
                           return CheckItem(
-                              data: widget.data[indexSwipper].values.toList()[5]
+                              data: tmp[indexSwipper].values.toList()[5]
                                   [index]);
                         },
                       ),
@@ -111,13 +152,21 @@ class _StepsState extends State<Steps> {
 
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () {
+            int countItemCheck = 0;
+            for (int i = 0; i < tmp.length; i++) {
+              countItemCheck += tmp[i].values.toList()[5].length;
+            }
             // // print(widget.data.toString());
             // print("So luong item la " + Global.number.toString());
-            if (Global.number.round() == widget.item.length) {
+            if (Global.number.round() == countItemCheck) {
               _updateOrder();
+              // SweetAlert.show(context,
+              //     title: "Chưa mua đủ đồ ${countItemCheck}",
+              //     style: SweetAlertStyle.success);
             } else {
               SweetAlert.show(context,
-                  title: "Chưa mua đủ đồ !", style: SweetAlertStyle.error);
+                  title: "Chưa mua đủ đồ ${countItemCheck}",
+                  style: SweetAlertStyle.error);
             }
           },
           label: Text('Hoàn Tất Mua Hàng'),
@@ -136,7 +185,7 @@ class _StepsState extends State<Steps> {
         "Accept": "application/json",
       },
       encoding: Encoding.getByName("utf-8"),
-      body: jsonEncode(widget.data),
+      body: jsonEncode(tmp),
     );
 
     if (response.statusCode == 200) {
@@ -144,7 +193,7 @@ class _StepsState extends State<Steps> {
         context,
         MaterialPageRoute(
             builder: (context) =>
-                RouteCustomer(data: widget.data, userData: widget.userData)),
+                RouteCustomer(data: tmp, userData: widget.userData)),
       );
     } else {
       // If the server did not return a 200 OK response,

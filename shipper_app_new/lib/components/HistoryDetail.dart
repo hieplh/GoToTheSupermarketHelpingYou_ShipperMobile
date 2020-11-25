@@ -49,8 +49,8 @@ class _HistoryDetailState extends State<HistoryDetail> {
         children: <Widget>[
           Card(
             child: ListTile(
-              leading: FlutterLogo(),
-              title: Text('Mã đơn hàng : ${widget.orderID}'),
+              leading: Text('Mã đơn hàng',style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold,color: Colors.red)),
+              title: Text('${widget.orderID}'),
             ),
           ),
           ListView.builder(

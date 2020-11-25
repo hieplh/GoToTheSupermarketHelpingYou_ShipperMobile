@@ -56,15 +56,15 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
     () => 'Data Loaded',
   );
 
-  _getOrders() {
-    print(GlobalVariable.API_ENDPOINT + "shipper/" + '${widget.userData.id}');
+  Future<String> _getOrders() async {
+    // print(GlobalVariable.API_ENDPOINT + "shipper/" + '${widget.userData.id}');
     // print(API_ENDPOINT +
     // "shipper/" +
     // '${widget.userData.id}' +
     // "/lat/10.847440/lng/106.796640");
     // 'http://25.72.134.12:1234/smhu/api/shipper/98765/lat/10.800777/lng/106.732639'
     //http://192.168.43.81/smhu/api/shipper/98765/lat/10.779534/lng/106.631451
-    http
+    await http
         .get(GlobalVariable.API_ENDPOINT + "shipper/" + '${widget.userData.id}')
         .then((response) {
       print("Response don hang " + response.body);
@@ -73,6 +73,74 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
         listOrders = list.map((model) => Orders.fromJson(model)).toList();
       });
     });
+    return 'Success';
+  }
+
+  updateOrders() async {
+    List<Map<String, dynamic>> data = new List<Map<String, dynamic>>();
+    for (Orders orders in listOrders) {
+      Map<String, dynamic> order = {
+        "costDelivery": orders.order.costDelivery,
+        "addressDelivery": orders.order.addressDelivery,
+        "costShopping": orders.order.costShopping,
+        "cust": '${orders.order.cust}',
+        "dateDelivery": "${orders.order.dateDelivery}",
+        "details": [
+          for (OrderDetail detail in orders.order.detail)
+            {
+              "foodName": utf8.decode(latin1.encode("${detail.foodId}"),
+                  allowMalformed: true),
+              "foodId": "${detail.foodId}",
+              "id": "${detail.id}",
+              "image": "${detail.image}",
+              "priceOriginal": detail.priceOriginal,
+              "pricePaid": detail.pricePaid,
+              "saleOff": detail.saleOff,
+              "weight": detail.weight
+            },
+        ],
+        "id": "${orders.order.id}",
+        "market": {
+          "addr1": utf8.decode(latin1.encode("${orders.order.market.addr1}"),
+              allowMalformed: true),
+          "addr2": utf8.decode(latin1.encode("${orders.order.market.addr2}"),
+              allowMalformed: true),
+          "addr3": utf8.decode(latin1.encode("${orders.order.market.addr3}"),
+              allowMalformed: true),
+          "addr4": utf8.decode(latin1.encode("${orders.order.market.addr4}"),
+              allowMalformed: true),
+          "id": "${orders.order.market.id}",
+          "lat": "${orders.order.market.lat}",
+          "lng": "${orders.order.market.lng}",
+          "name": utf8.decode(latin1.encode("${orders.order.market.name}"),
+              allowMalformed: true),
+        },
+        "note": "phuong nguyen",
+        "shipper": widget.userData.id,
+        "status": 21,
+        "timeDelivery": "12:12:12",
+        "totalCost": orders.order.totalCost
+      };
+      data.add(order);
+    }
+
+    var url = GlobalVariable.API_ENDPOINT + 'orders/update';
+    var response = await http.put(
+      Uri.encodeFull(url),
+      headers: {
+        'Content-type': 'application/json',
+        "Accept": "application/json",
+      },
+      encoding: Encoding.getByName("utf-8"),
+      body: jsonEncode(data),
+    );
+
+    if (response.statusCode == 200) {
+      print("Updater thanh cong");
+    } else {
+      throw Exception('Loi update dau tien ' +
+          utf8.decode(latin1.encode(response.body), allowMalformed: true));
+    }
   }
 
   _getHistory() {
@@ -215,9 +283,11 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                 actions: <Widget>[
                   TextButton(
                     child: Text('Chấp nhận'),
-                    onPressed: () {
-                      _getOrders();
-                      Navigator.pop(dialogContext);
+                    onPressed: () async {
+                      await _getOrders().then((value) {
+                        updateOrders();
+                      });
+                      await Navigator.pop(dialogContext);
                     },
                   ),
                   TextButton(
@@ -343,13 +413,13 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
             ),
             BottomNavigationBarItem(
               icon: Icon(
-                Icons.location_searching,
+                Icons.assignment,
               ),
               title: Text(''),
             ),
             BottomNavigationBarItem(
               icon: Icon(
-                Icons.assignment,
+                Icons.lock_clock,
               ),
               title: Text('Lịch Sử'),
             ),
@@ -418,76 +488,108 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
           centerTitle: true,
           backgroundColor: Colors.green),
       body: listOrders.length > 0
-          ? GroupedListView<dynamic, String>(
-              elements: listOrders,
-              groupBy: (element) => utf8.decode(
-                  latin1.encode(element.order.market.name),
-                  allowMalformed: true),
-              groupComparator: (value1, value2) => value2.compareTo(value1),
-              order: GroupedListOrder.DESC,
-              useStickyGroupSeparators: true,
-              groupSeparatorBuilder: (String value) => Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  value,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ? Column(
+              children: <Widget>[
+                Card(
+                  child: ListTile(
+                    title: Text(
+                      utf8.decode(
+                          latin1.encode(listOrders[0].order.market.name),
+                          allowMalformed: true),
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                    ),
+                  ),
                 ),
-              ),
-              itemBuilder: (c, element) {
-                return Card(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      ListTile(
-                        leading: Image.asset("assets/order.jpg"),
-                        title: Text(element.order.id),
-                        trailing:
-                            Text(oCcy.format(element.order.totalCost) + " vnd"),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                ListView.builder(
+                  physics: NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  itemCount: listOrders.length,
+                  itemBuilder: (context, indexList) {
+                    return Card(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: <Widget>[
-                          TextButton(
-                            child: const Text('HỦY',
-                                style: TextStyle(color: Colors.red)),
-                            onPressed: () {
-                              // SweetAlert.show(context,
-                              //     title: "Chú ý",
-                              //     subtitle: "Bạn có muốn đăng xuất khỏi ứng dụng ? ",
-                              //     style: SweetAlertStyle.confirm,
-                              //     showCancelButton: true, onPress: (bool isConfirm) {
-                              //       if (isConfirm) {
-                              //         _clockTimer.cancel();
-                              //         RestarApp.restartApp(context);
-                              //       }
-                              //     });
-                              // http
-                              //     .delete(API_ENDPOINT +
-                              //         element.order.id +
-                              //         'shipper' +
-                              //         widget.userData.id)
-                              //     .then((response) {
-                              //      String tmp = element.order.id;
-                              //       List newOrders = listOrders.removeWhere((elemen) => elemen.order.id == tmp);
-                              //   setState(() {
-                              //     Iterable list = json.decode(response.body);
-                              //     listHistory = list
-                              //         .map((model) => History.fromJson(model))
-                              //         .toList();
-                              //   });
-                              // });
-                            },
+                          ListTile(
+                            leading: Image.asset("assets/order.jpg"),
+                            title: Text(listOrders[indexList].order.id),
+                            trailing: Text(oCcy.format(
+                                    listOrders[indexList].order.totalCost) +
+                                " vnd"),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: <Widget>[
+                              TextButton(
+                                child: Text('HỦY',
+                                    style: TextStyle(color: Colors.red)),
+                                onPressed: () {
+
+                                  SweetAlert.show(context,
+                                      title: "Chú ý",
+                                      subtitle: "Bạn có muốn hủy đơn hàng ? ",
+                                      style: SweetAlertStyle.confirm,
+                                      showCancelButton: true,
+                                      onPress: (bool isConfirm) {
+                                    if (isConfirm) {
+                                      http
+                                          .delete(GlobalVariable.API_ENDPOINT +
+                                              'delete/' +
+                                              listOrders[indexList].order.id +
+                                              '/shipper/' +
+                                              widget.userData.id)
+                                          .then((response) {
+                                        print(GlobalVariable.API_ENDPOINT +
+                                            listOrders[indexList].order.id +
+                                            '/shipper/' +
+                                            widget.userData.id);
+                                        print(
+                                            'Status cancel : ${response.statusCode}');
+                                        if (response.statusCode == 200) {
+                                          SweetAlert.show(context,
+                                              title: "Hủy đơn hàng thành công",
+                                              style: SweetAlertStyle.success);
+                                          setState(() {
+                                            listOrders.removeWhere((item) =>
+                                                item.order.id ==
+                                                listOrders[indexList].order.id);
+                                          });
+                                        } else {
+                                          // SweetAlert.show(context,
+                                          //     title: '${response.statusCode}',
+                                          //     style: SweetAlertStyle.error);
+                                        }
+                                      });
+                                    }
+                                  });
+                                  // http
+                                  //     .delete(API_ENDPOINT +
+                                  //         element.order.id +
+                                  //         'shipper' +
+                                  //         widget.userData.id)
+                                  //     .then((response) {
+                                  //      String tmp = element.order.id;
+                                  //       List newOrders = listOrders.removeWhere((elemen) => elemen.order.id == tmp);
+                                  //   setState(() {
+                                  //     Iterable list = json.decode(response.body);
+                                  //     listHistory = list
+                                  //         .map((model) => History.fromJson(model))
+                                  //         .toList();
+                                  //   });
+                                  // });
+                                },
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                );
-              },
+                    );
+                  },
+                )
+              ],
             )
           : Center(child: const Text('Không có đơn hàng nào')),
-      floatingActionButton: Stack(
+      floatingActionButton: listOrders.length > 0 ? Stack(
         children: <Widget>[
           Positioned(
             bottom: 80.0,
@@ -537,7 +639,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
             ),
           ),
         ],
-      ),
+      ) : null,
     );
   }
 

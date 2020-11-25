@@ -66,41 +66,32 @@ class DetailScreenState extends State<DetailScreen> {
       };
       data.add(order);
     }
-    print(jsonEncode(data));
+    // print(jsonEncode(data));
+    //
+    // var url = GlobalVariable.API_ENDPOINT + 'orders/update';
+    // var response = await http.put(
+    //   Uri.encodeFull(url),
+    //   headers: {
+    //     'Content-type': 'application/json',
+    //     "Accept": "application/json",
+    //   },
+    //   encoding: Encoding.getByName("utf-8"),
+    //   body: jsonEncode(data),
+    // );
 
-    var url = GlobalVariable.API_ENDPOINT + 'orders/update';
-    var response = await http.put(
-      Uri.encodeFull(url),
-      headers: {
-        'Content-type': 'application/json',
-        "Accept": "application/json",
-      },
-      encoding: Encoding.getByName("utf-8"),
-      body: jsonEncode(data),
-    );
-
-    if (response.statusCode == 200) {
-      List<OrderDetail> oD = new List<OrderDetail>();
-      for (Orders orders in widget.list) {
-        for (OrderDetail detail in orders.order.detail) {
-          oD.add(detail);
-        }
+    List<OrderDetail> oD = new List<OrderDetail>();
+    for (Orders orders in widget.list) {
+      for (OrderDetail detail in orders.order.detail) {
+        oD.add(detail);
       }
-
-      // If the server did return a 200 OK response,
-      Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-              builder: (context) => RouteSupermarket(
-                  orderDetails: oD, data: data, userData: widget.userData)),
-          (Route<dynamic> route) => false);
-    } else {
-      // If the server did not return a 200 OK response,
-      // SweetAlert.show(context,
-      //     subtitle: "Xác nhận không thành công", style: SweetAlertStyle.error);
-      // then throw an exception.
-      throw Exception(
-          utf8.decode(latin1.encode(response.body), allowMalformed: true));
     }
+
+    // If the server did return a 200 OK response,
+    Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+            builder: (context) => RouteSupermarket(
+                orderDetails: oD, data: data, userData: widget.userData)),
+        (Route<dynamic> route) => false);
   }
 
   final oCcy = new NumberFormat("#,##0", "en_US");
@@ -204,8 +195,7 @@ class DetailScreenState extends State<DetailScreen> {
                       child: ListTile(
                         leading: Icon(Icons.directions_train),
                         title: Text('Khoảng cách '),
-                        trailing: Text("" +
-                            ' km'),
+                        trailing: Text("" + ' km'),
                       ),
                     ),
                     Card(

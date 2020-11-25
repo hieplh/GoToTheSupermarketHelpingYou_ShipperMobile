@@ -37,7 +37,7 @@ class RouteSupermarket extends StatefulWidget {
 }
 
 class RouteSupermarketState extends State<RouteSupermarket> {
-  double distanceToSupermarket;
+  double distanceToSupermarket = 0.00;
   Completer<GoogleMapController> _controller = Completer();
   Set<Marker> _markers = Set<Marker>();
 // for my drawn routes on the map
@@ -86,13 +86,6 @@ class RouteSupermarketState extends State<RouteSupermarket> {
       currentLocation = cLoc;
 
       updatePinOnMap();
-      setState(() {
-        distanceToSupermarket = (calculateDistance(
-            currentLocation.longitude,
-            currentLocation.latitude,
-            destinationLocation.latitude,
-            destinationLocation.longitude));
-      });
     });
     // set custom marker pins
 
@@ -214,13 +207,6 @@ class RouteSupermarketState extends State<RouteSupermarket> {
         markerId: MarkerId('destPin'),
         position: destPosition,
         icon: destinationIcon));
-    currentlySelectedPin = PinInformation(
-        locationName: widget.data[0]['market']['name'],
-        location: SOURCE_LOCATION,
-        pinPath: "assets/destination_map_marker.png",
-        avatarPath: "assets/cart.png",
-        distance: distanceToSupermarket,
-        labelColor: Colors.purple);
   }
 
   @override
@@ -255,8 +241,65 @@ class RouteSupermarketState extends State<RouteSupermarket> {
               },
               markers: _markers,
             ),
-            MapPinPillComponent(
-                pinPillPosition: 0, currentlySelectedPin: currentlySelectedPin)
+            AnimatedPositioned(
+              top: 0,
+              right: 0,
+              left: 0,
+              duration: Duration(milliseconds: 200),
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  margin: EdgeInsets.all(20),
+                  height: 70,
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.all(Radius.circular(50)),
+                      boxShadow: <BoxShadow>[
+                        BoxShadow(
+                            blurRadius: 20,
+                            offset: Offset.zero,
+                            color: Colors.grey.withOpacity(0.5))
+                      ]),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Container(
+                        width: 50,
+                        height: 50,
+                        margin: EdgeInsets.only(left: 10),
+                        child: ClipOval(
+                            child: Image.asset("assets/cart.png",
+                                fit: BoxFit.cover)),
+                      ),
+                      Expanded(
+                        child: Container(
+                          margin: EdgeInsets.only(left: 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Text(widget.data[0]['market']['name'],
+                                  style: TextStyle(fontSize: 14)),
+                              Text(
+                                  'Khoảng cách: ${distanceToSupermarket.toStringAsFixed(2)}' +
+                                      " km",
+                                  style: TextStyle(
+                                      fontSize: 16, color: Colors.red)),
+                              // Text('Longitude: ${widget.currentlySelectedPin.location.longitude.toString()}', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Padding(
+                      //   padding: EdgeInsets.all(15),
+                      //   child: Image.asset(widget.currentlySelectedPin.pinPath, width: 50, height: 50),
+                      // )
+                    ],
+                  ),
+                ),
+              ),
+            )
           ],
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -319,6 +362,11 @@ class RouteSupermarketState extends State<RouteSupermarket> {
     // do this inside the setState() so Flutter gets notified
     // that a widget update is due
     setState(() {
+      distanceToSupermarket = calculateDistance(
+          currentLocation.latitude,
+          currentLocation.longitude,
+          destinationLocation.latitude,
+          destinationLocation.longitude);
       // updated position
       var pinPosition =
           LatLng(currentLocation.latitude, currentLocation.longitude);
