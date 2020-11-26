@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
@@ -25,6 +26,7 @@ class RouteSupermarket extends StatefulWidget {
   final List<OrderDetail> orderDetails;
   final User userData;
 
+
   final List<Map<String, dynamic>> data;
   RouteSupermarket({
     Key key,
@@ -38,6 +40,7 @@ class RouteSupermarket extends StatefulWidget {
 
 class RouteSupermarketState extends State<RouteSupermarket> {
   double distanceToSupermarket = 0.00;
+  FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   Completer<GoogleMapController> _controller = Completer();
   Set<Marker> _markers = Set<Marker>();
 // for my drawn routes on the map
@@ -54,6 +57,7 @@ class RouteSupermarketState extends State<RouteSupermarket> {
 // a reference to the destination location
   LocationData destinationLocation;
 // wrapper around the location API
+  var listOrders = new List<Order>();
   Location location;
   double pinPillPosition = -100;
   PinInformation currentlySelectedPin = PinInformation(
@@ -65,6 +69,28 @@ class RouteSupermarketState extends State<RouteSupermarket> {
       labelColor: Colors.grey);
 
   PinInformation destinationPinInfo;
+  Future<String> _getOrders() async {
+    // print(GlobalVariable.API_ENDPOINT + "shipper/" + '${widget.userData.id}');
+    // print(API_ENDPOINT +
+    // "shipper/" +
+    // '${widget.userData.id}' +
+    // "/lat/10.847440/lng/106.796640");
+    // 'http://25.72.134.12:1234/smhu/api/shipper/98765/lat/10.800777/lng/106.732639'
+    //http://192.168.43.81/smhu/api/shipper/98765/lat/10.779534/lng/106.631451
+    await http
+        .get(GlobalVariable.API_ENDPOINT + "shipper/" + '${widget.userData.id}')
+        .then((response) {
+      print("Response don hang " + response.body);
+      setState(() {
+        Iterable list = json.decode(response.body);
+        listOrders = list.map((model) => Order.fromJson(model)).toList();
+
+      });
+
+    });
+   await print("List don hang moi ${listOrders.length}");
+    return 'Success';
+  }
 
   @override
   void initState() {
@@ -87,6 +113,49 @@ class RouteSupermarketState extends State<RouteSupermarket> {
 
       updatePinOnMap();
     });
+    _firebaseMessaging.configure(
+      onMessage: (message) async {
+        showDialog(
+            context: context,
+            builder: (_) => new AlertDialog(
+                  title: new Text("Thông báo"),
+                  content: new Text('Có đơn hàng mới'),
+                  actions: <Widget>[
+                    FlatButton(
+                      child: Text('Nhận'),
+                      onPressed: () async {
+                      await  _getOrders();
+                      await    Navigator.of(context).pop();
+                        // var url = GlobalVariable.API_ENDPOINT + 'orders/update';
+                        // var response = await http.put(
+                        //   Uri.encodeFull(url),
+                        //   headers: {
+                        //     'Content-type': 'application/json',
+                        //     "Accept": "application/json",
+                        //   },
+                        //   encoding: Encoding.getByName("utf-8"),
+                        //   body: '[' + jsonEncode(od) + ']',
+                        // );
+                        // print("Loi la ${response.statusCode}");
+                        // if (response.statusCode == 200) {
+                        //   Navigator.of(context).pop();
+                        //   Navigator.push(
+                        //       context,
+                        //       MaterialPageRoute(
+                        //           builder: (context) => CameraScreen()));
+                        // } else {}
+                      },
+                    )
+                  ],
+                ));
+      },
+      onResume: (message) async {
+        // setState(() {
+        //   title = message["data"]["title"];
+        //   helper = "You have open the application from notification";
+        // });
+      },
+    );
     // set custom marker pins
 
     // set the initial location

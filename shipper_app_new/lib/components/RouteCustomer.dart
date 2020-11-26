@@ -51,7 +51,7 @@ class RouteCustomerState extends State<RouteCustomer> {
   LocationData destinationLocation;
 // wrapper around the location API
   Location location;
-  double pinPillPosition = -100;
+  double pinPillPosition = 0;
   PinInformation currentlySelectedPin = PinInformation(
       pinPath: '',
       avatarPath: '',
@@ -261,9 +261,6 @@ class RouteCustomerState extends State<RouteCustomer> {
               polylines: _polylines,
               mapType: MapType.normal,
               initialCameraPosition: initialCameraPosition,
-              onTap: (LatLng loc) {
-                pinPillPosition = -100;
-              },
               onMapCreated: (GoogleMapController controller) {
                 _controller.complete(controller);
                 // my map has completed being created;
@@ -271,7 +268,7 @@ class RouteCustomerState extends State<RouteCustomer> {
                 showPinsOnMap();
               }),
           AnimatedPositioned(
-            top: 0,
+            top: pinPillPosition,
             right: 0,
             left: 0,
             duration: Duration(milliseconds: 200),
@@ -315,13 +312,37 @@ class RouteCustomerState extends State<RouteCustomer> {
                             Text(
                                 utf8.decode(latin1.encode(addressNearby),
                                     allowMalformed: true),
-                                style: TextStyle(fontSize: 14,fontWeight: FontWeight.bold)),
+                                style: TextStyle(
+                                    fontSize: 14, fontWeight: FontWeight.bold)),
                             Text(
                                 'Khoảng cách: ${distanceToAddressDelivery.toStringAsFixed(2)}' +
                                     " km",
                                 style:
                                     TextStyle(fontSize: 16, color: Colors.red)),
-                            TextButton(onPressed: () {}, child: Text('HỦY')),
+                            TextButton(
+                                onPressed: () {
+                                  SweetAlert.show(context,
+                                      title: "Chú ý",
+                                      subtitle: "Bạn có muốn hủy đơn hàng ? ",
+                                      style: SweetAlertStyle.confirm,
+                                      showCancelButton: true,
+                                      onPress: (bool isConfirm) {
+                                    if (isConfirm) {
+                                      http
+                                          .delete(GlobalVariable.API_ENDPOINT +
+                                              'delete/' +
+                                              orderIdFromMarker +
+                                              '/shipper/' +
+                                              widget.userData.id)
+                                          .then((response) {
+                                        if (response.statusCode == 200) {
+                                          _setNewPin();
+                                        } else {}
+                                      });
+                                    }
+                                  });
+                                },
+                                child: Text('HỦY')),
                             // Text('Longitude: ${widget.currentlySelectedPin.location.longitude.toString()}', style: TextStyle(fontSize: 12, color: Colors.grey)),
                           ],
                         ),
@@ -487,6 +508,63 @@ class RouteCustomerState extends State<RouteCustomer> {
     }
   }
 
+  _setNewPin() {
+    if (_markers.length > 1) {
+      Marker tmp = _markers.firstWhere((element) =>
+          element.position.latitude == destinationLocation.latitude);
+
+      currentOrderId = tmp.markerId.value;
+      _markers.removeWhere((m) =>
+          m.position.latitude == destinationLocation.latitude &&
+          m.position.longitude == destinationLocation.longitude);
+      polylineCoordinates.removeWhere(
+          (element) => element.latitude == destinationLocation.latitude);
+
+      List<Marker> listmarkers = _markers
+          .where((marker) => marker.markerId.value != 'sourcePin')
+          .toList();
+      if (listmarkers.length == 0) {
+        polylineCoordinates.clear();
+      } else if (listmarkers.length == 1) {
+        destinationLocation = LocationData.fromMap({
+          "latitude": listmarkers[0].position.latitude,
+          "longitude": listmarkers[0].position.longitude
+        });
+      } else {
+        destinationLocation = LocationData.fromMap({
+          "latitude": listmarkers[0].position.latitude,
+          "longitude": listmarkers[0].position.longitude
+        });
+
+        double minDistance = calculateDistance(
+            currentLocation.latitude,
+            currentLocation.longitude,
+            listmarkers[0].position.latitude,
+            listmarkers[0].position.longitude);
+
+        for (var i = 0; i < listmarkers.length; i++) {
+          if (calculateDistance(
+                  currentLocation.latitude,
+                  currentLocation.longitude,
+                  listmarkers[i].position.latitude,
+                  listmarkers[i].position.longitude) <
+              minDistance) {
+            destinationLocation = LocationData.fromMap({
+              "latitude": listmarkers[i].position.latitude,
+              "longitude": listmarkers[i].position.longitude
+            });
+            currentOrderId = listmarkers[i].markerId.value;
+          }
+        }
+      }
+    } else {
+      polylineCoordinates.clear();
+      setState(() {
+        pinPillPosition = -130;
+      });
+    }
+  }
+
   void updatePinOnMap() async {
     if (calculateDistance(currentLocation.latitude, currentLocation.longitude,
             destinationLocation.latitude, destinationLocation.longitude) <
@@ -583,6 +661,9 @@ class RouteCustomerState extends State<RouteCustomer> {
         }
       } else {
         polylineCoordinates.clear();
+        setState(() {
+          pinPillPosition = -150;
+        });
       }
 
       // setPolylines();
@@ -591,7 +672,11 @@ class RouteCustomerState extends State<RouteCustomer> {
       // }
 
     }
-    setPolylines();
+   if(_markers.length >1){
+     setPolylines();
+   } else if (_markers.length ==1){
+     polylineCoordinates.clear();
+   }
 
     // create a new CameraPosition instance
     // every time the location changes, so the camera
@@ -604,17 +689,22 @@ class RouteCustomerState extends State<RouteCustomer> {
     controller.animateCamera(CameraUpdate.newCameraPosition(cPosition));
     // do this inside the setState() so Flutter gets notified
     // that a widget update is due
-    Marker tmpMarker = _markers.firstWhere(
-            (element) => element.position.latitude == destinationLocation.latitude);
+    if (_markers.length > 1) {
+      Marker tmpMarker = _markers.firstWhere((element) =>
+          element.position.latitude == destinationLocation.latitude);
 
-    String initID = tmpMarker.markerId.value;
-    Map<String, dynamic> tmpMap = widget.data
-        .where((element) => element.values.toList()[6] == initID)
-        .first;
+      String initID = tmpMarker.markerId.value;
+      Map<String, dynamic> tmpMap = widget.data
+          .where((element) => element.values.toList()[6] == initID)
+          .first;
+      setState(() {
+        orderIdFromMarker = initID;
+        addressNearby = tmpMap.values.toList()[1];
+      });
+    }
     setState(() {
       // updated position
-      orderIdFromMarker = initID;
-      addressNearby = tmpMap.values.toList()[1];
+
       distanceToAddressDelivery = calculateDistance(
           currentLocation.latitude,
           currentLocation.longitude,

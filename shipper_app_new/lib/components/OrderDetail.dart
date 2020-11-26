@@ -10,7 +10,7 @@ import 'package:shipper_app_new/constant/constant.dart';
 
 class DetailScreen extends StatefulWidget {
   final User userData;
-  final List<Orders> list;
+  final List<Order> list;
   final oCcy = new NumberFormat("#,##0", "en_US");
   DetailScreen({Key key, this.list, this.userData}) : super(key: key);
 
@@ -21,15 +21,15 @@ class DetailScreen extends StatefulWidget {
 class DetailScreenState extends State<DetailScreen> {
   updateOrders() async {
     List<Map<String, dynamic>> data = new List<Map<String, dynamic>>();
-    for (Orders orders in widget.list) {
+    for (Order orderInList in widget.list) {
       Map<String, dynamic> order = {
-        "costDelivery": orders.order.costDelivery,
-        "addressDelivery": orders.order.addressDelivery,
-        "costShopping": orders.order.costShopping,
-        "cust": '${orders.order.cust}',
-        "dateDelivery": "${orders.order.dateDelivery}",
+        "costDelivery": orderInList.costDelivery,
+        "addressDelivery": orderInList.addressDelivery,
+        "costShopping": orderInList.costShopping,
+        "cust": '${orderInList.cust}',
+        "dateDelivery": "${orderInList.dateDelivery}",
         "details": [
-          for (OrderDetail detail in orders.order.detail)
+          for (OrderDetail detail in orderInList.detail)
             {
               "foodName": utf8.decode(latin1.encode("${detail.foodId}"),
                   allowMalformed: true),
@@ -42,27 +42,27 @@ class DetailScreenState extends State<DetailScreen> {
               "weight": detail.weight
             },
         ],
-        "id": "${orders.order.id}",
+        "id": "${orderInList.id}",
         "market": {
-          "addr1": utf8.decode(latin1.encode("${orders.order.market.addr1}"),
+          "addr1": utf8.decode(latin1.encode("${orderInList.market.addr1}"),
               allowMalformed: true),
-          "addr2": utf8.decode(latin1.encode("${orders.order.market.addr2}"),
+          "addr2": utf8.decode(latin1.encode("${orderInList.market.addr2}"),
               allowMalformed: true),
-          "addr3": utf8.decode(latin1.encode("${orders.order.market.addr3}"),
+          "addr3": utf8.decode(latin1.encode("${orderInList.market.addr3}"),
               allowMalformed: true),
-          "addr4": utf8.decode(latin1.encode("${orders.order.market.addr4}"),
+          "addr4": utf8.decode(latin1.encode("${orderInList.market.addr4}"),
               allowMalformed: true),
-          "id": "${orders.order.market.id}",
-          "lat": "${orders.order.market.lat}",
-          "lng": "${orders.order.market.lng}",
-          "name": utf8.decode(latin1.encode("${orders.order.market.name}"),
+          "id": "${orderInList.market.id}",
+          "lat": "${orderInList.market.lat}",
+          "lng": "${orderInList.market.lng}",
+          "name": utf8.decode(latin1.encode("${orderInList.market.name}"),
               allowMalformed: true),
         },
         "note": "phuong nguyen",
         "shipper": widget.userData.id,
         "status": 21,
         "timeDelivery": "12:12:12",
-        "totalCost": orders.order.totalCost
+        "totalCost": orderInList.totalCost
       };
       data.add(order);
     }
@@ -80,8 +80,8 @@ class DetailScreenState extends State<DetailScreen> {
     // );
 
     List<OrderDetail> oD = new List<OrderDetail>();
-    for (Orders orders in widget.list) {
-      for (OrderDetail detail in orders.order.detail) {
+    for (Order orders in widget.list) {
+      for (OrderDetail detail in orders.detail) {
         oD.add(detail);
       }
     }
@@ -98,9 +98,9 @@ class DetailScreenState extends State<DetailScreen> {
   @override
   Widget build(BuildContext context) {
     List<double> listTotalWeight = new List<double>();
-    for (Orders orders in widget.list) {
+    for (Order orders in widget.list) {
       double total = 0;
-      for (OrderDetail details in orders.order.detail) {
+      for (OrderDetail details in orders.detail) {
         total += details.weight;
       }
       listTotalWeight.add(total);
@@ -120,19 +120,21 @@ class DetailScreenState extends State<DetailScreen> {
                     ListView.builder(
                       physics: NeverScrollableScrollPhysics(),
                       shrinkWrap: true,
-                      itemCount: widget.list[index].order.detail.length,
+                      itemCount: widget.list[index].detail.length,
                       itemBuilder: (context, indexList) {
                         return ListTile(
-                          leading: Image.network(GlobalVariable.LAZY_IMAGE),
+                          leading: Image.network(widget
+                              .list[index].detail[indexList].foodId
+                              .toString()),
                           title: Text(utf8.decode(
-                              latin1.encode(widget
-                                  .list[index].order.detail[indexList].foodId),
+                              latin1.encode(
+                                  widget.list[index].detail[indexList].foodId),
                               allowMalformed: true)),
                           trailing: Text(widget
-                                  .list[index].order.detail[indexList].weight
+                                  .list[index].detail[indexList].weight
                                   .toString() +
                               " kg"),
-                          subtitle: Text(oCcy.format(widget.list[index].order
+                          subtitle: Text(oCcy.format(widget.list[index]
                                   .detail[indexList].priceOriginal) +
                               " vnd"),
                         );
@@ -142,7 +144,7 @@ class DetailScreenState extends State<DetailScreen> {
                       child: ListTile(
                         leading: Icon(Icons.settings_applications),
                         title: Text('Mã đơn hàng '),
-                        trailing: Text(widget.list[index].order.id),
+                        trailing: Text(widget.list[index].id),
                       ),
                     ),
                     Card(
@@ -150,8 +152,7 @@ class DetailScreenState extends State<DetailScreen> {
                         leading: Icon(Icons.money),
                         title: Text('Tổng tiền Sản Phẩm '),
                         trailing: Text(
-                            oCcy.format(widget.list[index].order.totalCost) +
-                                ' vnd'),
+                            oCcy.format(widget.list[index].totalCost) + ' vnd'),
                       ),
                     ),
                     Card(
@@ -159,7 +160,7 @@ class DetailScreenState extends State<DetailScreen> {
                         leading: Icon(Icons.local_shipping),
                         title: Text('Tiền vận chuyển '),
                         trailing: Text(
-                            oCcy.format(widget.list[index].order.costDelivery) +
+                            oCcy.format(widget.list[index].costDelivery) +
                                 ' vnd'),
                       ),
                     ),
@@ -168,7 +169,7 @@ class DetailScreenState extends State<DetailScreen> {
                         leading: Icon(Icons.book_outlined),
                         title: Text('Tiền công mua đồ '),
                         trailing: Text(
-                            oCcy.format(widget.list[index].order.costShopping) +
+                            oCcy.format(widget.list[index].costShopping) +
                                 ' vnd'),
                       ),
                     ),
@@ -177,8 +178,8 @@ class DetailScreenState extends State<DetailScreen> {
                         leading: Icon(Icons.receipt),
                         title: Text('Tiền được nhận '),
                         trailing: Text(oCcy.format(
-                                ((widget.list[index].order.costShopping +
-                                        widget.list[index].order.costDelivery) /
+                                ((widget.list[index].costShopping +
+                                        widget.list[index].costDelivery) /
                                     2)) +
                             ' vnd'),
                       ),
@@ -203,9 +204,9 @@ class DetailScreenState extends State<DetailScreen> {
                         leading: Icon(Icons.album),
                         title: Text('Đi Từ'),
                         subtitle: Text(utf8.decode(
-                            latin1.encode(widget.list[index].order.market.name +
+                            latin1.encode(widget.list[index].market.name +
                                 " " +
-                                widget.list[index].order.market.addr1),
+                                widget.list[index].market.addr1),
                             allowMalformed: true)),
                       ),
                     ),
@@ -214,8 +215,7 @@ class DetailScreenState extends State<DetailScreen> {
                         leading: Icon(Icons.home),
                         title: Text('Đến'),
                         subtitle: Text(utf8.decode(
-                            latin1.encode(
-                                widget.list[index].order.addressDelivery),
+                            latin1.encode(widget.list[index].addressDelivery),
                             allowMalformed: true)),
                       ),
                     ),
@@ -223,7 +223,7 @@ class DetailScreenState extends State<DetailScreen> {
                       child: ListTile(
                         leading: Icon(Icons.access_alarm),
                         title: Text('Giao trước lúc'),
-                        subtitle: Text(widget.list[index].order.timeDelivery),
+                        subtitle: Text(widget.list[index].timeDelivery),
                       ),
                     ),
                   ],

@@ -1,5 +1,5 @@
 class GlobalVariable {
-static String API_ENDPOINT = "http://192.168.1.5:1234/smhu2/api/";
+static String API_ENDPOINT = "http://192.168.1.5:1234/shm3/api/";
 //http://192.168.1.4:1234/smhu/api/
 //http://smhu.ddns.net/smhu/api/
 // 192.168.1.200

@@ -16,7 +16,7 @@ import 'Login.dart';
 import 'OrderDetail.dart';
 import 'package:intl/intl.dart';
 import 'package:sweetalert/sweetalert.dart';
-import 'package:grouped_list/grouped_list.dart';
+import 'package:badges/badges.dart';
 
 class MyHomeWidget extends StatefulWidget {
   final User userData;
@@ -31,6 +31,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   String title = "Title";
   String helper = "helper";
   int _counter = 0;
+  int countbadges = 0;
   final oCcy = new NumberFormat("#,##0", "en_US");
   StreamController<int> _events;
   String token_app;
@@ -38,7 +39,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   Future<List<Orders>> futureOrders;
   int _selectedIndex = 0;
-  var listOrders = new List<Orders>();
+  var listOrders = new List<Order>();
   var listHistory = new List<History>();
   Completer<GoogleMapController> _controller = Completer();
   Set<Marker> markers = Set();
@@ -70,7 +71,8 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
       print("Response don hang " + response.body);
       setState(() {
         Iterable list = json.decode(response.body);
-        listOrders = list.map((model) => Orders.fromJson(model)).toList();
+        listOrders = list.map((model) => Order.fromJson(model)).toList();
+        countbadges = listOrders.length;
       });
     });
     return 'Success';
@@ -78,15 +80,15 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
 
   updateOrders() async {
     List<Map<String, dynamic>> data = new List<Map<String, dynamic>>();
-    for (Orders orders in listOrders) {
+    for (Order orderInList in listOrders) {
       Map<String, dynamic> order = {
-        "costDelivery": orders.order.costDelivery,
-        "addressDelivery": orders.order.addressDelivery,
-        "costShopping": orders.order.costShopping,
-        "cust": '${orders.order.cust}',
-        "dateDelivery": "${orders.order.dateDelivery}",
+        "costDelivery": orderInList.costDelivery,
+        "addressDelivery": orderInList.addressDelivery,
+        "costShopping": orderInList.costShopping,
+        "cust": '${orderInList.cust}',
+        "dateDelivery": "${orderInList.dateDelivery}",
         "details": [
-          for (OrderDetail detail in orders.order.detail)
+          for (OrderDetail detail in orderInList.detail)
             {
               "foodName": utf8.decode(latin1.encode("${detail.foodId}"),
                   allowMalformed: true),
@@ -99,27 +101,27 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
               "weight": detail.weight
             },
         ],
-        "id": "${orders.order.id}",
+        "id": "${orderInList.id}",
         "market": {
-          "addr1": utf8.decode(latin1.encode("${orders.order.market.addr1}"),
+          "addr1": utf8.decode(latin1.encode("${orderInList.market.addr1}"),
               allowMalformed: true),
-          "addr2": utf8.decode(latin1.encode("${orders.order.market.addr2}"),
+          "addr2": utf8.decode(latin1.encode("${orderInList.market.addr2}"),
               allowMalformed: true),
-          "addr3": utf8.decode(latin1.encode("${orders.order.market.addr3}"),
+          "addr3": utf8.decode(latin1.encode("${orderInList.market.addr3}"),
               allowMalformed: true),
-          "addr4": utf8.decode(latin1.encode("${orders.order.market.addr4}"),
+          "addr4": utf8.decode(latin1.encode("${orderInList.market.addr4}"),
               allowMalformed: true),
-          "id": "${orders.order.market.id}",
-          "lat": "${orders.order.market.lat}",
-          "lng": "${orders.order.market.lng}",
-          "name": utf8.decode(latin1.encode("${orders.order.market.name}"),
+          "id": "${orderInList.market.id}",
+          "lat": "${orderInList.market.lat}",
+          "lng": "${orderInList.market.lng}",
+          "name": utf8.decode(latin1.encode("${orderInList.market.name}"),
               allowMalformed: true),
         },
         "note": "phuong nguyen",
         "shipper": widget.userData.id,
         "status": 21,
         "timeDelivery": "12:12:12",
-        "totalCost": orders.order.totalCost
+        "totalCost": orderInList.totalCost
       };
       data.add(order);
     }
@@ -231,8 +233,6 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
 
     _firebaseMessaging.configure(
       onMessage: (message) async {
-        print(message);
-
         _events = new StreamController<int>();
         _events.add(10);
         _startTimer();
@@ -367,6 +367,9 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
 
   void _onItemTapped(int index) {
     setState(() {
+      if (index == 2) {
+        countbadges = 0;
+      }
       _selectedIndex = index;
     });
   }
@@ -398,7 +401,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
             }),
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
-          items: const <BottomNavigationBarItem>[
+          items: <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(
                 Icons.location_on,
@@ -412,10 +415,16 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
               title: Text('Thông Báo'),
             ),
             BottomNavigationBarItem(
-              icon: Icon(
-                Icons.assignment,
-              ),
-              title: Text(''),
+              icon: countbadges > 0
+                  ? Badge(
+                      badgeContent: Text(
+                        '${countbadges}',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      child: Icon(Icons.assignment),
+                    )
+                  : Icon(Icons.assignment),
+              title: Text('Đơn hàng'),
             ),
             BottomNavigationBarItem(
               icon: Icon(
@@ -493,8 +502,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                 Card(
                   child: ListTile(
                     title: Text(
-                      utf8.decode(
-                          latin1.encode(listOrders[0].order.market.name),
+                      utf8.decode(latin1.encode(listOrders[0].market.name),
                           allowMalformed: true),
                       style:
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
@@ -512,10 +520,10 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                         children: <Widget>[
                           ListTile(
                             leading: Image.asset("assets/order.jpg"),
-                            title: Text(listOrders[indexList].order.id),
-                            trailing: Text(oCcy.format(
-                                    listOrders[indexList].order.totalCost) +
-                                " vnd"),
+                            title: Text(listOrders[indexList].id),
+                            trailing: Text(
+                                oCcy.format(listOrders[indexList].totalCost) +
+                                    " vnd"),
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
@@ -524,7 +532,6 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                                 child: Text('HỦY',
                                     style: TextStyle(color: Colors.red)),
                                 onPressed: () {
-
                                   SweetAlert.show(context,
                                       title: "Chú ý",
                                       subtitle: "Bạn có muốn hủy đơn hàng ? ",
@@ -535,12 +542,12 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                                       http
                                           .delete(GlobalVariable.API_ENDPOINT +
                                               'delete/' +
-                                              listOrders[indexList].order.id +
+                                              listOrders[indexList].id +
                                               '/shipper/' +
                                               widget.userData.id)
                                           .then((response) {
                                         print(GlobalVariable.API_ENDPOINT +
-                                            listOrders[indexList].order.id +
+                                            listOrders[indexList].id +
                                             '/shipper/' +
                                             widget.userData.id);
                                         print(
@@ -551,8 +558,8 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                                               style: SweetAlertStyle.success);
                                           setState(() {
                                             listOrders.removeWhere((item) =>
-                                                item.order.id ==
-                                                listOrders[indexList].order.id);
+                                                item.id ==
+                                                listOrders[indexList].id);
                                           });
                                         } else {
                                           // SweetAlert.show(context,
@@ -589,57 +596,44 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
               ],
             )
           : Center(child: const Text('Không có đơn hàng nào')),
-      floatingActionButton: listOrders.length > 0 ? Stack(
-        children: <Widget>[
-          Positioned(
-            bottom: 80.0,
-            right: 10.0,
-            child: FloatingActionButton.extended(
-              heroTag: 'save',
-              label: Text('Xem chi tiết'),
-              backgroundColor: Colors.green,
-              onPressed: () {
-                if (listOrders.length > 0) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => DetailScreen(
-                        list: listOrders,
-                        userData: widget.userData,
-                      ),
-                    ),
-                  );
-                } else {
-                  SweetAlert.show(context,
-                      title: "Thông báo",
-                      subtitle: "Hiện tại chưa có đơn hàng ",
-                      style: SweetAlertStyle.error);
-                }
-                // What you want to do
-              },
-              // child: Icon(Icons.save),
-              // shape: RoundedRectangleBorder(
-              //   borderRadius: BorderRadius.circular(5.0),
-              // ),
-            ),
-          ),
-          Positioned(
-            bottom: 10.0,
-            right: 10.0,
-            child: FloatingActionButton(
-              heroTag: 'close',
-              backgroundColor: Colors.green,
-              onPressed: () {
-                _getOrders();
-              },
-              child: Icon(Icons.get_app_rounded),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(5.0),
-              ),
-            ),
-          ),
-        ],
-      ) : null,
+      floatingActionButton: listOrders.length > 0
+          ? Stack(
+              children: <Widget>[
+                Positioned(
+                  bottom: 0.0,
+                  right: 10.0,
+                  child: FloatingActionButton.extended(
+                    heroTag: 'save',
+                    label: Text('Xem chi tiết'),
+                    backgroundColor: Colors.green,
+                    onPressed: () {
+                      if (listOrders.length > 0) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DetailScreen(
+                              list: listOrders,
+                              userData: widget.userData,
+                            ),
+                          ),
+                        );
+                      } else {
+                        SweetAlert.show(context,
+                            title: "Thông báo",
+                            subtitle: "Hiện tại chưa có đơn hàng ",
+                            style: SweetAlertStyle.error);
+                      }
+                      // What you want to do
+                    },
+                    // child: Icon(Icons.save),
+                    // shape: RoundedRectangleBorder(
+                    //   borderRadius: BorderRadius.circular(5.0),
+                    // ),
+                  ),
+                ),
+              ],
+            )
+          : null,
     );
   }
 
