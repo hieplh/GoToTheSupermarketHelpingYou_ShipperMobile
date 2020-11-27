@@ -165,7 +165,7 @@ class _StepsState extends State<Steps> {
               //     style: SweetAlertStyle.success);
             } else {
               SweetAlert.show(context,
-                  title: "Chưa mua đủ đồ ${countItemCheck}",
+                  title: "Chưa mua đủ đồ",
                   style: SweetAlertStyle.error);
             }
           },
@@ -195,6 +195,7 @@ class _StepsState extends State<Steps> {
             builder: (context) =>
                 RouteCustomer(data: tmp, userData: widget.userData)),
       );
+      Global.number = 0;
     } else {
       // If the server did not return a 200 OK response,
       // SweetAlert.show(context,

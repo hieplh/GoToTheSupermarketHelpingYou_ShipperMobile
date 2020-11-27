@@ -51,8 +51,10 @@ class Order {
         dateDelivery: json['dateDelivery'],
         timeDelivery: json['timeDelivery'],
         addressDelivery: json['addressDelivery'],
-        detail: List<OrderDetail>.from(
-            json["details"].map((x) => OrderDetail.fromJson(x))));
+        detail: json["details"] != null
+            ? List<OrderDetail>.from(
+                json["details"].map((x) => OrderDetail.fromJson(x)))
+            : List<OrderDetail>());
   }
 }
 

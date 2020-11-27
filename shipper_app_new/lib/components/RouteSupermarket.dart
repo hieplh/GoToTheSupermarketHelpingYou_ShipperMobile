@@ -26,7 +26,6 @@ class RouteSupermarket extends StatefulWidget {
   final List<OrderDetail> orderDetails;
   final User userData;
 
-
   final List<Map<String, dynamic>> data;
   RouteSupermarket({
     Key key,
@@ -47,10 +46,12 @@ class RouteSupermarketState extends State<RouteSupermarket> {
   Set<Polyline> _polylines = Set<Polyline>();
   List<LatLng> polylineCoordinates = [];
   PolylinePoints polylinePoints;
+  List<Map<String, dynamic>> tmp = new List();
   String googleAPIKey = 'AIzaSyDl3HXWngkUA1yFkSXDeXSzu_3KyPkH810';
 // for my custom marker pins
   BitmapDescriptor sourceIcon;
   BitmapDescriptor destinationIcon;
+  List<OrderDetail> tmpDetail = new List();
 // the user's initial location and current location
 // as it moves
   LocationData currentLocation;
@@ -84,18 +85,74 @@ class RouteSupermarketState extends State<RouteSupermarket> {
       setState(() {
         Iterable list = json.decode(response.body);
         listOrders = list.map((model) => Order.fromJson(model)).toList();
-
       });
-
     });
-   await print("List don hang moi ${listOrders.length}");
+    await print("List don hang moi ${listOrders.length}");
     return 'Success';
+  }
+
+  _setNewListOrder() async {
+    List<Map<String, dynamic>> data = new List<Map<String, dynamic>>();
+    for (Order orderInList in listOrders) {
+      Map<String, dynamic> order = {
+        "costDelivery": orderInList.costDelivery,
+        "addressDelivery": orderInList.addressDelivery,
+        "costShopping": orderInList.costShopping,
+        "cust": '${orderInList.cust}',
+        "dateDelivery": "${orderInList.dateDelivery}",
+        "details": [
+          for (OrderDetail detail in orderInList.detail)
+            {
+              "foodName": utf8.decode(latin1.encode("${detail.foodId}"),
+                  allowMalformed: true),
+              "foodId": "${detail.foodId}",
+              "id": "${detail.id}",
+              "image": "${detail.image}",
+              "priceOriginal": detail.priceOriginal,
+              "pricePaid": detail.pricePaid,
+              "saleOff": detail.saleOff,
+              "weight": detail.weight
+            },
+        ],
+        "id": "${orderInList.id}",
+        "market": {
+          "addr1": utf8.decode(latin1.encode("${orderInList.market.addr1}"),
+              allowMalformed: true),
+          "addr2": utf8.decode(latin1.encode("${orderInList.market.addr2}"),
+              allowMalformed: true),
+          "addr3": utf8.decode(latin1.encode("${orderInList.market.addr3}"),
+              allowMalformed: true),
+          "addr4": utf8.decode(latin1.encode("${orderInList.market.addr4}"),
+              allowMalformed: true),
+          "id": "${orderInList.market.id}",
+          "lat": "${orderInList.market.lat}",
+          "lng": "${orderInList.market.lng}",
+          "name": utf8.decode(latin1.encode("${orderInList.market.name}"),
+              allowMalformed: true),
+        },
+        "note": "phuong nguyen",
+        "shipper": widget.userData.id,
+        "status": 21,
+        "timeDelivery": "12:12:12",
+        "totalCost": orderInList.totalCost
+      };
+      data.add(order);
+    }
+    tmp = data;
+    List<OrderDetail> oD = new List<OrderDetail>();
+    for (Order orders in listOrders) {
+      for (OrderDetail detail in orders.detail) {
+        oD.add(detail);
+      }
+    }
+    tmpDetail = oD;
   }
 
   @override
   void initState() {
     super.initState();
-
+    tmp = widget.data;
+    tmpDetail = widget.orderDetails;
     // create an instance of Location
     location = new Location();
     polylinePoints = PolylinePoints();
@@ -115,17 +172,19 @@ class RouteSupermarketState extends State<RouteSupermarket> {
     });
     _firebaseMessaging.configure(
       onMessage: (message) async {
-        showDialog(
+        await _getOrders();
+        await _setNewListOrder();
+        await showDialog(
             context: context,
             builder: (_) => new AlertDialog(
                   title: new Text("Thông báo"),
-                  content: new Text('Có đơn hàng mới'),
+                  content: new Text(
+                      'Có đơn ${listOrders.length - tmp.length} hàng mới'),
                   actions: <Widget>[
                     FlatButton(
-                      child: Text('Nhận'),
+                      child: Text('OK'),
                       onPressed: () async {
-                      await  _getOrders();
-                      await    Navigator.of(context).pop();
+                        await Navigator.of(context).pop();
                         // var url = GlobalVariable.API_ENDPOINT + 'orders/update';
                         // var response = await http.put(
                         //   Uri.encodeFull(url),
@@ -186,7 +245,7 @@ class RouteSupermarketState extends State<RouteSupermarket> {
           "Accept": "application/json",
         },
         encoding: Encoding.getByName("utf-8"),
-        body: jsonEncode(widget.data),
+        body: jsonEncode(tmp),
       );
       print("Response code la ${response.statusCode}");
       if (response.statusCode == 200) {
@@ -195,8 +254,8 @@ class RouteSupermarketState extends State<RouteSupermarket> {
           context,
           MaterialPageRoute(
               builder: (context) => Steps(
-                    item: widget.orderDetails,
-                    data: widget.data,
+                    item: tmpDetail,
+                    data: tmp,
                     userData: widget.userData,
                   )),
         );
