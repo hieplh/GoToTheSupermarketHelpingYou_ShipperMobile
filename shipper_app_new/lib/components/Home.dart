@@ -12,7 +12,6 @@ import 'package:location/location.dart';
 import 'package:shipper_app_new/constant/constant.dart';
 import 'package:shipper_app_new/model/User.dart';
 import 'HistoryDetail.dart';
-import 'Login.dart';
 import 'OrderDetail.dart';
 import 'package:intl/intl.dart';
 import 'package:sweetalert/sweetalert.dart';
@@ -313,7 +312,11 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
     );
 
     _clockTimer = Timer.periodic(new Duration(seconds: 5), (timer) {
-      _updatePos();
+      if (GlobalVariable.IS_LOG_OUT == true) {
+        _clockTimer.cancel();
+      } else {
+        _updatePos();
+      }
     });
   }
 
@@ -461,6 +464,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
       children: [
         GoogleMap(
           initialCameraPosition: initialCameraPosition,
+          
           mapType: MapType.normal,
           onMapCreated: (GoogleMapController controller) {
             _controller.complete(controller);
@@ -783,7 +787,8 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                     style: SweetAlertStyle.confirm,
                     showCancelButton: true, onPress: (bool isConfirm) {
                   if (isConfirm) {
-                    _clockTimer.cancel();
+                    // _clockTimer.cancel();
+                    GlobalVariable.IS_LOG_OUT = true;
                     RestarApp.restartApp(context);
                   }
                 });

@@ -179,7 +179,7 @@ class RouteSupermarketState extends State<RouteSupermarket> {
             builder: (_) => new AlertDialog(
                   title: new Text("Thông báo"),
                   content: new Text(
-                      'Có đơn ${listOrders.length - tmp.length} hàng mới'),
+                      'Có 1 đơn hàng mới'),
                   actions: <Widget>[
                     FlatButton(
                       child: Text('OK'),

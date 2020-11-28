@@ -28,6 +28,7 @@ _postLogin(String username, String password, BuildContext context) async {
   if (response.statusCode == 200) {
     user = User.fromJson(json.decode(response.body));
     // If the server did return a 200 OK response,
+    GlobalVariable.IS_LOG_OUT = false;
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => MyHomeWidget(userData: user)),

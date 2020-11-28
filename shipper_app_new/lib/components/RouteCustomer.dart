@@ -570,10 +570,6 @@ class RouteCustomerState extends State<RouteCustomer> {
             destinationLocation.latitude, destinationLocation.longitude) <
         0.05) {
       if (_markers.length > 1) {
-        Marker tmp = _markers.firstWhere((element) =>
-            element.position.latitude == destinationLocation.latitude);
-
-        currentOrderId = tmp.markerId.value;
         _markers.removeWhere((m) =>
             m.position.latitude == destinationLocation.latitude &&
             m.position.longitude == destinationLocation.longitude);
@@ -585,7 +581,7 @@ class RouteCustomerState extends State<RouteCustomer> {
             .toList();
         if (listmarkers.length == 0) {
           List<Map<String, dynamic>> rs = widget.data
-              .where((element) => element.values.toList()[6] == currentOrderId)
+              .where((element) => element.values.toList()[6] == orderIdFromMarker)
               .toList();
 
           _showMaterialDialog(rs[0]);
@@ -597,7 +593,7 @@ class RouteCustomerState extends State<RouteCustomer> {
           });
 
           List<Map<String, dynamic>> rs = widget.data
-              .where((element) => element.values.toList()[6] == currentOrderId)
+              .where((element) => element.values.toList()[6] == orderIdFromMarker)
               .toList();
 
           _showMaterialDialog(rs[0]);
@@ -639,7 +635,7 @@ class RouteCustomerState extends State<RouteCustomer> {
           }
 
           List<Map<String, dynamic>> rs = widget.data
-              .where((element) => element.values.toList()[6] == currentOrderId)
+              .where((element) => element.values.toList()[6] == orderIdFromMarker)
               .toList();
 
           _showMaterialDialog(rs[0]);
