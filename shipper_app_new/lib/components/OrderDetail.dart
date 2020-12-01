@@ -124,8 +124,7 @@ class DetailScreenState extends State<DetailScreen> {
                       itemBuilder: (context, indexList) {
                         return ListTile(
                           leading: Image.network(widget
-                              .list[index].detail[indexList].foodId
-                              .toString()),
+                              .list[index].detail[indexList].image),
                           title: Text(utf8.decode(
                               latin1.encode(
                                   widget.list[index].detail[indexList].foodId),
@@ -192,13 +191,13 @@ class DetailScreenState extends State<DetailScreen> {
                             Text(oCcy.format(listTotalWeight[index]) + " kg"),
                       ),
                     ),
-                    Card(
-                      child: ListTile(
-                        leading: Icon(Icons.directions_train),
-                        title: Text('Khoảng cách '),
-                        trailing: Text("" + ' km'),
-                      ),
-                    ),
+                    // Card(
+                    //   child: ListTile(
+                    //     leading: Icon(Icons.directions_train),
+                    //     title: Text('Khoảng cách '),
+                    //     trailing: Text("" + ' km'),
+                    //   ),
+                    // ),
                     Card(
                       child: ListTile(
                         leading: Icon(Icons.album),

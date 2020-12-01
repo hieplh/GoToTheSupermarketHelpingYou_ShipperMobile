@@ -16,6 +16,7 @@ import 'DeliverySuccess.dart';
 import 'package:http/http.dart' as http;
 import 'package:sweetalert/sweetalert.dart';
 
+import 'Home.dart';
 import 'map_pin_pill.dart';
 
 const double CAMERA_ZOOM = 14;
@@ -336,7 +337,47 @@ class RouteCustomerState extends State<RouteCustomer> {
                                               widget.userData.id)
                                           .then((response) {
                                         if (response.statusCode == 200) {
-                                          _setNewPin();
+                                          widget.data.removeWhere((element) =>
+                                              element.values.toList()[6] ==
+                                              orderIdFromMarker);
+                                          if (widget.data.length > 0) {
+                                            _setNewPin();
+                                          } else if (widget.data.length == 0) {
+                                            showDialog(
+                                                context: context,
+                                                barrierDismissible: false,
+                                                builder: (_) => new AlertDialog(
+                                                      title:
+                                                          new Text("Thông báo"),
+                                                      content: new Text(
+                                                        "Tất cả đơn hàng đã bị hủy",
+                                                        style: TextStyle(
+                                                            color: Colors.red,
+                                                            fontSize: 20),
+                                                      ),
+                                                      actions: <Widget>[
+                                                        FlatButton(
+                                                          child: Text(
+                                                              'Quay về màn hình chính!'),
+                                                          onPressed: () {
+                                                            Navigator
+                                                                .pushAndRemoveUntil(
+                                                              context,
+                                                              MaterialPageRoute(
+                                                                  builder: (BuildContext
+                                                                          context) =>
+                                                                      MyHomeWidget(
+                                                                          userData:
+                                                                              widget.userData)),
+                                                              ModalRoute
+                                                                  .withName(
+                                                                      '/'),
+                                                            );
+                                                          },
+                                                        )
+                                                      ],
+                                                    ));
+                                          }
                                         } else {}
                                       });
                                     }
@@ -581,7 +622,8 @@ class RouteCustomerState extends State<RouteCustomer> {
             .toList();
         if (listmarkers.length == 0) {
           List<Map<String, dynamic>> rs = widget.data
-              .where((element) => element.values.toList()[6] == orderIdFromMarker)
+              .where(
+                  (element) => element.values.toList()[6] == orderIdFromMarker)
               .toList();
 
           _showMaterialDialog(rs[0]);
@@ -593,7 +635,8 @@ class RouteCustomerState extends State<RouteCustomer> {
           });
 
           List<Map<String, dynamic>> rs = widget.data
-              .where((element) => element.values.toList()[6] == orderIdFromMarker)
+              .where(
+                  (element) => element.values.toList()[6] == orderIdFromMarker)
               .toList();
 
           _showMaterialDialog(rs[0]);
@@ -635,7 +678,8 @@ class RouteCustomerState extends State<RouteCustomer> {
           }
 
           List<Map<String, dynamic>> rs = widget.data
-              .where((element) => element.values.toList()[6] == orderIdFromMarker)
+              .where(
+                  (element) => element.values.toList()[6] == orderIdFromMarker)
               .toList();
 
           _showMaterialDialog(rs[0]);
@@ -668,11 +712,11 @@ class RouteCustomerState extends State<RouteCustomer> {
       // }
 
     }
-   if(_markers.length >1){
-     setPolylines();
-   } else if (_markers.length ==1){
-     polylineCoordinates.clear();
-   }
+    if (_markers.length > 1) {
+      setPolylines();
+    } else if (_markers.length == 1) {
+      polylineCoordinates.clear();
+    }
 
     // create a new CameraPosition instance
     // every time the location changes, so the camera

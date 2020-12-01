@@ -239,6 +239,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
         BuildContext dialogContext;
         showDialog(
             context: context,
+            barrierDismissible: false,
             builder: (BuildContext builderContext) {
               dialogContext = context;
               _timer = Timer(Duration(seconds: 10), () {
@@ -464,7 +465,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
       children: [
         GoogleMap(
           initialCameraPosition: initialCameraPosition,
-          
+
           mapType: MapType.normal,
           onMapCreated: (GoogleMapController controller) {
             _controller.complete(controller);
@@ -654,27 +655,55 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
           ? ListView.builder(
               itemCount: listHistory.length,
               itemBuilder: (context, index) {
-                return ListTile(
-                    leading: Icon(Icons.home),
-                    title: Text(utf8.decode(
-                        latin1.encode(listHistory[index].id),
-                        allowMalformed: true)),
-                    trailing: Text(
-                        oCcy.format(listHistory[index].totalCost) + " vnd"),
-                    subtitle: Text(utf8.decode(
-                            latin1.encode(listHistory[index].marketName),
-                            allowMalformed: true) +
-                        '\n' +
-                        '${utf8.decode(latin1.encode(listHistory[index].addressDelivery), allowMalformed: true)}'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              HistoryDetail(orderID: listHistory[index].id),
-                        ),
-                      );
-                    });
+                return Card(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      ListTile(
+                          leading: Icon(Icons.lock_clock),
+                          title: Text(utf8.decode(
+                              latin1.encode(listHistory[index].id),
+                              allowMalformed: true)),
+                          subtitle: Text(utf8.decode(
+                                  latin1.encode(listHistory[index].marketName),
+                                  allowMalformed: true) +
+                              '\n' +
+                              '${utf8.decode(latin1.encode(listHistory[index].addressDelivery), allowMalformed: true)}'),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => HistoryDetail(
+                                    orderID: listHistory[index].id),
+                              ),
+                            );
+                          },
+                          trailing: Text(oCcy.format(listHistory[index].totalCost) + " vnd"),
+                          ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+
+                        children: <Widget>[
+                          listHistory[index].status == 24
+                              ? Text(
+                                  "Hoàn tất",
+                                  style: TextStyle(
+                                      color: Colors.green,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20),
+                                )
+                              : Text(
+                                  "Đã bị hủy",
+                                  style: TextStyle(
+                                      color: Colors.red,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20),
+                                )
+                        ],
+                      ),
+                    ],
+                  ),
+                );
               },
             )
           : Center(child: const Text('Lịch sử trống')),
