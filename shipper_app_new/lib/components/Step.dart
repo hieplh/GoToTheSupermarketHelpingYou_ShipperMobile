@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shipper_app_new/components/RouteCustomer.dart';
 import 'package:shipper_app_new/constant/constant.dart';
@@ -7,7 +8,6 @@ import 'package:shipper_app_new/model/Orders.dart';
 import 'package:http/http.dart' as http;
 import 'package:shipper_app_new/model/User.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:sweetalert/sweetalert.dart';
 
@@ -100,7 +100,6 @@ class _StepsState extends State<Steps> {
     setState(() {
       tmp = data;
     });
-
   }
 
   @override
@@ -117,36 +116,35 @@ class _StepsState extends State<Steps> {
         await showDialog(
             context: context,
             builder: (_) => new AlertDialog(
-              title: new Text("Thông báo"),
-              content: new Text(
-                  'Có đơn hàng mới'),
-              actions: <Widget>[
-                FlatButton(
-                  child: Text('OK'),
-                  onPressed: () async {
-                    await Navigator.of(context).pop();
-                    // var url = GlobalVariable.API_ENDPOINT + 'orders/update';
-                    // var response = await http.put(
-                    //   Uri.encodeFull(url),
-                    //   headers: {
-                    //     'Content-type': 'application/json',
-                    //     "Accept": "application/json",
-                    //   },
-                    //   encoding: Encoding.getByName("utf-8"),
-                    //   body: '[' + jsonEncode(od) + ']',
-                    // );
-                    // print("Loi la ${response.statusCode}");
-                    // if (response.statusCode == 200) {
-                    //   Navigator.of(context).pop();
-                    //   Navigator.push(
-                    //       context,
-                    //       MaterialPageRoute(
-                    //           builder: (context) => CameraScreen()));
-                    // } else {}
-                  },
-                )
-              ],
-            ));
+                  title: new Text("Thông báo"),
+                  content: new Text('Có đơn hàng mới'),
+                  actions: <Widget>[
+                    FlatButton(
+                      child: Text('OK'),
+                      onPressed: () async {
+                        await Navigator.of(context).pop();
+                        // var url = GlobalVariable.API_ENDPOINT + 'orders/update';
+                        // var response = await http.put(
+                        //   Uri.encodeFull(url),
+                        //   headers: {
+                        //     'Content-type': 'application/json',
+                        //     "Accept": "application/json",
+                        //   },
+                        //   encoding: Encoding.getByName("utf-8"),
+                        //   body: '[' + jsonEncode(od) + ']',
+                        // );
+                        // print("Loi la ${response.statusCode}");
+                        // if (response.statusCode == 200) {
+                        //   Navigator.of(context).pop();
+                        //   Navigator.push(
+                        //       context,
+                        //       MaterialPageRoute(
+                        //           builder: (context) => CameraScreen()));
+                        // } else {}
+                      },
+                    )
+                  ],
+                ));
       },
       onResume: (message) async {
         // setState(() {
@@ -187,7 +185,6 @@ class _StepsState extends State<Steps> {
             itemCount: tmp.length,
             itemBuilder: (BuildContext context, int indexSwipper) {
               return Container(
-
                   margin: new EdgeInsets.all(10),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -364,7 +361,23 @@ class _StepsState extends State<Steps> {
     double sum = arrayOrderDetail
         .map((expense) => expense['priceOriginal'])
         .fold(0, (prev, amount) => prev + amount);
-    return Text("Tổng tiền : " + oCcy.format(sum) + " vnd");
+    return RichText(
+      text: TextSpan(
+          text: 'Tổng tiền : ',
+          style: TextStyle(fontSize: 20, color: Colors.black),
+          children: <TextSpan>[
+            TextSpan(
+              text: oCcy.format(sum) + " vnd",
+              style: TextStyle(
+                fontSize: 24,
+
+                fontWeight: FontWeight.bold,
+                color: Colors.red
+              ),
+            ),
+          ]
+      ),
+    );
   }
 }
 
@@ -408,6 +421,7 @@ class _CheckItemState extends State<CheckItem> {
       activeColor: Colors.green,
       checkColor: Colors.white,
       onChanged: (bool value) {
+        print("Image network la ${widget.data['image']}");
         setState(() {
           if (value == false) {
             Global.number--;
@@ -417,7 +431,9 @@ class _CheckItemState extends State<CheckItem> {
           _checked = value;
         });
       },
-      secondary: Image.network(widget.data['image'].toString()),
+      secondary: widget.data['image'] == 'null'
+          ? Image.network(GlobalVariable.LAZY_IMAGE)
+          : Image.network(widget.data['image']),
       controlAffinity: ListTileControlAffinity.trailing,
     );
   }

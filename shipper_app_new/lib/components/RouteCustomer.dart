@@ -480,6 +480,7 @@ class RouteCustomerState extends State<RouteCustomer> {
       //     value["addressDelivery"] + ',' + element["addressDelivery"]);
       showDialog(
           context: context,
+          barrierDismissible: false,
           builder: (_) => new AlertDialog(
                 title: new Text("Thông báo"),
                 content: new Text('Đã tới địa điểm giao của đơn hàng'
@@ -514,6 +515,7 @@ class RouteCustomerState extends State<RouteCustomer> {
     } else {
       showDialog(
           context: context,
+          barrierDismissible: false,
           builder: (_) => new AlertDialog(
                 title: new Text("Thông báo"),
                 content: new Text(

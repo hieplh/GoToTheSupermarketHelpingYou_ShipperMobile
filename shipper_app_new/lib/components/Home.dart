@@ -232,77 +232,80 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
 
     _firebaseMessaging.configure(
       onMessage: (message) async {
-        _events = new StreamController<int>();
-        _events.add(10);
-        _startTimer();
-        Timer _timer;
-        BuildContext dialogContext;
-        showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (BuildContext builderContext) {
-              dialogContext = context;
-              _timer = Timer(Duration(seconds: 10), () {
-                Navigator.of(context).pop();
-              });
+        print(message);
+        if (message['data']['compulsory'] == 'false') {
+          _events = new StreamController<int>();
+          _events.add(10);
+          _startTimer();
+          Timer _timer;
+          BuildContext dialogContext;
+          showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (BuildContext builderContext) {
+                dialogContext = context;
+                _timer = Timer(Duration(seconds: 10), () {
+                  Navigator.of(context).pop();
+                });
 
-              return AlertDialog(
-                title: Text("Thông báo"),
-                content: StreamBuilder<int>(
-                    stream: _events.stream,
-                    builder:
-                        (BuildContext context, AsyncSnapshot<int> snapshot) {
-                      return Container(
-                          height: 300,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: <Widget>[
-                              Text("Có đơn hàng mới gần đây"),
-                              Text("Bạn có muốn tiếp nhận ?"),
-                              Image.asset(
-                                'assets/veget.png',
-                                height: 150,
-                                width: 150,
-                              ),
-                              new Expanded(
-                                  child: new Align(
-                                      alignment: Alignment.bottomCenter,
-                                      child: new Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: <Widget>[
-                                          Text('${snapshot.data.toString()}',
-                                              style: TextStyle(
-                                                  color: Colors.red,
-                                                  fontSize: 30)),
-                                        ],
-                                      ))),
-                            ],
-                          ));
-                    }),
-                actions: <Widget>[
-                  TextButton(
-                    child: Text('Chấp nhận'),
-                    onPressed: () async {
-                      await _getOrders().then((value) {
-                        updateOrders();
-                      });
-                      await Navigator.pop(dialogContext);
-                    },
-                  ),
-                  TextButton(
-                    child: Text('Từ chối '),
-                    onPressed: () {
-                      Navigator.pop(dialogContext);
-                    },
-                  ),
-                ],
-              );
-            }).then((val) {
-          if (_timer.isActive) {
-            _timer.cancel();
-          }
-        });
+                return AlertDialog(
+                  title: Text("Thông báo"),
+                  content: StreamBuilder<int>(
+                      stream: _events.stream,
+                      builder:
+                          (BuildContext context, AsyncSnapshot<int> snapshot) {
+                        return Container(
+                            height: 300,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: <Widget>[
+                                Text("Có đơn hàng mới gần đây"),
+                                Text("Bạn có muốn tiếp nhận ?"),
+                                Image.asset(
+                                  'assets/veget.png',
+                                  height: 150,
+                                  width: 150,
+                                ),
+                                new Expanded(
+                                    child: new Align(
+                                        alignment: Alignment.bottomCenter,
+                                        child: new Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: <Widget>[
+                                            Text('${snapshot.data.toString()}',
+                                                style: TextStyle(
+                                                    color: Colors.red,
+                                                    fontSize: 30)),
+                                          ],
+                                        ))),
+                              ],
+                            ));
+                      }),
+                  actions: <Widget>[
+                    TextButton(
+                      child: Text('Chấp nhận'),
+                      onPressed: () async {
+                        await _getOrders().then((value) {
+                          updateOrders();
+                        });
+                        await Navigator.pop(dialogContext);
+                      },
+                    ),
+                    TextButton(
+                      child: Text('Từ chối '),
+                      onPressed: () {
+                        Navigator.pop(dialogContext);
+                      },
+                    ),
+                  ],
+                );
+              }).then((val) {
+            if (_timer.isActive) {
+              _timer.cancel();
+            }
+          });
+        }
       },
       onResume: (message) async {
         // setState(() {
@@ -660,29 +663,29 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
                       ListTile(
-                          leading: Icon(Icons.lock_clock),
-                          title: Text(utf8.decode(
-                              latin1.encode(listHistory[index].id),
-                              allowMalformed: true)),
-                          subtitle: Text(utf8.decode(
-                                  latin1.encode(listHistory[index].marketName),
-                                  allowMalformed: true) +
-                              '\n' +
-                              '${utf8.decode(latin1.encode(listHistory[index].addressDelivery), allowMalformed: true)}'),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => HistoryDetail(
-                                    orderID: listHistory[index].id),
-                              ),
-                            );
-                          },
-                          trailing: Text(oCcy.format(listHistory[index].totalCost) + " vnd"),
-                          ),
+                        leading: Icon(Icons.lock_clock),
+                        title: Text(utf8.decode(
+                            latin1.encode(listHistory[index].id),
+                            allowMalformed: true)),
+                        subtitle: Text(utf8.decode(
+                                latin1.encode(listHistory[index].marketName),
+                                allowMalformed: true) +
+                            '\n' +
+                            '${utf8.decode(latin1.encode(listHistory[index].addressDelivery), allowMalformed: true)}'),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  HistoryDetail(orderID: listHistory[index].id),
+                            ),
+                          );
+                        },
+                        trailing: Text(
+                            oCcy.format(listHistory[index].totalCost) + " vnd"),
+                      ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
-
                         children: <Widget>[
                           listHistory[index].status == 24
                               ? Text(

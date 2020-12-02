@@ -7,6 +7,7 @@ import 'package:flutter_swiper/flutter_swiper.dart';
 import 'dart:convert';
 import 'package:shipper_app_new/components/RouteSupermarket.dart';
 import 'package:shipper_app_new/constant/constant.dart';
+import 'package:meet_network_image/meet_network_image.dart';
 
 class DetailScreen extends StatefulWidget {
   final User userData;
@@ -123,8 +124,7 @@ class DetailScreenState extends State<DetailScreen> {
                       itemCount: widget.list[index].detail.length,
                       itemBuilder: (context, indexList) {
                         return ListTile(
-                          leading: Image.network(widget
-                              .list[index].detail[indexList].image),
+                          leading: widget.list[index].detail[indexList].image != null ?  Image.network(widget.list[index].detail[indexList].image) : Image.network(GlobalVariable.LAZY_IMAGE),
                           title: Text(utf8.decode(
                               latin1.encode(
                                   widget.list[index].detail[indexList].foodId),
