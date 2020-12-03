@@ -12,36 +12,41 @@ class LoginPage extends StatefulWidget {
   State<StatefulWidget> createState() => new _State();
 }
 
-
-
 _postLogin(String username, String password, BuildContext context) async {
-  User user = null;
-  var url = GlobalVariable.API_ENDPOINT + 'account/username';
-  var response = await http.post(Uri.parse(url),
-      headers: {
-        'Content-type': 'application/json',
-        "Accept": "application/json",
-      },
-      body: json.encode(
-          {"password": password, "role": "shipper", "username": username}));
-
-  if (response.statusCode == 200) {
-    user = User.fromJson(json.decode(response.body));
-    // If the server did return a 200 OK response,
-    GlobalVariable.IS_LOG_OUT = false;
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => MyHomeWidget(userData: user)),
-    );
-  } else {
-    // If the server did not return a 200 OK response,
-    // SweetAlert.show(context,
-    //     subtitle: "Xác nhận không thành công", style: SweetAlertStyle.error);
-    // then throw an exception.
+  if (username.isEmpty || password.isEmpty) {
     SweetAlert.show(context,
-        title: "Login Failed",
-        subtitle: "Invalid username or password",
+        title: "Lỗi",
+        subtitle: "Tên tài khoản hoặc mật khẩu không được để trống !",
         style: SweetAlertStyle.error);
+  } else {
+    User user = null;
+    var url = GlobalVariable.API_ENDPOINT + 'account/username';
+    var response = await http.post(Uri.parse(url),
+        headers: {
+          'Content-type': 'application/json',
+          "Accept": "application/json",
+        },
+        body: json.encode(
+            {"password": password, "role": "shipper", "username": username}));
+
+    if (response.statusCode == 200) {
+      user = User.fromJson(json.decode(response.body));
+      // If the server did return a 200 OK response,
+      GlobalVariable.IS_LOG_OUT = false;
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => MyHomeWidget(userData: user)),
+      );
+    } else {
+      // If the server did not return a 200 OK response,
+      // SweetAlert.show(context,
+      //     subtitle: "Xác nhận không thành công", style: SweetAlertStyle.error);
+      // then throw an exception.
+      SweetAlert.show(context,
+          title: "Lỗi",
+          subtitle: "Tên tài khoản hoặc mật khẩu không hợp lệ !",
+          style: SweetAlertStyle.error);
+    }
   }
 }
 
@@ -77,7 +82,7 @@ class _State extends State<LoginPage> {
                     controller: nameController,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
-                      labelText: 'User Name',
+                      labelText: 'Tên Tài Khoản',
                     ),
                     onChanged: (val) {
                       // (val) is looking at the value in the textbox.
@@ -92,7 +97,7 @@ class _State extends State<LoginPage> {
                     controller: passwordController,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
-                      labelText: 'Password',
+                      labelText: 'Mật Khẩu',
                     ),
                     onChanged: (val) {
                       // (val) is looking at the value in the textbox.
@@ -103,7 +108,6 @@ class _State extends State<LoginPage> {
                 FlatButton(
                   onPressed: () {
                     //forgot password screen
-
                   },
                   textColor: Colors.blue,
                   child: Text('Forgot Password'),
@@ -117,7 +121,7 @@ class _State extends State<LoginPage> {
                             children: <Widget>[
                               new TextField(
                                 decoration:
-                                new InputDecoration(hintText: "Update IP"),
+                                    new InputDecoration(hintText: "Update IP"),
                                 controller: _c,
                               ),
                               new FlatButton(
@@ -144,7 +148,7 @@ class _State extends State<LoginPage> {
                     child: RaisedButton(
                       textColor: Colors.white,
                       color: Colors.green,
-                      child: Text('Login'),
+                      child: Text('Đăng Nhập'),
                       onPressed: () {
                         _postLogin(nameController.text, passwordController.text,
                             context);
