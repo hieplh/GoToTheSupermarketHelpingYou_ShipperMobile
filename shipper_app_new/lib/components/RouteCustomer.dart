@@ -5,6 +5,7 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:flutter/material.dart';
+import 'package:shipper_app_new/components/CustomerDetail.dart';
 import 'package:shipper_app_new/components/camera.dart';
 import 'package:shipper_app_new/constant/constant.dart';
 import 'package:shipper_app_new/model/Orders.dart';
@@ -73,33 +74,12 @@ class RouteCustomerState extends State<RouteCustomer> {
   void initState() {
     super.initState();
 
-    // create an instance of Location
-    location = new Location();
-    polylinePoints = PolylinePoints();
-    setSourceAndDestinationIcons();
-    setInitialLocation();
+    setInitialLocation().then((value) => showPinsOnMap()).then((value) =>
+        location.onLocationChanged().listen((LocationData cLoc) async {
+          currentLocation = await cLoc;
 
-    // subscribe to changes in the user's location
-    // by "listening" to the location's onLocationChanged event
-    location.onLocationChanged().listen((LocationData cLoc) {
-      // cLoc contains the lat and long of the
-      // current user's position in real time,
-      // so we're holding on to it
-
-      currentLocation = cLoc;
-
-      updatePinOnMap();
-      // setState(() {
-      //   distanceToAddressDelivery = calculateDistance(
-      //       currentLocation.latitude,
-      //       currentLocation.longitude,
-      //       destinationLocation.latitude,
-      //       destinationLocation.longitude);
-      // });
-    });
-    // set custom marker pins
-
-    // set the initial location
+          await updatePinOnMap();
+        }));
   }
 
   double calculateDistance(lat1, lon1, lat2, lon2) {
@@ -124,26 +104,7 @@ class RouteCustomerState extends State<RouteCustomer> {
     );
 
     if (response.statusCode == 200) {
-      // If the server did return a 200 OK response,
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-            builder: (BuildContext context) => SuccessScreen(
-                  userData: widget.userData,
-                  data: widget.data,
-                )),
-        ModalRoute.withName('/'),
-      );
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(
-      //       builder: (context) => MyHomeWidget(userData: widget.userData)),
-      // );
     } else {
-      // If the server did not return a 200 OK response,
-      // SweetAlert.show(context,
-      //     subtitle: "Xác nhận không thành công", style: SweetAlertStyle.error);
-      // then throw an exception.
       throw Exception(response.body);
     }
   }
@@ -161,30 +122,32 @@ class RouteCustomerState extends State<RouteCustomer> {
     });
   }
 
-  void setInitialLocation() async {
+  Future<String> setInitialLocation() async {
+    location = await new Location();
+    polylinePoints = await PolylinePoints();
     currentLocation = await location.getLocation();
     var pinPosition =
-        LatLng(currentLocation.latitude, currentLocation.longitude);
-    _markers.add(Marker(
+        await LatLng(currentLocation.latitude, currentLocation.longitude);
+    await _markers.add(Marker(
         markerId: MarkerId('sourcePin'),
         position: pinPosition,
         icon: sourceIcon));
 
     for (var i = 0; i < widget.data.length; i++) {
-      var addressFromMap = widget.data[i].values.toList();
-      final query =
-          utf8.decode(latin1.encode(addressFromMap[1]), allowMalformed: true);
+      var addressFromMap = await widget.data[i].values.toList();
+      final query = await utf8.decode(latin1.encode(addressFromMap[1]),
+          allowMalformed: true);
       var addresses = await Geocoder.local.findAddressesFromQuery(query);
-      var first = addresses.first;
+      var first = await addresses.first;
       var destPosition =
-          LatLng(first.coordinates.latitude, first.coordinates.longitude);
-      _markers.add(Marker(
+          await LatLng(first.coordinates.latitude, first.coordinates.longitude);
+      await _markers.add(Marker(
           markerId: MarkerId(addressFromMap[6]),
           position: destPosition,
           icon: BitmapDescriptor.defaultMarker));
     }
 
-    List<Marker> listmarkers = _markers
+    List<Marker> listmarkers = await _markers
         .where((marker) => marker.markerId.value != 'sourcePin')
         .toList();
 
@@ -200,23 +163,23 @@ class RouteCustomerState extends State<RouteCustomer> {
         listmarkers[0].position.longitude);
 
     for (var i = 0; i < listmarkers.length; i++) {
-      if (calculateDistance(
+      if (await calculateDistance(
               currentLocation.latitude,
               currentLocation.longitude,
               listmarkers[i].position.latitude,
               listmarkers[i].position.longitude) <
           minDistance) {
-        destinationLocation = LocationData.fromMap({
+        destinationLocation = await LocationData.fromMap({
           "latitude": listmarkers[i].position.latitude,
           "longitude": listmarkers[i].position.longitude
         });
       }
     }
-    Marker tmpMarker = _markers.firstWhere(
+    Marker tmpMarker = await _markers.firstWhere(
         (element) => element.position.latitude == destinationLocation.latitude);
 
-    String initID = tmpMarker.markerId.value;
-    Map<String, dynamic> tmpMap = widget.data
+    String initID = await tmpMarker.markerId.value;
+    Map<String, dynamic> tmpMap = await widget.data
         .where((element) => element.values.toList()[6] == initID)
         .first;
     setState(() {
@@ -228,22 +191,23 @@ class RouteCustomerState extends State<RouteCustomer> {
           destinationLocation.latitude,
           destinationLocation.longitude);
     });
+    await BitmapDescriptor.fromAssetImage(
+            ImageConfiguration(devicePixelRatio: 2.0),
+            'assets/destination_map_marker.png')
+        .then((onValue) {
+      destinationIcon = onValue;
+    });
+    await BitmapDescriptor.fromAssetImage(
+            ImageConfiguration(devicePixelRatio: 2.0), 'assets/driving_pin.png')
+        .then((onValue) {
+      sourceIcon = onValue;
+    });
+
+    return "Success";
   }
 
   @override
   Widget build(BuildContext context) {
-    // distanceToAddressDelivery = calculateDistance(
-    //     currentLocation.latitude,
-    //     currentLocation.longitude,
-    //     destinationLocation.latitude,
-    //     destinationLocation.longitude);
-    // currentlySelectedPin = PinInformation(
-    //     locationName: addressNearby,
-    //     location: SOURCE_LOCATION,
-    //     pinPath: "assets/destination_map_marker.png",
-    //     avatarPath: "assets/destination_map_marker.png",
-    //     distance: distanceToAddressDelivery,
-    //     labelColor: Colors.purple);
     CameraPosition initialCameraPosition =
         CameraPosition(zoom: CAMERA_ZOOM, target: SOURCE_LOCATION);
     if (currentLocation != null) {
@@ -264,137 +228,112 @@ class RouteCustomerState extends State<RouteCustomer> {
               initialCameraPosition: initialCameraPosition,
               onMapCreated: (GoogleMapController controller) {
                 _controller.complete(controller);
-                // my map has completed being created;
-                // i'm ready to show the pins on the map
-                showPinsOnMap();
               }),
           AnimatedPositioned(
-            top: pinPillPosition,
+            top: pinPillPosition+10,
             right: 0,
             left: 0,
             duration: Duration(milliseconds: 200),
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Container(
-                margin: EdgeInsets.all(20),
-                height: 130,
-                decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.all(Radius.circular(50)),
-                    boxShadow: <BoxShadow>[
-                      BoxShadow(
-                          blurRadius: 20,
-                          offset: Offset.zero,
-                          color: Colors.grey.withOpacity(0.5))
-                    ]),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Container(
-                      width: 50,
-                      height: 50,
-                      margin: EdgeInsets.only(left: 10),
-                      child: ClipOval(
-                          child: Image.asset(
-                              "assets/destination_map_marker.png",
-                              fit: BoxFit.cover)),
-                    ),
-                    Expanded(
-                      child: Container(
-                        margin: EdgeInsets.only(left: 20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            Text(orderIdFromMarker,
-                                style: TextStyle(
-                                    fontSize: 16, color: Colors.green)),
-                            Text(
-                                utf8.decode(latin1.encode(addressNearby),
-                                    allowMalformed: true),
-                                style: TextStyle(
-                                    fontSize: 14, fontWeight: FontWeight.bold)),
-                            Text(
-                                'Khoảng cách: ${distanceToAddressDelivery.toStringAsFixed(2)}' +
-                                    " km",
-                                style:
-                                    TextStyle(fontSize: 16, color: Colors.red)),
-                            TextButton(
-                                onPressed: () {
-                                  SweetAlert.show(context,
-                                      title: "Chú ý",
-                                      subtitle: "Bạn có muốn hủy đơn hàng ? ",
-                                      style: SweetAlertStyle.confirm,
-                                      showCancelButton: true,
-                                      onPress: (bool isConfirm) {
-                                    if (isConfirm) {
-                                      http
-                                          .delete(GlobalVariable.API_ENDPOINT +
-                                              'delete/' +
-                                              orderIdFromMarker +
-                                              '/shipper/' +
-                                              widget.userData.id)
-                                          .then((response) {
-                                        if (response.statusCode == 200) {
-                                          widget.data.removeWhere((element) =>
-                                              element.values.toList()[6] ==
-                                              orderIdFromMarker);
-                                          if (widget.data.length > 0) {
-                                            _setNewPin();
-                                          } else if (widget.data.length == 0) {
-                                            showDialog(
-                                                context: context,
-                                                barrierDismissible: false,
-                                                builder: (_) => new AlertDialog(
-                                                      title:
-                                                          new Text("Thông báo"),
-                                                      content: new Text(
-                                                        "Tất cả đơn hàng đã bị hủy",
-                                                        style: TextStyle(
-                                                            color: Colors.red,
-                                                            fontSize: 20),
-                                                      ),
-                                                      actions: <Widget>[
-                                                        FlatButton(
-                                                          child: Text(
-                                                              'Quay về màn hình chính!'),
-                                                          onPressed: () {
-                                                            Navigator
-                                                                .pushAndRemoveUntil(
-                                                              context,
-                                                              MaterialPageRoute(
-                                                                  builder: (BuildContext
-                                                                          context) =>
-                                                                      MyHomeWidget(
-                                                                          userData:
-                                                                              widget.userData)),
-                                                              ModalRoute
-                                                                  .withName(
-                                                                      '/'),
-                                                            );
-                                                          },
-                                                        )
-                                                      ],
-                                                    ));
-                                          }
-                                        } else {}
-                                      });
-                                    }
-                                  });
-                                },
-                                child: Text('HỦY')),
-                            // Text('Longitude: ${widget.currentlySelectedPin.location.longitude.toString()}', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                          ],
-                        ),
+            child: Card(
+              margin: EdgeInsets.only(top: 10.0),
+              child: Column(
+
+                mainAxisSize: MainAxisSize.max,
+                children: <Widget>[
+                  ListTile(
+                    leading: Image.asset("assets/destination_map_marker.png"),
+                    title: Text(orderIdFromMarker,
+                        style: TextStyle(fontSize: 16, color: Colors.green)),
+                    subtitle: Text(
+                        utf8.decode(latin1.encode(addressNearby),
+                            allowMalformed: true),
+                        style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold)),
+                    trailing: Text(
+                        '${distanceToAddressDelivery.toStringAsFixed(2)}' +
+                            " km",
+                        style: TextStyle(fontSize: 16, color: Colors.orange,fontWeight: FontWeight.bold)),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: <Widget>[
+                      TextButton(
+                        child: Text('HỦY',style: TextStyle(fontSize: 14, color: Colors.red)),
+                        onPressed: () {
+                          SweetAlert.show(context,
+                              title: "Chú ý",
+                              subtitle: "Bạn có muốn hủy đơn hàng ? ",
+                              style: SweetAlertStyle.confirm,
+                              showCancelButton: true,
+                              onPress: (bool isConfirm) {
+                            if (isConfirm) {
+                              http
+                                  .delete(GlobalVariable.API_ENDPOINT +
+                                      'delete/' +
+                                      orderIdFromMarker +
+                                      '/shipper/' +
+                                      widget.userData.id)
+                                  .then((response) {
+                                if (response.statusCode == 200) {
+                                  widget.data.removeWhere((element) =>
+                                      element.values.toList()[6] ==
+                                      orderIdFromMarker);
+                                  if (widget.data.length > 0) {
+                                    _setNewPin();
+                                  } else if (widget.data.length == 0) {
+                                    showDialog(
+                                        context: context,
+                                        barrierDismissible: false,
+                                        builder: (_) => new AlertDialog(
+                                              title: new Text("Thông báo"),
+                                              content: new Text(
+                                                "Tất cả đơn hàng đã bị hủy",
+                                                style: TextStyle(
+                                                    color: Colors.red,
+                                                    fontSize: 20),
+                                              ),
+                                              actions: <Widget>[
+                                                FlatButton(
+                                                  child: Text(
+                                                      'Quay về màn hình chính!'),
+                                                  onPressed: () {
+                                                    Navigator
+                                                        .pushAndRemoveUntil(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                          builder: (BuildContext
+                                                                  context) =>
+                                                              MyHomeWidget(
+                                                                  userData: widget
+                                                                      .userData)),
+                                                      ModalRoute.withName('/'),
+                                                    );
+                                                  },
+                                                )
+                                              ],
+                                            ));
+                                  }
+                                } else {}
+                              });
+                            }
+                          });
+                        },
                       ),
-                    ),
-                    // Padding(
-                    //   padding: EdgeInsets.all(15),
-                    //   child: Image.asset(widget.currentlySelectedPin.pinPath, width: 50, height: 50),
-                    // )
-                  ],
-                ),
+                      SizedBox(width: 8),
+                      TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => CustomerPage(
+                                          orderID: orderIdFromMarker,
+                                        )));
+                          },
+                          child: Text("Thông tin khách hàng",style: TextStyle(color: Colors.green))),
+                      SizedBox(width: 8),
+                    ],
+                  ),
+                ],
               ),
             ),
           )
@@ -431,13 +370,9 @@ class RouteCustomerState extends State<RouteCustomer> {
     );
   }
 
-  void showPinsOnMap() {
-    // get a LatLng for the source location
-    // from the LocationData currentLocation object
-
-    // set the route lines on the map from source to destination
-    // for more info follow this tutorial
-    setPolylines();
+  Future<String> showPinsOnMap() async {
+    await setPolylines();
+    return "Success";
   }
 
   void setPolylines() async {
@@ -476,8 +411,6 @@ class RouteCustomerState extends State<RouteCustomer> {
     });
     print("Co trung khong : ${checkDuplicate}");
     if (await checkDuplicate == true) {
-      // var listIdOrder = widget.data.reduce((value, element) =>
-      //     value["addressDelivery"] + ',' + element["addressDelivery"]);
       showDialog(
           context: context,
           barrierDismissible: false,
@@ -509,6 +442,20 @@ class RouteCustomerState extends State<RouteCustomer> {
                                 builder: (context) => CameraScreen()));
                       } else {}
                     },
+                  ),
+                  FlatButton(
+                    child: Text(
+                      'Thông tin khách hàng',
+                      style: TextStyle(color: Colors.green),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => CustomerPage(
+                                    orderID: orderIdFromMarker,
+                                  )));
+                    },
                   )
                 ],
               ));
@@ -524,7 +471,10 @@ class RouteCustomerState extends State<RouteCustomer> {
                     '\nXin vui lòng chụp hình mặt hàng trước khi chuyển giao cho khách '),
                 actions: <Widget>[
                   FlatButton(
-                    child: Text('Chụp hình'),
+                    child: Text(
+                      'Chụp hình',
+                      style: TextStyle(color: Colors.red),
+                    ),
                     onPressed: () async {
                       var url = GlobalVariable.API_ENDPOINT + 'orders/update';
                       var response = await http.put(
@@ -544,6 +494,20 @@ class RouteCustomerState extends State<RouteCustomer> {
                             MaterialPageRoute(
                                 builder: (context) => CameraScreen()));
                       } else {}
+                    },
+                  ),
+                  FlatButton(
+                    child: Text(
+                      'Thông tin khách hàng',
+                      style: TextStyle(color: Colors.green),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => CustomerPage(
+                                    orderID: orderIdFromMarker,
+                                  )));
                     },
                   )
                 ],

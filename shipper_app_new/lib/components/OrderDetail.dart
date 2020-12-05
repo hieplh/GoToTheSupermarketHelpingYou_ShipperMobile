@@ -9,6 +9,8 @@ import 'package:shipper_app_new/components/RouteSupermarket.dart';
 import 'package:shipper_app_new/constant/constant.dart';
 import 'package:meet_network_image/meet_network_image.dart';
 
+import 'CustomerDetail.dart';
+
 class DetailScreen extends StatefulWidget {
   final User userData;
   final List<Order> list;
@@ -124,7 +126,11 @@ class DetailScreenState extends State<DetailScreen> {
                       itemCount: widget.list[index].detail.length,
                       itemBuilder: (context, indexList) {
                         return ListTile(
-                          leading: widget.list[index].detail[indexList].image != null ?  Image.network(widget.list[index].detail[indexList].image) : Image.network(GlobalVariable.LAZY_IMAGE),
+                          leading: widget.list[index].detail[indexList].image !=
+                                  null
+                              ? Image.network(
+                                  widget.list[index].detail[indexList].image)
+                              : Image.network(GlobalVariable.LAZY_IMAGE),
                           title: Text(utf8.decode(
                               latin1.encode(
                                   widget.list[index].detail[indexList].foodId),
@@ -138,6 +144,21 @@ class DetailScreenState extends State<DetailScreen> {
                               " vnd"),
                         );
                       },
+                    ),
+                    Card(
+                      child: ListTile(
+                        leading: Icon(Icons.supervised_user_circle),
+                        title: Text('Thông tin khách hàng '),
+                        trailing: Text("Xem chi tiết",style: TextStyle(color: Colors.green,fontSize: 14,fontWeight: FontWeight.bold),),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => CustomerPage(
+                                    orderID: widget.list[index].id)),
+                          );
+                        },
+                      ),
                     ),
                     Card(
                       child: ListTile(

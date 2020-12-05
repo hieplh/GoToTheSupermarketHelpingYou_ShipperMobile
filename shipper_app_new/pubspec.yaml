@@ -50,6 +50,7 @@ dependencies:
   splashscreen:
   shared_preferences: ^0.5.12+4
   meet_network_image: ^0.1.2
+  url_launcher: ^5.7.10
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -77,6 +78,7 @@ flutter:
     - assets/veget.png
     - assets/order.jpg
     - assets/supermarket.png
+    - assets/history.png
     
 
   # An image asset can refer to one or more resolution-specific "variants", see

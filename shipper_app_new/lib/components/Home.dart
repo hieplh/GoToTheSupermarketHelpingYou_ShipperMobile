@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:shipper_app_new/components/CustomerDetail.dart';
 import 'package:shipper_app_new/components/RestarApp.dart';
 import 'package:shipper_app_new/model/History.dart';
 import 'package:shipper_app_new/model/Orders.dart';
@@ -663,7 +664,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
                       ListTile(
-                        leading: Icon(Icons.lock_clock),
+                        leading: Image.asset("assets/history.png"),
                         title: Text(utf8.decode(
                             latin1.encode(listHistory[index].id),
                             allowMalformed: true)),
@@ -795,7 +796,9 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                 Icons.keyboard_arrow_right,
                 color: const Color.fromRGBO(0, 175, 82, 1),
               ),
-              onTap: () {},
+              onTap: () {
+
+              },
             ),
             ListTile(
               leading: Icon(
