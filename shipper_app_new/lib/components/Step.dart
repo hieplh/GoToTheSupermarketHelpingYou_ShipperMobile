@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
@@ -32,6 +33,7 @@ class _StepsState extends State<Steps> {
   bool _isChecked = false;
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   double totalCost = 0;
+  Timer getOrdersTimer;
   int countChecked = 0;
   var listOrders = new List<Order>();
   List<Map<String, dynamic>> tmp = new List();
@@ -41,11 +43,30 @@ class _StepsState extends State<Steps> {
     await http
         .get(GlobalVariable.API_ENDPOINT + "shipper/" + '${widget.userData.id}')
         .then((response) {
-      print("Response don hang " + response.body);
-      setState(() {
-        Iterable list = json.decode(response.body);
-        listOrders = list.map((model) => Order.fromJson(model)).toList();
-      });
+      print("Response don hang Step");
+      if (response.body.isNotEmpty) {
+        setState(() {
+          Iterable list = json.decode(response.body);
+          listOrders = list.map((model) => Order.fromJson(model)).toList();
+        });
+        if (listOrders.length > tmp.length) {
+          _setNewListOrder();
+          showDialog(
+              context: context,
+              builder: (_) => new AlertDialog(
+                    title: new Text("Thông báo"),
+                    content: new Text('Có đơn hàng mới'),
+                    actions: <Widget>[
+                      FlatButton(
+                        child: Text('OK'),
+                        onPressed: () async {
+                          await Navigator.of(context).pop();
+                        },
+                      )
+                    ],
+                  ));
+        }
+      } else {}
     });
     return 'Success';
   }
@@ -109,50 +130,54 @@ class _StepsState extends State<Steps> {
     totalItem = widget.item.length;
     _getTotalCost();
 
-    _firebaseMessaging.configure(
-      onMessage: (message) async {
-        await _getOrders();
-        await _setNewListOrder();
-        await showDialog(
-            context: context,
-            builder: (_) => new AlertDialog(
-                  title: new Text("Thông báo"),
-                  content: new Text('Có đơn hàng mới'),
-                  actions: <Widget>[
-                    FlatButton(
-                      child: Text('OK'),
-                      onPressed: () async {
-                        await Navigator.of(context).pop();
-                        // var url = GlobalVariable.API_ENDPOINT + 'orders/update';
-                        // var response = await http.put(
-                        //   Uri.encodeFull(url),
-                        //   headers: {
-                        //     'Content-type': 'application/json',
-                        //     "Accept": "application/json",
-                        //   },
-                        //   encoding: Encoding.getByName("utf-8"),
-                        //   body: '[' + jsonEncode(od) + ']',
-                        // );
-                        // print("Loi la ${response.statusCode}");
-                        // if (response.statusCode == 200) {
-                        //   Navigator.of(context).pop();
-                        //   Navigator.push(
-                        //       context,
-                        //       MaterialPageRoute(
-                        //           builder: (context) => CameraScreen()));
-                        // } else {}
-                      },
-                    )
-                  ],
-                ));
-      },
-      onResume: (message) async {
-        // setState(() {
-        //   title = message["data"]["title"];
-        //   helper = "You have open the application from notification";
-        // });
-      },
-    );
+    // _firebaseMessaging.configure(
+    //   onMessage: (message) async {
+    //     await _getOrders();
+    //     await _setNewListOrder();
+    //     await showDialog(
+    //         context: context,
+    //         builder: (_) => new AlertDialog(
+    //               title: new Text("Thông báo"),
+    //               content: new Text('Có đơn hàng mới'),
+    //               actions: <Widget>[
+    //                 FlatButton(
+    //                   child: Text('OK'),
+    //                   onPressed: () async {
+    //                     await Navigator.of(context).pop();
+    //                     // var url = GlobalVariable.API_ENDPOINT + 'orders/update';
+    //                     // var response = await http.put(
+    //                     //   Uri.encodeFull(url),
+    //                     //   headers: {
+    //                     //     'Content-type': 'application/json',
+    //                     //     "Accept": "application/json",
+    //                     //   },
+    //                     //   encoding: Encoding.getByName("utf-8"),
+    //                     //   body: '[' + jsonEncode(od) + ']',
+    //                     // );
+    //                     // print("Loi la ${response.statusCode}");
+    //                     // if (response.statusCode == 200) {
+    //                     //   Navigator.of(context).pop();
+    //                     //   Navigator.push(
+    //                     //       context,
+    //                     //       MaterialPageRoute(
+    //                     //           builder: (context) => CameraScreen()));
+    //                     // } else {}
+    //                   },
+    //                 )
+    //               ],
+    //             ));
+    //   },
+    //   onResume: (message) async {
+    //     // setState(() {
+    //     //   title = message["data"]["title"];
+    //     //   helper = "You have open the application from notification";
+    //     // });
+    //   },
+    // );
+
+    getOrdersTimer = Timer.periodic(new Duration(seconds: 5), (timer) {
+      _getOrders();
+    });
   }
 
   _getTotalCost() {
@@ -311,6 +336,7 @@ class _StepsState extends State<Steps> {
             // print("So luong item la " + Global.number.toString());
             if (Global.number.round() == countItemCheck) {
               _updateOrder();
+              getOrdersTimer.cancel();
               // SweetAlert.show(context,
               //     title: "Chưa mua đủ đồ ${countItemCheck}",
               //     style: SweetAlertStyle.success);
@@ -319,7 +345,7 @@ class _StepsState extends State<Steps> {
                   title: "Chưa mua đủ đồ", style: SweetAlertStyle.error);
             }
           },
-          label: Text('Hoàn Tất Mua Hàng'),
+          label: Text('Hoàn Tất'),
           backgroundColor: Colors.green,
         ),
       ),
@@ -369,14 +395,9 @@ class _StepsState extends State<Steps> {
             TextSpan(
               text: oCcy.format(sum) + " vnd",
               style: TextStyle(
-                fontSize: 24,
-
-                fontWeight: FontWeight.bold,
-                color: Colors.red
-              ),
+                  fontSize: 24, fontWeight: FontWeight.bold, color: Colors.red),
             ),
-          ]
-      ),
+          ]),
     );
   }
 }
@@ -437,4 +458,8 @@ class _CheckItemState extends State<CheckItem> {
       controlAffinity: ListTileControlAffinity.trailing,
     );
   }
+}
+
+class CheckIntervalStep {
+  static bool isHasOrderStep = false;
 }

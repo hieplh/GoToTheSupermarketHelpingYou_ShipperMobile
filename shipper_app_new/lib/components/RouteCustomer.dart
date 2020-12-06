@@ -361,7 +361,7 @@ class RouteCustomerState extends State<RouteCustomer> {
             );
           } else {
             SweetAlert.show(context,
-                title: "Chưa giao đủ đơn hàng !", style: SweetAlertStyle.error);
+                title: "Chưa đến điểm giao hàng !", style: SweetAlertStyle.error);
           }
         },
         label: Text('Hoàn Tất Giao Hàng'),
@@ -409,7 +409,6 @@ class RouteCustomerState extends State<RouteCustomer> {
         address.add(u["addressDelivery"]);
       }
     });
-    print("Co trung khong : ${checkDuplicate}");
     if (await checkDuplicate == true) {
       showDialog(
           context: context,

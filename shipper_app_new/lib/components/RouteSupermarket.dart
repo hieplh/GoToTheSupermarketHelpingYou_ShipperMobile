@@ -42,22 +42,17 @@ class RouteSupermarketState extends State<RouteSupermarket> {
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   Completer<GoogleMapController> _controller = Completer();
   Set<Marker> _markers = Set<Marker>();
-// for my drawn routes on the map
   Set<Polyline> _polylines = Set<Polyline>();
   List<LatLng> polylineCoordinates = [];
   PolylinePoints polylinePoints;
   List<Map<String, dynamic>> tmp = new List();
   String googleAPIKey = 'AIzaSyDl3HXWngkUA1yFkSXDeXSzu_3KyPkH810';
-// for my custom marker pins
   BitmapDescriptor sourceIcon;
   BitmapDescriptor destinationIcon;
   List<OrderDetail> tmpDetail = new List();
-// the user's initial location and current location
-// as it moves
+  Timer getOrdersTimer;
   LocationData currentLocation;
-// a reference to the destination location
   LocationData destinationLocation;
-// wrapper around the location API
   var listOrders = new List<Order>();
   Location location;
   double pinPillPosition = -100;
@@ -71,27 +66,39 @@ class RouteSupermarketState extends State<RouteSupermarket> {
 
   PinInformation destinationPinInfo;
   Future<String> _getOrders() async {
-    // print(GlobalVariable.API_ENDPOINT + "shipper/" + '${widget.userData.id}');
-    // print(API_ENDPOINT +
-    // "shipper/" +
-    // '${widget.userData.id}' +
-    // "/lat/10.847440/lng/106.796640");
-    // 'http://25.72.134.12:1234/smhu/api/shipper/98765/lat/10.800777/lng/106.732639'
-    //http://192.168.43.81/smhu/api/shipper/98765/lat/10.779534/lng/106.631451
     await http
         .get(GlobalVariable.API_ENDPOINT + "shipper/" + '${widget.userData.id}')
         .then((response) {
-      print("Response don hang " + response.body);
-      setState(() {
-        Iterable list = json.decode(response.body);
-        listOrders = list.map((model) => Order.fromJson(model)).toList();
-      });
+      print("Response don hang RouteSuppermarket ");
+      if (response.body.isNotEmpty) {
+        setState(() {
+          Iterable list = json.decode(response.body);
+          listOrders = list.map((model) => Order.fromJson(model)).toList();
+        });
+        if (listOrders.length > tmp.length) {
+          _setNewListOrder();
+          showDialog(
+              context: context,
+              builder: (_) => new AlertDialog(
+                    title: new Text("Thông báo"),
+                    content: new Text('Có đơn hàng mới'),
+                    actions: <Widget>[
+                      FlatButton(
+                        child: Text('OK'),
+                        onPressed: () async {
+                          await Navigator.of(context).pop();
+                        },
+                      )
+                    ],
+                  ));
+        }
+      } else {}
     });
-    await print("List don hang moi ${listOrders.length}");
+
     return 'Success';
   }
 
-  _setNewListOrder() async {
+  Future<String> _setNewListOrder() async {
     List<Map<String, dynamic>> data = new List<Map<String, dynamic>>();
     for (Order orderInList in listOrders) {
       Map<String, dynamic> order = {
@@ -138,14 +145,15 @@ class RouteSupermarketState extends State<RouteSupermarket> {
       };
       data.add(order);
     }
-    tmp = data;
+    tmp = await data;
     List<OrderDetail> oD = new List<OrderDetail>();
     for (Order orders in listOrders) {
       for (OrderDetail detail in orders.detail) {
         oD.add(detail);
       }
     }
-    tmpDetail = oD;
+    tmpDetail = await oD;
+    return 'Success';
   }
 
   @override
@@ -154,84 +162,56 @@ class RouteSupermarketState extends State<RouteSupermarket> {
     tmp = widget.data;
     tmpDetail = widget.orderDetails;
     // create an instance of Location
-    location = new Location();
-    polylinePoints = PolylinePoints();
-    setInitialLocation();
-    setSourceAndDestinationIcons();
+    setInitialLocation().then((value) => showPinsOnMap()).then((value) =>
+        location.onLocationChanged().listen((LocationData cLoc) async {
+          currentLocation = await cLoc;
 
-    // subscribe to changes in the user's location
-    // by "listening" to the location's onLocationChanged event
-    location.onLocationChanged().listen((LocationData cLoc) {
-      // cLoc contains the lat and long of the
-      // current user's position in real time,
-      // so we're holding on to it
-
-      currentLocation = cLoc;
-
-      updatePinOnMap();
-    });
-    _firebaseMessaging.configure(
-      onMessage: (message) async {
-        await _getOrders();
-        await _setNewListOrder();
-        await showDialog(
-            context: context,
-            builder: (_) => new AlertDialog(
-                  title: new Text("Thông báo"),
-                  content: new Text(
-                      'Có đơn hàng mới'),
-                  actions: <Widget>[
-                    FlatButton(
-                      child: Text('OK'),
-                      onPressed: () async {
-                        await Navigator.of(context).pop();
-                        // var url = GlobalVariable.API_ENDPOINT + 'orders/update';
-                        // var response = await http.put(
-                        //   Uri.encodeFull(url),
-                        //   headers: {
-                        //     'Content-type': 'application/json',
-                        //     "Accept": "application/json",
-                        //   },
-                        //   encoding: Encoding.getByName("utf-8"),
-                        //   body: '[' + jsonEncode(od) + ']',
-                        // );
-                        // print("Loi la ${response.statusCode}");
-                        // if (response.statusCode == 200) {
-                        //   Navigator.of(context).pop();
-                        //   Navigator.push(
-                        //       context,
-                        //       MaterialPageRoute(
-                        //           builder: (context) => CameraScreen()));
-                        // } else {}
-                      },
-                    )
-                  ],
-                ));
-      },
-      onResume: (message) async {
-        // setState(() {
-        //   title = message["data"]["title"];
-        //   helper = "You have open the application from notification";
-        // });
-      },
-    );
-    // set custom marker pins
-
-    // set the initial location
-  }
-
-  void setSourceAndDestinationIcons() async {
-    BitmapDescriptor.fromAssetImage(
-            ImageConfiguration(devicePixelRatio: 2.0), 'assets/cart.png')
-        .then((onValue) {
-      destinationIcon = onValue;
-    });
-    BitmapDescriptor.fromAssetImage(
-            ImageConfiguration(devicePixelRatio: 2.0), 'assets/driving_pin.png')
-        .then((onValue) {
-      sourceIcon = onValue;
+          await updatePinOnMap();
+        }));
+    // _firebaseMessaging.configure(
+    //   onMessage: (message) async {
+    //     await _getOrders();
+    //     await _setNewListOrder();
+    //     await showDialog(
+    //         context: context,
+    //         builder: (_) => new AlertDialog(
+    //               title: new Text("Thông báo"),
+    //               content: new Text('Có đơn hàng mới'),
+    //               actions: <Widget>[
+    //                 FlatButton(
+    //                   child: Text('OK'),
+    //                   onPressed: () async {
+    //                     await Navigator.of(context).pop();
+    //
+    //                   },
+    //                 )
+    //               ],
+    //             ));
+    //   },
+    //   onResume: (message) async {
+    //     // setState(() {
+    //     //   title = message["data"]["title"];
+    //     //   helper = "You have open the application from notification";
+    //     // });
+    //   },
+    // );
+    getOrdersTimer = Timer.periodic(new Duration(seconds: 5), (timer) {
+      _getOrders();
     });
   }
+
+  // void setSourceAndDestinationIcons() async {
+  //   BitmapDescriptor.fromAssetImage(
+  //           ImageConfiguration(devicePixelRatio: 2.0), 'assets/cart.png')
+  //       .then((onValue) {
+  //     destinationIcon = onValue;
+  //   });
+  //   BitmapDescriptor.fromAssetImage(
+  //           ImageConfiguration(devicePixelRatio: 2.0), 'assets/driving_pin.png')
+  //       .then((onValue) {
+  //     sourceIcon = onValue;
+  //   });
+  // }
 
   _updateOrder() async {
     if (calculateDistance(currentLocation.latitude, currentLocation.longitude,
@@ -281,9 +261,11 @@ class RouteSupermarketState extends State<RouteSupermarket> {
     return 12742 * asin(sqrt(a));
   }
 
-  void setInitialLocation() async {
-    final latDes = double.parse(widget.data[0]['market']['lat']);
-    final longDes = double.parse(widget.data[0]['market']['lng']);
+  Future<String> setInitialLocation() async {
+    location = await new Location();
+    polylinePoints = await PolylinePoints();
+    final latDes = await double.parse(widget.data[0]['market']['lat']);
+    final longDes = await double.parse(widget.data[0]['market']['lng']);
 
     // print("phuong " + latDes.toString());
 
@@ -293,13 +275,13 @@ class RouteSupermarketState extends State<RouteSupermarket> {
 
     // hard-coded destination for this example
     destinationLocation =
-        LocationData.fromMap({"latitude": latDes, "longitude": longDes});
+        await LocationData.fromMap({"latitude": latDes, "longitude": longDes});
     var pinPosition =
-        LatLng(currentLocation.latitude, currentLocation.longitude);
+        await LatLng(currentLocation.latitude, currentLocation.longitude);
     // get a LatLng out of the LocationData object
-    var destPosition =
-        LatLng(destinationLocation.latitude, destinationLocation.longitude);
-    distanceToSupermarket = (calculateDistance(
+    var destPosition = await LatLng(
+        destinationLocation.latitude, destinationLocation.longitude);
+    distanceToSupermarket = await (calculateDistance(
         currentLocation.latitude,
         currentLocation.longitude,
         destinationLocation.latitude,
@@ -320,7 +302,7 @@ class RouteSupermarketState extends State<RouteSupermarket> {
     //     labelColor: Colors.purple);
 
     // add the initial source location pin
-    _markers.add(Marker(
+    await _markers.add(Marker(
         markerId: MarkerId('sourcePin'),
         position: pinPosition,
         // onTap: () {
@@ -331,10 +313,22 @@ class RouteSupermarketState extends State<RouteSupermarket> {
         // },
         icon: sourceIcon));
 
-    _markers.add(Marker(
+    await _markers.add(Marker(
         markerId: MarkerId('destPin'),
         position: destPosition,
         icon: destinationIcon));
+
+    await BitmapDescriptor.fromAssetImage(
+            ImageConfiguration(devicePixelRatio: 2.0), 'assets/cart.png')
+        .then((onValue) {
+      destinationIcon = onValue;
+    });
+    await BitmapDescriptor.fromAssetImage(
+            ImageConfiguration(devicePixelRatio: 2.0), 'assets/driving_pin.png')
+        .then((onValue) {
+      sourceIcon = onValue;
+    });
+    return "Success";
   }
 
   @override
@@ -365,7 +359,6 @@ class RouteSupermarketState extends State<RouteSupermarket> {
                 _controller.complete(controller);
                 // my map has completed being created;
                 // i'm ready to show the pins on the map
-                showPinsOnMap();
               },
               markers: _markers,
             ),
@@ -432,9 +425,10 @@ class RouteSupermarketState extends State<RouteSupermarket> {
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         floatingActionButton: FloatingActionButton.extended(
-          onPressed: () {
+          onPressed: () async {
             // print(widget.orderDetails.length.toString());
-            _updateOrder();
+           await getOrdersTimer.cancel();
+           await _updateOrder();
           },
           label: Text('Đi đến siêu thị hoàn tất'),
           backgroundColor: Colors.green,
@@ -443,13 +437,9 @@ class RouteSupermarketState extends State<RouteSupermarket> {
     );
   }
 
-  void showPinsOnMap() {
-    // get a LatLng for the source location
-    // from the LocationData currentLocation object
-
-    // set the route lines on the map from source to destination
-    // for more info follow this tutorial
-    setPolylines();
+  Future<String> showPinsOnMap() async {
+    await setPolylines();
+    return "Success";
   }
 
   void setPolylines() async {
@@ -476,7 +466,7 @@ class RouteSupermarketState extends State<RouteSupermarket> {
   }
 
   void updatePinOnMap() async {
-    setPolylines();
+    await setPolylines();
 
     // create a new CameraPosition instance
     // every time the location changes, so the camera
@@ -516,4 +506,8 @@ class RouteSupermarketState extends State<RouteSupermarket> {
           icon: sourceIcon));
     });
   }
+}
+
+class CheckInterval {
+  static bool isHasOrder = false;
 }

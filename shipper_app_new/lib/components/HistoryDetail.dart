@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:shipper_app_new/constant/constant.dart';
 import 'package:shipper_app_new/model/Orders.dart';
 
+import 'CustomerDetail.dart';
+
 class HistoryDetail extends StatefulWidget {
   final orderID;
   const HistoryDetail({Key key, this.orderID}) : super(key: key);
@@ -49,8 +51,8 @@ class _HistoryDetailState extends State<HistoryDetail> {
         children: <Widget>[
           Card(
             child: ListTile(
-              leading: Text('Mã đơn hàng',style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold,color: Colors.red)),
-              title: Text('${widget.orderID}'),
+              leading: Text('${widget.orderID}',style: TextStyle(color: Colors.red,fontSize: 20,fontWeight: FontWeight.bold)),
+
             ),
           ),
           ListView.builder(
@@ -69,7 +71,15 @@ class _HistoryDetailState extends State<HistoryDetail> {
                     oCcy.format(listOrderDetail[indexList].priceOriginal) + " vnd"),
               );
             },
-          )
+          ),
+          TextButton(onPressed: (){
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => CustomerPage(
+                      orderID: widget.orderID)),
+            );
+          }, child: Text('Xem Thông tin khách hàng',style: TextStyle(color: Colors.green),)),
         ],
       ),
       floatingActionButton: FloatingActionButton(
