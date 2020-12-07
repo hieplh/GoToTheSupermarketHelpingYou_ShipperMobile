@@ -69,7 +69,7 @@ class RouteSupermarketState extends State<RouteSupermarket> {
     await http
         .get(GlobalVariable.API_ENDPOINT + "shipper/" + '${widget.userData.id}')
         .then((response) {
-      print("Response don hang RouteSuppermarket ");
+      print("Response don hang RouteSuppermarket " + response.body);
       if (response.body.isNotEmpty) {
         setState(() {
           Iterable list = json.decode(response.body);
@@ -103,7 +103,11 @@ class RouteSupermarketState extends State<RouteSupermarket> {
     for (Order orderInList in listOrders) {
       Map<String, dynamic> order = {
         "costDelivery": orderInList.costDelivery,
-        "addressDelivery": orderInList.addressDelivery,
+        "addressDelivery": {
+          "address": '${orderInList.addressDelivery.address}',
+          "lng": '${orderInList.addressDelivery.lng}',
+          "lat": '${orderInList.addressDelivery.lat}',
+        },
         "costShopping": orderInList.costShopping,
         "cust": '${orderInList.cust}',
         "dateDelivery": "${orderInList.dateDelivery}",

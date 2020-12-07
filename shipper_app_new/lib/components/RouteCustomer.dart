@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:shipper_app_new/components/CustomerDetail.dart';
 import 'package:shipper_app_new/components/camera.dart';
 import 'package:shipper_app_new/constant/constant.dart';
-import 'package:shipper_app_new/model/Orders.dart';
 import 'package:shipper_app_new/model/User.dart';
 import 'package:geocoder/geocoder.dart';
 import 'package:shipper_app_new/model/pin_pill_info.dart';
@@ -135,12 +134,12 @@ class RouteCustomerState extends State<RouteCustomer> {
 
     for (var i = 0; i < widget.data.length; i++) {
       var addressFromMap = await widget.data[i].values.toList();
-      final query = await utf8.decode(latin1.encode(addressFromMap[1]),
-          allowMalformed: true);
-      var addresses = await Geocoder.local.findAddressesFromQuery(query);
-      var first = await addresses.first;
-      var destPosition =
-          await LatLng(first.coordinates.latitude, first.coordinates.longitude);
+      // final query = await utf8.decode(latin1.encode(addressFromMap[1]),
+      //     allowMalformed: true);
+      // var addresses = await Geocoder.local.findAddressesFromQuery(query);
+      // var first = await addresses.first;
+      var destPosition = await LatLng(double.parse(addressFromMap[1]['lat']),
+          double.parse(addressFromMap[1]['lng']));
       await _markers.add(Marker(
           markerId: MarkerId(addressFromMap[6]),
           position: destPosition,
@@ -184,7 +183,7 @@ class RouteCustomerState extends State<RouteCustomer> {
         .first;
     setState(() {
       orderIdFromMarker = initID;
-      addressNearby = tmpMap.values.toList()[1];
+      addressNearby = tmpMap.values.toList()[1]['address'];
       distanceToAddressDelivery = calculateDistance(
           currentLocation.latitude,
           currentLocation.longitude,
@@ -230,14 +229,13 @@ class RouteCustomerState extends State<RouteCustomer> {
                 _controller.complete(controller);
               }),
           AnimatedPositioned(
-            top: pinPillPosition+10,
+            top: pinPillPosition + 10,
             right: 0,
             left: 0,
             duration: Duration(milliseconds: 200),
             child: Card(
               margin: EdgeInsets.only(top: 10.0),
               child: Column(
-
                 mainAxisSize: MainAxisSize.max,
                 children: <Widget>[
                   ListTile(
@@ -252,13 +250,17 @@ class RouteCustomerState extends State<RouteCustomer> {
                     trailing: Text(
                         '${distanceToAddressDelivery.toStringAsFixed(2)}' +
                             " km",
-                        style: TextStyle(fontSize: 16, color: Colors.orange,fontWeight: FontWeight.bold)),
+                        style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.orange,
+                            fontWeight: FontWeight.bold)),
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: <Widget>[
                       TextButton(
-                        child: Text('HỦY',style: TextStyle(fontSize: 14, color: Colors.red)),
+                        child: Text('HỦY',
+                            style: TextStyle(fontSize: 14, color: Colors.red)),
                         onPressed: () {
                           SweetAlert.show(context,
                               title: "Chú ý",
@@ -329,7 +331,8 @@ class RouteCustomerState extends State<RouteCustomer> {
                                           orderID: orderIdFromMarker,
                                         )));
                           },
-                          child: Text("Thông tin khách hàng",style: TextStyle(color: Colors.green))),
+                          child: Text("Thông tin khách hàng",
+                              style: TextStyle(color: Colors.green))),
                       SizedBox(width: 8),
                     ],
                   ),
@@ -361,7 +364,8 @@ class RouteCustomerState extends State<RouteCustomer> {
             );
           } else {
             SweetAlert.show(context,
-                title: "Chưa đến điểm giao hàng !", style: SweetAlertStyle.error);
+                title: "Chưa đến điểm giao hàng !",
+                style: SweetAlertStyle.error);
           }
         },
         label: Text('Hoàn Tất Giao Hàng'),
@@ -399,17 +403,27 @@ class RouteCustomerState extends State<RouteCustomer> {
   }
 
   _showMaterialDialog(Map<String, dynamic> od) async {
-    bool checkDuplicate = false;
-    List address = List();
-    await widget.data.forEach((u) {
-      if (address.contains(u["addressDelivery"]))
-        checkDuplicate = true;
-      else {
-        checkDuplicate = false;
-        address.add(u["addressDelivery"]);
+    // bool checkDuplicate = false;
+    // List address = List();
+    // await widget.data.forEach((u) {
+    //   if (address.contains(u["addressDelivery"]))
+    //     checkDuplicate = true;
+    //   else {
+    //     checkDuplicate = false;
+    //     address.add(u["addressDelivery"]);
+    //   }
+    // });
+    List<Map<String, dynamic>> listTmpDup = new List();
+    for (int i = 0; i < widget.data.length; i++) {
+      for (int j = i + 1; j < widget.data.length; j++) {
+        if (widget.data[i]['addressDelivery']['address'] ==
+            (widget.data[j]['addressDelivery']['address'])) {
+          listTmpDup.add(widget.data[i]);
+          listTmpDup.add(widget.data[j]);
+        }
       }
-    });
-    if (await checkDuplicate == true) {
+    }
+    if (listTmpDup.contains(od)) {
       showDialog(
           context: context,
           barrierDismissible: false,
@@ -430,9 +444,8 @@ class RouteCustomerState extends State<RouteCustomer> {
                           "Accept": "application/json",
                         },
                         encoding: Encoding.getByName("utf-8"),
-                        body: jsonEncode(widget.data),
+                        body: jsonEncode(listTmpDup),
                       );
-                      print("Loi la ${response.statusCode}");
                       if (response.statusCode == 200) {
                         Navigator.of(context).pop();
                         Navigator.push(
@@ -704,7 +717,7 @@ class RouteCustomerState extends State<RouteCustomer> {
           .first;
       setState(() {
         orderIdFromMarker = initID;
-        addressNearby = tmpMap.values.toList()[1];
+        addressNearby = tmpMap.values.toList()[1]['address'];
       });
     }
     setState(() {

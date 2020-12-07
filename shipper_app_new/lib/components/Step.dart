@@ -76,7 +76,11 @@ class _StepsState extends State<Steps> {
     for (Order orderInList in listOrders) {
       Map<String, dynamic> order = {
         "costDelivery": orderInList.costDelivery,
-        "addressDelivery": orderInList.addressDelivery,
+        "addressDelivery": {
+          "address": '${orderInList.addressDelivery.address}',
+          "lng": '${orderInList.addressDelivery.lng}',
+          "lat": '${orderInList.addressDelivery.lat}',
+        },
         "costShopping": orderInList.costShopping,
         "cust": '${orderInList.cust}',
         "dateDelivery": "${orderInList.dateDelivery}",

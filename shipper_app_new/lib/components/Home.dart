@@ -83,7 +83,11 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
     for (Order orderInList in listOrders) {
       Map<String, dynamic> order = {
         "costDelivery": orderInList.costDelivery,
-        "addressDelivery": orderInList.addressDelivery,
+        "addressDelivery": {
+          "address": '${orderInList.addressDelivery.address}',
+          "lng": '${orderInList.addressDelivery.lng}',
+          "lat": '${orderInList.addressDelivery.lat}',
+        },
         "costShopping": orderInList.costShopping,
         "cust": '${orderInList.cust}',
         "dateDelivery": "${orderInList.dateDelivery}",
@@ -571,9 +575,10 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                                                 listOrders[indexList].id);
                                           });
                                         } else {
-                                          // SweetAlert.show(context,
-                                          //     title: '${response.statusCode}',
-                                          //     style: SweetAlertStyle.error);
+                                          SweetAlert.show(context,
+                                              title: "Đã xảy ra lỗi !",
+                                              style: SweetAlertStyle.error);
+
                                         }
                                       });
                                     }
@@ -796,9 +801,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                 Icons.keyboard_arrow_right,
                 color: const Color.fromRGBO(0, 175, 82, 1),
               ),
-              onTap: () {
-
-              },
+              onTap: () {},
             ),
             ListTile(
               leading: Icon(

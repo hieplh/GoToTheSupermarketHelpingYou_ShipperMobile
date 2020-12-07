@@ -27,7 +27,11 @@ class DetailScreenState extends State<DetailScreen> {
     for (Order orderInList in widget.list) {
       Map<String, dynamic> order = {
         "costDelivery": orderInList.costDelivery,
-        "addressDelivery": orderInList.addressDelivery,
+        "addressDelivery": {
+          "address": '${orderInList.addressDelivery.address}',
+          "lng": '${orderInList.addressDelivery.lng}',
+          "lat": '${orderInList.addressDelivery.lat}',
+        },
         "costShopping": orderInList.costShopping,
         "cust": '${orderInList.cust}',
         "dateDelivery": "${orderInList.dateDelivery}",
@@ -149,7 +153,13 @@ class DetailScreenState extends State<DetailScreen> {
                       child: ListTile(
                         leading: Icon(Icons.supervised_user_circle),
                         title: Text('Thông tin khách hàng '),
-                        trailing: Text("Xem chi tiết",style: TextStyle(color: Colors.green,fontSize: 14,fontWeight: FontWeight.bold),),
+                        trailing: Text(
+                          "Xem chi tiết",
+                          style: TextStyle(
+                              color: Colors.green,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold),
+                        ),
                         onTap: () {
                           Navigator.push(
                             context,
@@ -235,7 +245,7 @@ class DetailScreenState extends State<DetailScreen> {
                         leading: Icon(Icons.home),
                         title: Text('Đến'),
                         subtitle: Text(utf8.decode(
-                            latin1.encode(widget.list[index].addressDelivery),
+                            latin1.encode(widget.list[index].addressDelivery.address),
                             allowMalformed: true)),
                       ),
                     ),

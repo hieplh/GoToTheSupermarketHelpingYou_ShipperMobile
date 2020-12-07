@@ -19,7 +19,7 @@ class Order {
   String note;
   double costShopping;
   double costDelivery;
-  String addressDelivery;
+  AddressDelivery addressDelivery;
   double totalCost;
   String dateDelivery;
   String timeDelivery;
@@ -43,6 +43,7 @@ class Order {
     return Order(
         id: json['id'],
         cust: json['cust'],
+        addressDelivery: AddressDelivery.fromJson(json['addressDelivery']),
         market: Market.fromJson(json['market']),
         note: json['note'],
         costShopping: json['costShopping'],
@@ -50,7 +51,6 @@ class Order {
         totalCost: json['totalCost'],
         dateDelivery: json['dateDelivery'],
         timeDelivery: json['timeDelivery'],
-        addressDelivery: json['addressDelivery'],
         detail: json["details"] != null
             ? List<OrderDetail>.from(
                 json["details"].map((x) => OrderDetail.fromJson(x)))
@@ -86,6 +86,22 @@ class Market {
       addr2: json['addr2'],
       addr3: json['addr3'],
       addr4: json['addr4'],
+      lat: json['lat'],
+      lng: json['lng'],
+    );
+  }
+}
+
+class AddressDelivery {
+  String address;
+  String lat;
+  String lng;
+
+  AddressDelivery({this.address, this.lat, this.lng});
+
+  factory AddressDelivery.fromJson(Map<String, dynamic> json) {
+    return AddressDelivery(
+      address: json['address'],
       lat: json['lat'],
       lng: json['lng'],
     );
