@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:shipper_app_new/components/CustomerDetail.dart';
 import 'package:shipper_app_new/components/camera.dart';
 import 'package:shipper_app_new/constant/constant.dart';
+import 'package:shipper_app_new/model/Orders.dart';
 import 'package:shipper_app_new/model/User.dart';
 import 'package:geocoder/geocoder.dart';
 import 'package:shipper_app_new/model/pin_pill_info.dart';
@@ -15,9 +16,8 @@ import 'dart:async';
 import 'DeliverySuccess.dart';
 import 'package:http/http.dart' as http;
 import 'package:sweetalert/sweetalert.dart';
-
 import 'Home.dart';
-import 'map_pin_pill.dart';
+import 'Step.dart';
 
 const double CAMERA_ZOOM = 14;
 
@@ -37,13 +37,21 @@ class RouteCustomerState extends State<RouteCustomer> {
   Set<Marker> _markers = Set<Marker>();
   double distanceToAddressDelivery = 0.00;
 // for my drawn routes on the map
+  var listOrders = new List<Order>();
   Set<Polyline> _polylines = Set<Polyline>();
+  String imagePath = "assets/destination_map_marker.png";
   List<LatLng> polylineCoordinates = [];
+  String marketName = '';
+  List<Map<String, dynamic>> tmpList = new List();
+  List<OrderDetail> tmpDetail = new List();
+  bool hasNewOrder = false;
+  int countShow = 0;
   PolylinePoints polylinePoints;
   String googleAPIKey = 'AIzaSyDl3HXWngkUA1yFkSXDeXSzu_3KyPkH810';
 // for my custom marker pins
   BitmapDescriptor sourceIcon;
   BitmapDescriptor destinationIcon;
+  BitmapDescriptor superMarketIcon;
   int countUpdate = 0;
 // the user's initial location and current location
 // as it moves
@@ -68,7 +76,7 @@ class RouteCustomerState extends State<RouteCustomer> {
   String addressNearby = '';
   PinInformation sourcePinInfo;
   PinInformation destinationPinInfo;
-
+  Timer getOrdersTimer;
   @override
   void initState() {
     super.initState();
@@ -79,6 +87,129 @@ class RouteCustomerState extends State<RouteCustomer> {
 
           await updatePinOnMap();
         }));
+    getOrdersTimer = Timer.periodic(new Duration(seconds: 5), (timer) {
+      _getOrders();
+    });
+  }
+
+  _showDialogNewOrder() async {
+    showDialog(
+        context: context,
+        builder: (_) => new AlertDialog(
+              title: new Text("Thông báo"),
+              content: new Text('Có đơn hàng mới'),
+              actions: <Widget>[
+                FlatButton(
+                  child: Text('OK'),
+                  onPressed: () async {
+                    await Navigator.of(context).pop();
+                  },
+                )
+              ],
+            ));
+  }
+
+  Future<String> _getOrders() async {
+    await http
+        .get(GlobalVariable.API_ENDPOINT +
+            "shipper/" +
+            '${widget.userData.id}' +
+            '/pre-order')
+        .then((response) {
+      print("Response don hang RouteCustomer " + response.body);
+
+      print("Tmp ${tmpList.length} '${tmpDetail.length}");
+      if (response.body.isNotEmpty && response.body.length > countShow) {
+        countShow = response.body.length;
+
+        setState(() {
+          Iterable list = json.decode(response.body);
+          listOrders = list.map((model) => Order.fromJson(model)).toList();
+        });
+
+        _showDialogNewOrder();
+        setState(() {
+          marketName = utf8.decode(latin1.encode(listOrders[0].market.name),
+                  allowMalformed: true);
+        });
+        _setNewListOrder();
+
+        _markers.add(Marker(
+            markerId: MarkerId('Supermarket'),
+            position: LatLng(double.parse(listOrders[0].market.lat),
+                double.parse(listOrders[0].market.lng)),
+            icon: superMarketIcon));
+
+        // if (listOrders.length > tmp.length) {
+        //   _setNewListOrder();
+
+        // }
+      } else {}
+    });
+
+    return 'Success';
+  }
+
+  Future<String> _setNewListOrder() async {
+    List<Map<String, dynamic>> data = new List<Map<String, dynamic>>();
+    for (Order orderInList in listOrders) {
+      Map<String, dynamic> order = {
+        "costDelivery": orderInList.costDelivery,
+        "addressDelivery": {
+          "address": '${orderInList.addressDelivery.address}',
+          "lng": '${orderInList.addressDelivery.lng}',
+          "lat": '${orderInList.addressDelivery.lat}',
+        },
+        "costShopping": orderInList.costShopping,
+        "cust": '${orderInList.cust}',
+        "dateDelivery": "${orderInList.dateDelivery}",
+        "details": [
+          for (OrderDetail detail in orderInList.detail)
+            {
+              "foodName": utf8.decode(latin1.encode("${detail.foodId}"),
+                  allowMalformed: true),
+              "foodId": "${detail.foodId}",
+              "id": "${detail.id}",
+              "image": "${detail.image}",
+              "priceOriginal": detail.priceOriginal,
+              "pricePaid": detail.pricePaid,
+              "saleOff": detail.saleOff,
+              "weight": detail.weight
+            },
+        ],
+        "id": "${orderInList.id}",
+        "market": {
+          "addr1": utf8.decode(latin1.encode("${orderInList.market.addr1}"),
+              allowMalformed: true),
+          "addr2": utf8.decode(latin1.encode("${orderInList.market.addr2}"),
+              allowMalformed: true),
+          "addr3": utf8.decode(latin1.encode("${orderInList.market.addr3}"),
+              allowMalformed: true),
+          "addr4": utf8.decode(latin1.encode("${orderInList.market.addr4}"),
+              allowMalformed: true),
+          "id": "${orderInList.market.id}",
+          "lat": "${orderInList.market.lat}",
+          "lng": "${orderInList.market.lng}",
+          "name": utf8.decode(latin1.encode("${orderInList.market.name}"),
+              allowMalformed: true),
+        },
+        "note": "phuong nguyen",
+        "shipper": widget.userData.id,
+        "status": 21,
+        "timeDelivery": "12:12:12",
+        "totalCost": orderInList.totalCost
+      };
+      data.add(order);
+    }
+    tmpList = await data;
+    List<OrderDetail> oD = new List<OrderDetail>();
+    for (Order orders in listOrders) {
+      for (OrderDetail detail in orders.detail) {
+        oD.add(detail);
+      }
+    }
+    tmpDetail = await oD;
+    return 'Success';
   }
 
   double calculateDistance(lat1, lon1, lat2, lon2) {
@@ -99,7 +230,7 @@ class RouteCustomerState extends State<RouteCustomer> {
         "Accept": "application/json",
       },
       encoding: Encoding.getByName("utf-8"),
-      body: jsonEncode(widget.data),
+      body: jsonEncode(tmpList),
     );
 
     if (response.statusCode == 200) {
@@ -131,6 +262,12 @@ class RouteCustomerState extends State<RouteCustomer> {
         markerId: MarkerId('sourcePin'),
         position: pinPosition,
         icon: sourceIcon));
+    await BitmapDescriptor.fromAssetImage(
+        ImageConfiguration(devicePixelRatio: 2.0),
+        'assets/destination_map_marker.png')
+        .then((onValue) {
+      destinationIcon = onValue;
+    });
 
     for (var i = 0; i < widget.data.length; i++) {
       var addressFromMap = await widget.data[i].values.toList();
@@ -143,7 +280,7 @@ class RouteCustomerState extends State<RouteCustomer> {
       await _markers.add(Marker(
           markerId: MarkerId(addressFromMap[6]),
           position: destPosition,
-          icon: BitmapDescriptor.defaultMarker));
+          icon: destinationIcon));
     }
 
     List<Marker> listmarkers = await _markers
@@ -190,16 +327,16 @@ class RouteCustomerState extends State<RouteCustomer> {
           destinationLocation.latitude,
           destinationLocation.longitude);
     });
-    await BitmapDescriptor.fromAssetImage(
-            ImageConfiguration(devicePixelRatio: 2.0),
-            'assets/destination_map_marker.png')
-        .then((onValue) {
-      destinationIcon = onValue;
-    });
+
     await BitmapDescriptor.fromAssetImage(
             ImageConfiguration(devicePixelRatio: 2.0), 'assets/driving_pin.png')
         .then((onValue) {
       sourceIcon = onValue;
+    });
+    await BitmapDescriptor.fromAssetImage(
+            ImageConfiguration(devicePixelRatio: 2.0), 'assets/cart.png')
+        .then((onValue) {
+      superMarketIcon = onValue;
     });
 
     return "Success";
@@ -239,7 +376,7 @@ class RouteCustomerState extends State<RouteCustomer> {
                 mainAxisSize: MainAxisSize.max,
                 children: <Widget>[
                   ListTile(
-                    leading: Image.asset("assets/destination_map_marker.png"),
+                    leading: Image.asset(imagePath),
                     title: Text(orderIdFromMarker,
                         style: TextStyle(fontSize: 16, color: Colors.green)),
                     subtitle: Text(
@@ -282,6 +419,12 @@ class RouteCustomerState extends State<RouteCustomer> {
                                       orderIdFromMarker);
                                   if (widget.data.length > 0) {
                                     _setNewPin();
+                                    if (_markers.length == 1) {
+                                      polylineCoordinates.clear();
+                                      setState(() {
+                                        pinPillPosition = -130;
+                                      });
+                                    }
                                   } else if (widget.data.length == 0) {
                                     showDialog(
                                         context: context,
@@ -345,32 +488,63 @@ class RouteCustomerState extends State<RouteCustomer> {
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // print(widget.orderDetails.length.toString());
-          // _updateOrder();
-          List<Marker> listmarkers = _markers
-              .where((marker) => marker.markerId.value != 'sourcePin')
-              .toList();
-          if (listmarkers.length == 0) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(
-                  builder: (BuildContext context) => SuccessScreen(
-                        userData: widget.userData,
-                        data: widget.data,
-                      )),
-              ModalRoute.withName('/'),
-            );
-          } else {
-            SweetAlert.show(context,
-                title: "Chưa đến điểm giao hàng !",
-                style: SweetAlertStyle.error);
-          }
-        },
-        label: Text('Hoàn Tất Giao Hàng'),
-        backgroundColor: Colors.green,
-      ),
+      floatingActionButton: hasNewOrder == false
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                // print(widget.orderDetails.length.toString());
+                // _updateOrder();
+                List<Marker> listmarkers = _markers
+                    .where((marker) => marker.markerId.value != 'sourcePin')
+                    .toList();
+                if (listmarkers.length == 0) {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                        builder: (BuildContext context) => SuccessScreen(
+                              userData: widget.userData,
+                              data: widget.data,
+                            )),
+                    ModalRoute.withName('/'),
+                  );
+                } else {
+                  SweetAlert.show(context,
+                      title: "Chưa đến điểm giao hàng !",
+                      style: SweetAlertStyle.error);
+                }
+              },
+              label: Text('Hoàn Tất Giao Hàng'),
+              backgroundColor: Colors.green,
+            )
+          : FloatingActionButton.extended(
+              onPressed: () async {
+                // print(widget.orderDetails.length.toString());
+                // _updateOrder();
+                if (calculateDistance(
+                        currentLocation.latitude,
+                        currentLocation.longitude,
+                        destinationLocation.latitude,
+                        destinationLocation.longitude) <
+                    0.05) {
+                  await _updateOrder();
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => Steps(
+                              item: tmpDetail,
+                              data: tmpList,
+                              userData: widget.userData,
+                            )),
+                  );
+                } else {
+                  SweetAlert.show(context,
+                      title: "Chưa đi đến siêu thị !",
+                      style: SweetAlertStyle.error);
+                }
+              },
+              label: Text('Đi siêu thị hoàn tất'),
+              backgroundColor: Colors.green,
+            ),
     );
   }
 
@@ -588,100 +762,217 @@ class RouteCustomerState extends State<RouteCustomer> {
     if (calculateDistance(currentLocation.latitude, currentLocation.longitude,
             destinationLocation.latitude, destinationLocation.longitude) <
         0.05) {
-      if (_markers.length > 1) {
-        _markers.removeWhere((m) =>
-            m.position.latitude == destinationLocation.latitude &&
-            m.position.longitude == destinationLocation.longitude);
-        polylineCoordinates.removeWhere(
-            (element) => element.latitude == destinationLocation.latitude);
+      if (listOrders.length > 0) {
+        Marker market = _markers
+            .where((element) => element.markerId.value == 'Supermarket')
+            .toList()
+            .first;
+        if (destinationLocation.latitude != market.position.latitude ||
+            market.position.latitude == null) {
+          if (_markers.length > 1) {
+            _markers.removeWhere((m) =>
+                m.position.latitude == destinationLocation.latitude &&
+                m.position.longitude == destinationLocation.longitude);
+            polylineCoordinates.removeWhere(
+                (element) => element.latitude == destinationLocation.latitude);
 
-        List<Marker> listmarkers = _markers
-            .where((marker) => marker.markerId.value != 'sourcePin')
-            .toList();
-        if (listmarkers.length == 0) {
-          List<Map<String, dynamic>> rs = widget.data
-              .where(
-                  (element) => element.values.toList()[6] == orderIdFromMarker)
-              .toList();
+            List<Marker> listmarkers = _markers
+                .where((marker) => marker.markerId.value != 'sourcePin')
+                .toList();
+            if (listmarkers.length == 0) {
+              List<Map<String, dynamic>> rs = widget.data
+                  .where((element) =>
+                      element.values.toList()[6] == orderIdFromMarker)
+                  .toList();
 
-          _showMaterialDialog(rs[0]);
-          polylineCoordinates.clear();
-        } else if (listmarkers.length == 1) {
-          destinationLocation = LocationData.fromMap({
-            "latitude": listmarkers[0].position.latitude,
-            "longitude": listmarkers[0].position.longitude
-          });
-
-          List<Map<String, dynamic>> rs = widget.data
-              .where(
-                  (element) => element.values.toList()[6] == orderIdFromMarker)
-              .toList();
-
-          _showMaterialDialog(rs[0]);
-
-          // addressNearby = addressDelivery[0];
-          // currentOrderId = orderID[0];
-        } else {
-          destinationLocation = LocationData.fromMap({
-            "latitude": listmarkers[0].position.latitude,
-            "longitude": listmarkers[0].position.longitude
-          });
-
-          // addressNearby = addressDelivery[0];
-          // currentOrderId = orderID[0];
-
-          double minDistance = calculateDistance(
-              currentLocation.latitude,
-              currentLocation.longitude,
-              listmarkers[0].position.latitude,
-              listmarkers[0].position.longitude);
-
-          for (var i = 0; i < listmarkers.length; i++) {
-            if (calculateDistance(
-                    currentLocation.latitude,
-                    currentLocation.longitude,
-                    listmarkers[i].position.latitude,
-                    listmarkers[i].position.longitude) <
-                minDistance) {
+              _showMaterialDialog(rs[0]);
+              polylineCoordinates.clear();
+            } else if (listmarkers.length == 1) {
               destinationLocation = LocationData.fromMap({
-                "latitude": listmarkers[i].position.latitude,
-                "longitude": listmarkers[i].position.longitude
+                "latitude": listmarkers[0].position.latitude,
+                "longitude": listmarkers[0].position.longitude
               });
-              currentOrderId = listmarkers[i].markerId.value;
 
-              // addressNearby = addressDelivery[i];
-              // currentIndex = i;
-              // currentOrderId = orderID[i];
+              List<Map<String, dynamic>> rs = widget.data
+                  .where((element) =>
+                      element.values.toList()[6] == orderIdFromMarker)
+                  .toList();
+
+              _showMaterialDialog(rs[0]);
+
+              // addressNearby = addressDelivery[0];
+              // currentOrderId = orderID[0];
+            } else {
+              destinationLocation = LocationData.fromMap({
+                "latitude": listmarkers[0].position.latitude,
+                "longitude": listmarkers[0].position.longitude
+              });
+
+              // addressNearby = addressDelivery[0];
+              // currentOrderId = orderID[0];
+
+              double minDistance = calculateDistance(
+                  currentLocation.latitude,
+                  currentLocation.longitude,
+                  listmarkers[0].position.latitude,
+                  listmarkers[0].position.longitude);
+
+              for (var i = 0; i < listmarkers.length; i++) {
+                if (calculateDistance(
+                        currentLocation.latitude,
+                        currentLocation.longitude,
+                        listmarkers[i].position.latitude,
+                        listmarkers[i].position.longitude) <
+                    minDistance) {
+                  destinationLocation = LocationData.fromMap({
+                    "latitude": listmarkers[i].position.latitude,
+                    "longitude": listmarkers[i].position.longitude
+                  });
+                  currentOrderId = listmarkers[i].markerId.value;
+
+                  // addressNearby = addressDelivery[i];
+                  // currentIndex = i;
+                  // currentOrderId = orderID[i];
+                }
+              }
+
+              List<Map<String, dynamic>> rs = widget.data
+                  .where((element) =>
+                      element.values.toList()[6] == orderIdFromMarker)
+                  .toList();
+
+              _showMaterialDialog(rs[0]);
+
+              // setState(() {
+              //   distanceToAddressDelivery = calculateDistance(
+              //       currentLocation.latitude,
+              //       currentLocation.longitude,
+              //       destinationLocation.latitude,
+              //       destinationLocation.longitude);
+              //   currentlySelectedPin = PinInformation(
+              //       locationName: addressNearby,
+              //       location: SOURCE_LOCATION,
+              //       pinPath: "assets/destination_map_marker.png",
+              //       avatarPath: "assets/destination_map_marker.png",
+              //       distance: distanceToAddressDelivery,
+              //       labelColor: Colors.purple);
+              // });
             }
+          } else {
+            polylineCoordinates.clear();
+            setState(() {
+              pinPillPosition = -150;
+            });
           }
-
-          List<Map<String, dynamic>> rs = widget.data
-              .where(
-                  (element) => element.values.toList()[6] == orderIdFromMarker)
-              .toList();
-
-          _showMaterialDialog(rs[0]);
-
-          // setState(() {
-          //   distanceToAddressDelivery = calculateDistance(
-          //       currentLocation.latitude,
-          //       currentLocation.longitude,
-          //       destinationLocation.latitude,
-          //       destinationLocation.longitude);
-          //   currentlySelectedPin = PinInformation(
-          //       locationName: addressNearby,
-          //       location: SOURCE_LOCATION,
-          //       pinPath: "assets/destination_map_marker.png",
-          //       avatarPath: "assets/destination_map_marker.png",
-          //       distance: distanceToAddressDelivery,
-          //       labelColor: Colors.purple);
-          // });
+        } else {
+          setState(() {
+            imagePath = "assets/cart.png";
+            hasNewOrder = true;
+            orderIdFromMarker = listOrders[0].market.id;
+            addressNearby = marketName;
+            distanceToAddressDelivery = calculateDistance(
+                currentLocation.latitude,
+                currentLocation.longitude,
+                destinationLocation.latitude,
+                destinationLocation.longitude);
+          });
         }
       } else {
-        polylineCoordinates.clear();
-        setState(() {
-          pinPillPosition = -150;
-        });
+        if (_markers.length > 1) {
+          _markers.removeWhere((m) =>
+              m.position.latitude == destinationLocation.latitude &&
+              m.position.longitude == destinationLocation.longitude);
+          polylineCoordinates.removeWhere(
+              (element) => element.latitude == destinationLocation.latitude);
+
+          List<Marker> listmarkers = _markers
+              .where((marker) => marker.markerId.value != 'sourcePin')
+              .toList();
+          if (listmarkers.length == 0) {
+            List<Map<String, dynamic>> rs = widget.data
+                .where((element) =>
+                    element.values.toList()[6] == orderIdFromMarker)
+                .toList();
+
+            _showMaterialDialog(rs[0]);
+            polylineCoordinates.clear();
+          } else if (listmarkers.length == 1) {
+            destinationLocation = LocationData.fromMap({
+              "latitude": listmarkers[0].position.latitude,
+              "longitude": listmarkers[0].position.longitude
+            });
+
+            List<Map<String, dynamic>> rs = widget.data
+                .where((element) =>
+                    element.values.toList()[6] == orderIdFromMarker)
+                .toList();
+
+            _showMaterialDialog(rs[0]);
+
+            // addressNearby = addressDelivery[0];
+            // currentOrderId = orderID[0];
+          } else {
+            destinationLocation = LocationData.fromMap({
+              "latitude": listmarkers[0].position.latitude,
+              "longitude": listmarkers[0].position.longitude
+            });
+
+            // addressNearby = addressDelivery[0];
+            // currentOrderId = orderID[0];
+
+            double minDistance = calculateDistance(
+                currentLocation.latitude,
+                currentLocation.longitude,
+                listmarkers[0].position.latitude,
+                listmarkers[0].position.longitude);
+
+            for (var i = 0; i < listmarkers.length; i++) {
+              if (calculateDistance(
+                      currentLocation.latitude,
+                      currentLocation.longitude,
+                      listmarkers[i].position.latitude,
+                      listmarkers[i].position.longitude) <
+                  minDistance) {
+                destinationLocation = LocationData.fromMap({
+                  "latitude": listmarkers[i].position.latitude,
+                  "longitude": listmarkers[i].position.longitude
+                });
+                currentOrderId = listmarkers[i].markerId.value;
+
+                // addressNearby = addressDelivery[i];
+                // currentIndex = i;
+                // currentOrderId = orderID[i];
+              }
+            }
+
+            List<Map<String, dynamic>> rs = widget.data
+                .where((element) =>
+                    element.values.toList()[6] == orderIdFromMarker)
+                .toList();
+
+            _showMaterialDialog(rs[0]);
+
+            // setState(() {
+            //   distanceToAddressDelivery = calculateDistance(
+            //       currentLocation.latitude,
+            //       currentLocation.longitude,
+            //       destinationLocation.latitude,
+            //       destinationLocation.longitude);
+            //   currentlySelectedPin = PinInformation(
+            //       locationName: addressNearby,
+            //       location: SOURCE_LOCATION,
+            //       pinPath: "assets/destination_map_marker.png",
+            //       avatarPath: "assets/destination_map_marker.png",
+            //       distance: distanceToAddressDelivery,
+            //       labelColor: Colors.purple);
+            // });
+          }
+        } else {
+          polylineCoordinates.clear();
+          setState(() {
+            pinPillPosition = -150;
+          });
+        }
       }
 
       // setPolylines();
@@ -708,17 +999,49 @@ class RouteCustomerState extends State<RouteCustomer> {
     // do this inside the setState() so Flutter gets notified
     // that a widget update is due
     if (_markers.length > 1) {
-      Marker tmpMarker = _markers.firstWhere((element) =>
-          element.position.latitude == destinationLocation.latitude);
+      if (listOrders.length > 0) {
+        Marker market = _markers
+            .where((element) => element.markerId.value == 'Supermarket')
+            .toList()
+            .first;
+        if (destinationLocation.latitude == market.position.latitude) {
+          setState(() {
+            imagePath = "assets/cart.png";
+            hasNewOrder = true;
+            orderIdFromMarker = listOrders[0].market.id;
+            addressNearby = marketName;
+            distanceToAddressDelivery = calculateDistance(
+                currentLocation.latitude,
+                currentLocation.longitude,
+                destinationLocation.latitude,
+                destinationLocation.longitude);
+          });
+        } else {
+          Marker tmpMarker = _markers.firstWhere((element) =>
+              element.position.latitude == destinationLocation.latitude);
 
-      String initID = tmpMarker.markerId.value;
-      Map<String, dynamic> tmpMap = widget.data
-          .where((element) => element.values.toList()[6] == initID)
-          .first;
-      setState(() {
-        orderIdFromMarker = initID;
-        addressNearby = tmpMap.values.toList()[1]['address'];
-      });
+          String initID = tmpMarker.markerId.value;
+          Map<String, dynamic> tmpMap = widget.data
+              .where((element) => element.values.toList()[6] == initID)
+              .first;
+          setState(() {
+            orderIdFromMarker = initID;
+            addressNearby = tmpMap.values.toList()[1]['address'];
+          });
+        }
+      } else {
+        Marker tmpMarker = _markers.firstWhere((element) =>
+            element.position.latitude == destinationLocation.latitude);
+
+        String initID = tmpMarker.markerId.value;
+        Map<String, dynamic> tmpMap = widget.data
+            .where((element) => element.values.toList()[6] == initID)
+            .first;
+        setState(() {
+          orderIdFromMarker = initID;
+          addressNearby = tmpMap.values.toList()[1]['address'];
+        });
+      }
     }
     setState(() {
       // updated position
