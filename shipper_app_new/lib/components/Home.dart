@@ -156,10 +156,12 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
             '${widget.userData.id}' +
             "/page/1")
         .then((response) {
-      setState(() {
-        Iterable list = json.decode(response.body);
-        listHistory = list.map((model) => History.fromJson(model)).toList();
-      });
+        if(response.body.length>0){
+          setState(() {
+            Iterable list = json.decode(response.body);
+            listHistory = list.map((model) => History.fromJson(model)).toList();
+          });
+        }
     });
   }
 
@@ -234,6 +236,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
     _firebaseMessaging.getToken().then((token) {
       token_app = token.substring(2);
     });
+
 
     _firebaseMessaging.configure(
       onMessage: (message) async {

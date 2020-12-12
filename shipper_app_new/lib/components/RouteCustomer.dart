@@ -129,8 +129,7 @@ class RouteCustomerState extends State<RouteCustomer> {
 
         _showDialogNewOrder();
         setState(() {
-          marketName = utf8.decode(latin1.encode(listOrders[0].market.name),
-                  allowMalformed: true);
+          marketName = listOrders[0].market.name;
         });
         _setNewListOrder();
 
@@ -263,8 +262,8 @@ class RouteCustomerState extends State<RouteCustomer> {
         position: pinPosition,
         icon: sourceIcon));
     await BitmapDescriptor.fromAssetImage(
-        ImageConfiguration(devicePixelRatio: 2.0),
-        'assets/destination_map_marker.png')
+            ImageConfiguration(devicePixelRatio: 2.0),
+            'assets/destination_map_marker.png')
         .then((onValue) {
       destinationIcon = onValue;
     });
@@ -392,93 +391,98 @@ class RouteCustomerState extends State<RouteCustomer> {
                             color: Colors.orange,
                             fontWeight: FontWeight.bold)),
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: <Widget>[
-                      TextButton(
-                        child: Text('HỦY',
-                            style: TextStyle(fontSize: 14, color: Colors.red)),
-                        onPressed: () {
-                          SweetAlert.show(context,
-                              title: "Chú ý",
-                              subtitle: "Bạn có muốn hủy đơn hàng ? ",
-                              style: SweetAlertStyle.confirm,
-                              showCancelButton: true,
-                              onPress: (bool isConfirm) {
-                            if (isConfirm) {
-                              http
-                                  .delete(GlobalVariable.API_ENDPOINT +
-                                      'delete/' +
-                                      orderIdFromMarker +
-                                      '/shipper/' +
-                                      widget.userData.id)
-                                  .then((response) {
-                                if (response.statusCode == 200) {
-                                  widget.data.removeWhere((element) =>
-                                      element.values.toList()[6] ==
-                                      orderIdFromMarker);
-                                  if (widget.data.length > 0) {
-                                    _setNewPin();
-                                    if (_markers.length == 1) {
-                                      polylineCoordinates.clear();
-                                      setState(() {
-                                        pinPillPosition = -130;
-                                      });
-                                    }
-                                  } else if (widget.data.length == 0) {
-                                    showDialog(
-                                        context: context,
-                                        barrierDismissible: false,
-                                        builder: (_) => new AlertDialog(
-                                              title: new Text("Thông báo"),
-                                              content: new Text(
-                                                "Tất cả đơn hàng đã bị hủy",
-                                                style: TextStyle(
-                                                    color: Colors.red,
-                                                    fontSize: 20),
-                                              ),
-                                              actions: <Widget>[
-                                                FlatButton(
-                                                  child: Text(
-                                                      'Quay về màn hình chính!'),
-                                                  onPressed: () {
-                                                    Navigator
-                                                        .pushAndRemoveUntil(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                          builder: (BuildContext
-                                                                  context) =>
-                                                              MyHomeWidget(
-                                                                  userData: widget
-                                                                      .userData)),
-                                                      ModalRoute.withName('/'),
-                                                    );
-                                                  },
-                                                )
-                                              ],
-                                            ));
+                  hasNewOrder == false
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            TextButton(
+                              child: Text('HỦY',
+                                  style: TextStyle(
+                                      fontSize: 14, color: Colors.red)),
+                              onPressed: () {
+                                SweetAlert.show(context,
+                                    title: "Chú ý",
+                                    subtitle: "Bạn có muốn hủy đơn hàng ? ",
+                                    style: SweetAlertStyle.confirm,
+                                    showCancelButton: true,
+                                    onPress: (bool isConfirm) {
+                                  if (isConfirm) {
+                                    http
+                                        .delete(GlobalVariable.API_ENDPOINT +
+                                            'delete/' +
+                                            orderIdFromMarker +
+                                            '/shipper/' +
+                                            widget.userData.id)
+                                        .then((response) {
+                                      if (response.statusCode == 200) {
+                                        widget.data.removeWhere((element) =>
+                                            element.values.toList()[6] ==
+                                            orderIdFromMarker);
+                                        if (widget.data.length > 0) {
+                                          _setNewPin();
+                                          if (_markers.length == 1) {
+                                            polylineCoordinates.clear();
+                                            setState(() {
+                                              pinPillPosition = -130;
+                                            });
+                                          }
+                                        } else if (widget.data.length == 0) {
+                                          showDialog(
+                                              context: context,
+                                              barrierDismissible: false,
+                                              builder: (_) => new AlertDialog(
+                                                    title:
+                                                        new Text("Thông báo"),
+                                                    content: new Text(
+                                                      "Tất cả đơn hàng đã bị hủy",
+                                                      style: TextStyle(
+                                                          color: Colors.red,
+                                                          fontSize: 20),
+                                                    ),
+                                                    actions: <Widget>[
+                                                      FlatButton(
+                                                        child: Text(
+                                                            'Quay về màn hình chính!'),
+                                                        onPressed: () {
+                                                          Navigator
+                                                              .pushAndRemoveUntil(
+                                                            context,
+                                                            MaterialPageRoute(
+                                                                builder: (BuildContext
+                                                                        context) =>
+                                                                    MyHomeWidget(
+                                                                        userData:
+                                                                            widget.userData)),
+                                                            ModalRoute.withName(
+                                                                '/'),
+                                                          );
+                                                        },
+                                                      )
+                                                    ],
+                                                  ));
+                                        }
+                                      } else {}
+                                    });
                                   }
-                                } else {}
-                              });
-                            }
-                          });
-                        },
-                      ),
-                      SizedBox(width: 8),
-                      TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => CustomerPage(
-                                          orderID: orderIdFromMarker,
-                                        )));
-                          },
-                          child: Text("Thông tin khách hàng",
-                              style: TextStyle(color: Colors.green))),
-                      SizedBox(width: 8),
-                    ],
-                  ),
+                                });
+                              },
+                            ),
+                            SizedBox(width: 8),
+                            TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => CustomerPage(
+                                                orderID: orderIdFromMarker,
+                                              )));
+                                },
+                                child: Text("Thông tin khách hàng",
+                                    style: TextStyle(color: Colors.green))),
+                            SizedBox(width: 8),
+                          ],
+                        )
+                      : Row(),
                 ],
               ),
             ),
@@ -625,7 +629,9 @@ class RouteCustomerState extends State<RouteCustomer> {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => CameraScreen()));
+                                builder: (context) => CameraScreen(
+                                    shipperId: widget.userData.id,
+                                    listTmpDup: listTmpDup)));
                       } else {}
                     },
                   ),
@@ -678,7 +684,10 @@ class RouteCustomerState extends State<RouteCustomer> {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => CameraScreen()));
+                                builder: (context) => CameraScreen(
+                                      shipperId: widget.userData.id,
+                                      orderId: od['id'],
+                                    )));
                       } else {}
                     },
                   ),

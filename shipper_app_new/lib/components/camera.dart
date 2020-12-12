@@ -6,6 +6,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shipper_app_new/components/preview.dart';
 
 class CameraScreen extends StatefulWidget {
+  final String shipperId;
+  final String orderId;
+  final List<Map<String, dynamic>> listTmpDup;
+  CameraScreen({this.shipperId, this.orderId,this.listTmpDup});
   @override
   _CameraScreenState createState() => _CameraScreenState();
 }
@@ -15,8 +19,6 @@ class _CameraScreenState extends State<CameraScreen> {
   List cameras;
   int selectedCameraIndex;
   String imgPath;
-
-
 
   Future initCamera(CameraDescription cameraDescription) async {
     if (cameraController != null) {
@@ -110,7 +112,7 @@ class _CameraScreenState extends State<CameraScreen> {
             label: Text(
               '${lensDirection.toString().substring(lensDirection.toString().indexOf('.') + 1).toUpperCase()}',
               style:
-              TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
             )),
       ),
     );
@@ -125,9 +127,17 @@ class _CameraScreenState extends State<CameraScreen> {
       await cameraController.takePicture(path).then((value) {
         print('here');
         print(path);
-        Navigator.push(context, MaterialPageRoute(builder: (context) =>PreviewScreen(imgPath: path,fileName: "$name.png",)));
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => PreviewScreen(
+                      imgPath: path,
+                      fileName: "$name.png",
+                      shipperId: widget.shipperId,
+                      orderId: widget.orderId,
+                      listTmpDup: widget.listTmpDup,
+                    )));
       });
-
     } catch (e) {
       showCameraException(e);
     }
@@ -139,17 +149,15 @@ class _CameraScreenState extends State<CameraScreen> {
     super.initState();
     availableCameras().then((value) {
       cameras = value;
-      if(cameras.length > 0){
+      if (cameras.length > 0) {
         setState(() {
           selectedCameraIndex = 0;
         });
-        initCamera(cameras[selectedCameraIndex]).then((value) {
-
-        });
+        initCamera(cameras[selectedCameraIndex]).then((value) {});
       } else {
         print('No camera available');
       }
-    }).catchError((e){
+    }).catchError((e) {
       print('Error : ${e.code}');
     });
   }
@@ -207,7 +215,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
   onSwitchCamera() {
     selectedCameraIndex =
-    selectedCameraIndex < cameras.length - 1 ? selectedCameraIndex + 1 : 0;
+        selectedCameraIndex < cameras.length - 1 ? selectedCameraIndex + 1 : 0;
     CameraDescription selectedCamera = cameras[selectedCameraIndex];
     initCamera(selectedCamera);
   }
