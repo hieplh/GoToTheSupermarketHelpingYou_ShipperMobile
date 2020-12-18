@@ -81,7 +81,7 @@ class CustomerPageState extends State<CustomerPage> {
                       ),
                     ),
                     subtitle: Text(
-                      '${snapshot.data.email}',
+                      '${snapshot.data.username}',
                       style: TextStyle(
                         fontFamily: 'Montserrat',
                         fontSize: 15.0,

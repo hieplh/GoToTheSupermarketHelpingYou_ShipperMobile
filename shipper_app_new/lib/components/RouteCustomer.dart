@@ -113,7 +113,7 @@ class RouteCustomerState extends State<RouteCustomer> {
     await http
         .get(GlobalVariable.API_ENDPOINT +
             "shipper/" +
-            '${widget.userData.id}' +
+            '${widget.userData.username}' +
             '/pre-order')
         .then((response) {
       print("Response don hang RouteCustomer " + response.body);
@@ -193,7 +193,7 @@ class RouteCustomerState extends State<RouteCustomer> {
               allowMalformed: true),
         },
         "note": "phuong nguyen",
-        "shipper": widget.userData.id,
+        "shipper": widget.userData.username,
         "status": 21,
         "timeDelivery": "12:12:12",
         "totalCost": orderInList.totalCost
@@ -412,7 +412,7 @@ class RouteCustomerState extends State<RouteCustomer> {
                                             'delete/' +
                                             orderIdFromMarker +
                                             '/shipper/' +
-                                            widget.userData.id)
+                                            widget.userData.username)
                                         .then((response) {
                                       if (response.statusCode == 200) {
                                         widget.data.removeWhere((element) =>
@@ -630,7 +630,7 @@ class RouteCustomerState extends State<RouteCustomer> {
                             context,
                             MaterialPageRoute(
                                 builder: (context) => CameraScreen(
-                                    shipperId: widget.userData.id,
+                                    shipperId: widget.userData.username,
                                     listTmpDup: listTmpDup)));
                       } else {}
                     },
@@ -678,14 +678,14 @@ class RouteCustomerState extends State<RouteCustomer> {
                         encoding: Encoding.getByName("utf-8"),
                         body: '[' + jsonEncode(od) + ']',
                       );
-                      print("Loi la ${response.statusCode}");
+                      print("Loi la ${response.statusCode}"+"${response.body}");
                       if (response.statusCode == 200) {
                         Navigator.of(context).pop();
                         Navigator.push(
                             context,
                             MaterialPageRoute(
                                 builder: (context) => CameraScreen(
-                                      shipperId: widget.userData.id,
+                                      shipperId: widget.userData.username,
                                       orderId: od['id'],
                                     )));
                       } else {}

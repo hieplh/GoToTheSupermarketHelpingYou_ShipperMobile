@@ -41,7 +41,7 @@ class _StepsState extends State<Steps> {
 
   Future<String> _getOrders() async {
     await http
-        .get(GlobalVariable.API_ENDPOINT + "shipper/" + '${widget.userData.id}')
+        .get(GlobalVariable.API_ENDPOINT + "shipper/" + '${widget.userData.username}')
         .then((response) {
       print("Response don hang Step");
       if (response.body.isNotEmpty) {
@@ -87,7 +87,7 @@ class _StepsState extends State<Steps> {
         "details": [
           for (OrderDetail detail in orderInList.detail)
             {
-              "foodName": utf8.decode(latin1.encode("${detail.foodId}"),
+              "foodName": utf8.decode(latin1.encode("${detail.foodName}"),
                   allowMalformed: true),
               "foodId": "${detail.foodId}",
               "id": "${detail.id}",
@@ -115,7 +115,7 @@ class _StepsState extends State<Steps> {
               allowMalformed: true),
         },
         "note": "phuong nguyen",
-        "shipper": widget.userData.id,
+        "shipper": widget.userData.username,
         "status": 21,
         "timeDelivery": "12:12:12",
         "totalCost": orderInList.totalCost
@@ -246,7 +246,7 @@ class _StepsState extends State<Steps> {
                                           'delete/' +
                                           tmp[indexSwipper].values.toList()[6] +
                                           '/shipper/' +
-                                          widget.userData.id)
+                                          widget.userData.username)
                                       .then((response) {
                                     if (response.statusCode == 200) {
                                       setState(() {
@@ -433,7 +433,7 @@ class _CheckItemState extends State<CheckItem> {
   Widget build(BuildContext context) {
     return CheckboxListTile(
       title: Text(utf8.decode(
-          latin1.encode(widget.data['foodId'].toString() +
+          latin1.encode(widget.data['foodName'].toString() +
               "     " +
               utf8.decode(
                   latin1.encode(widget.data['weight'].toString() + " kg"),

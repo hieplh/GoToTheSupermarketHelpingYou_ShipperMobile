@@ -67,7 +67,7 @@ class RouteSupermarketState extends State<RouteSupermarket> {
   PinInformation destinationPinInfo;
   Future<String> _getOrders() async {
     await http
-        .get(GlobalVariable.API_ENDPOINT + "shipper/" + '${widget.userData.id}')
+        .get(GlobalVariable.API_ENDPOINT + "shipper/" + '${widget.userData.username}')
         .then((response) {
       print("Response don hang RouteSuppermarket " + response.body);
       if (response.body.isNotEmpty) {
@@ -114,7 +114,7 @@ class RouteSupermarketState extends State<RouteSupermarket> {
         "details": [
           for (OrderDetail detail in orderInList.detail)
             {
-              "foodName": utf8.decode(latin1.encode("${detail.foodId}"),
+              "foodName": utf8.decode(latin1.encode("${detail.foodName}"),
                   allowMalformed: true),
               "foodId": "${detail.foodId}",
               "id": "${detail.id}",
@@ -142,7 +142,7 @@ class RouteSupermarketState extends State<RouteSupermarket> {
               allowMalformed: true),
         },
         "note": "phuong nguyen",
-        "shipper": widget.userData.id,
+        "shipper": widget.userData.username,
         "status": 21,
         "timeDelivery": "12:12:12",
         "totalCost": orderInList.totalCost

@@ -15,6 +15,7 @@ class DetailScreen extends StatefulWidget {
   final User userData;
   final List<Order> list;
   final oCcy = new NumberFormat("#,##0", "en_US");
+
   DetailScreen({Key key, this.list, this.userData}) : super(key: key);
 
   @override
@@ -38,7 +39,7 @@ class DetailScreenState extends State<DetailScreen> {
         "details": [
           for (OrderDetail detail in orderInList.detail)
             {
-              "foodName": utf8.decode(latin1.encode("${detail.foodId}"),
+              "foodName": utf8.decode(latin1.encode("${detail.foodName}"),
                   allowMalformed: true),
               "foodId": "${detail.foodId}",
               "id": "${detail.id}",
@@ -66,7 +67,7 @@ class DetailScreenState extends State<DetailScreen> {
               allowMalformed: true),
         },
         "note": "phuong nguyen",
-        "shipper": widget.userData.id,
+        "shipper": widget.userData.username,
         "status": 21,
         "timeDelivery": "12:12:12",
         "totalCost": orderInList.totalCost
@@ -102,6 +103,7 @@ class DetailScreenState extends State<DetailScreen> {
   }
 
   final oCcy = new NumberFormat("#,##0", "en_US");
+
   @override
   Widget build(BuildContext context) {
     List<double> listTotalWeight = new List<double>();
@@ -137,7 +139,7 @@ class DetailScreenState extends State<DetailScreen> {
                               : Image.network(GlobalVariable.LAZY_IMAGE),
                           title: Text(utf8.decode(
                               latin1.encode(
-                                  widget.list[index].detail[indexList].foodId),
+                                  widget.list[index].detail[indexList].foodName),
                               allowMalformed: true)),
                           trailing: Text(widget
                                   .list[index].detail[indexList].weight
@@ -245,7 +247,8 @@ class DetailScreenState extends State<DetailScreen> {
                         leading: Icon(Icons.home),
                         title: Text('Đến'),
                         subtitle: Text(utf8.decode(
-                            latin1.encode(widget.list[index].addressDelivery.address),
+                            latin1.encode(
+                                widget.list[index].addressDelivery.address),
                             allowMalformed: true)),
                       ),
                     ),

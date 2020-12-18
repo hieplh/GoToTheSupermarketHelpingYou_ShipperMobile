@@ -66,7 +66,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
     // 'http://25.72.134.12:1234/smhu/api/shipper/98765/lat/10.800777/lng/106.732639'
     //http://192.168.43.81/smhu/api/shipper/98765/lat/10.779534/lng/106.631451
     await http
-        .get(GlobalVariable.API_ENDPOINT + "shipper/" + '${widget.userData.id}')
+        .get(GlobalVariable.API_ENDPOINT + "shipper/" + '${widget.userData.username}')
         .then((response) {
       print("Response don hang " + response.body);
       setState(() {
@@ -122,7 +122,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
               allowMalformed: true),
         },
         "note": "phuong nguyen",
-        "shipper": widget.userData.id,
+        "shipper": widget.userData.username,
         "status": 21,
         "timeDelivery": "12:12:12",
         "totalCost": orderInList.totalCost
@@ -153,7 +153,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
     http
         .get(GlobalVariable.API_ENDPOINT +
             "histories/shipper/" +
-            '${widget.userData.id}' +
+            '${widget.userData.username}' +
             "/page/1")
         .then((response) {
         if(response.body.length>0){
@@ -335,7 +335,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   _updatePos() {
     print(GlobalVariable.API_ENDPOINT +
         "shipper/" +
-        '${widget.userData.id}' +
+        '${widget.userData.username}' +
         "/lat/" +
         '${currentLocation.latitude}' +
         "/lng/" +
@@ -345,7 +345,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
     http
         .get(GlobalVariable.API_ENDPOINT +
             "shipper/" +
-            '${widget.userData.id}' +
+            '${widget.userData.username}' +
             "/lat/" +
             '${currentLocation.latitude}' +
             "/lng/" +
@@ -560,12 +560,12 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                                               'delete/' +
                                               listOrders[indexList].id +
                                               '/shipper/' +
-                                              widget.userData.id)
+                                              widget.userData.username)
                                           .then((response) {
                                         print(GlobalVariable.API_ENDPOINT +
                                             listOrders[indexList].id +
                                             '/shipper/' +
-                                            widget.userData.id);
+                                            widget.userData.username);
                                         print(
                                             'Status cancel : ${response.statusCode}');
                                         if (response.statusCode == 200) {

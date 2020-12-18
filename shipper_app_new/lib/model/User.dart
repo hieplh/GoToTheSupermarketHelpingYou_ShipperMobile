@@ -1,5 +1,4 @@
 class User {
-  String id;
   String username;
   String firstName;
   String middleName;
@@ -13,7 +12,7 @@ class User {
   double wallet;
 
   User(
-      {this.id,
+      {
       this.username,
       this.firstName,
       this.middleName,
@@ -28,7 +27,6 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'],
       username: json['username'],
       firstName: json['firstName'],
       middleName: json['middleName'],
