@@ -67,7 +67,9 @@ class RouteSupermarketState extends State<RouteSupermarket> {
   PinInformation destinationPinInfo;
   Future<String> _getOrders() async {
     await http
-        .get(GlobalVariable.API_ENDPOINT + "shipper/" + '${widget.userData.username}')
+        .get(GlobalVariable.API_ENDPOINT +
+            "shipper/" +
+            '${widget.userData.username}')
         .then((response) {
       print("Response don hang RouteSuppermarket " + response.body);
       if (response.body.isNotEmpty) {
@@ -367,63 +369,37 @@ class RouteSupermarketState extends State<RouteSupermarket> {
               markers: _markers,
             ),
             AnimatedPositioned(
-              top: 0,
+              top: 15,
               right: 0,
               left: 0,
               duration: Duration(milliseconds: 200),
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: Container(
-                  margin: EdgeInsets.all(20),
-                  height: 70,
-                  decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.all(Radius.circular(50)),
-                      boxShadow: <BoxShadow>[
-                        BoxShadow(
-                            blurRadius: 20,
-                            offset: Offset.zero,
-                            color: Colors.grey.withOpacity(0.5))
-                      ]),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Container(
-                        width: 50,
-                        height: 50,
-                        margin: EdgeInsets.only(left: 10),
-                        child: ClipOval(
-                            child: Image.asset("assets/cart.png",
-                                fit: BoxFit.cover)),
+              child: Card(
+                  margin: EdgeInsets.only(top: 10.0),
+                  child:
+                      Column(mainAxisSize: MainAxisSize.max, children: <Widget>[
+                    ListTile(
+                      leading: Image.asset("assets/cart.png"),
+                      title: Text(widget.data[0]['market']['name'],
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
+                      subtitle: Text(widget.data[0]['market']['addr1'] +
+                          " " +
+                          widget.data[0]['market']['addr2'] +
+                          " " +
+                          widget.data[0]['market']['addr3'] +
+                          " " +
+                          widget.data[0]['market']['addr4'],
+                          style: TextStyle(
+                              fontSize: 16, )
                       ),
-                      Expanded(
-                        child: Container(
-                          margin: EdgeInsets.only(left: 20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              Text(widget.data[0]['market']['name'],
-                                  style: TextStyle(fontSize: 14)),
-                              Text(
-                                  'Khoảng cách: ${distanceToSupermarket.toStringAsFixed(2)}' +
-                                      " km",
-                                  style: TextStyle(
-                                      fontSize: 16, color: Colors.red)),
-                              // Text('Longitude: ${widget.currentlySelectedPin.location.longitude.toString()}', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                            ],
-                          ),
-                        ),
-                      ),
-                      // Padding(
-                      //   padding: EdgeInsets.all(15),
-                      //   child: Image.asset(widget.currentlySelectedPin.pinPath, width: 50, height: 50),
-                      // )
-                    ],
-                  ),
-                ),
-              ),
+                      trailing: Text(
+                          '${distanceToSupermarket.toStringAsFixed(2)}' + " km",
+                          style: TextStyle(
+                              fontSize: 17,
+                              color: Colors.orange,
+                              fontWeight: FontWeight.bold)),
+                    )
+                  ])),
             )
           ],
         ),
@@ -431,8 +407,8 @@ class RouteSupermarketState extends State<RouteSupermarket> {
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () async {
             // print(widget.orderDetails.length.toString());
-           await getOrdersTimer.cancel();
-           await _updateOrder();
+            await getOrdersTimer.cancel();
+            await _updateOrder();
           },
           label: Text('Đi đến siêu thị hoàn tất'),
           backgroundColor: Colors.green,

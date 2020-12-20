@@ -10,6 +10,7 @@ class User {
   int numSuccess;
   int numCancel;
   double wallet;
+  double rating;
 
   User(
       {
@@ -23,7 +24,9 @@ class User {
       this.role,
       this.numSuccess,
       this.numCancel,
-      this.wallet});
+      this.wallet,
+      this.rating
+      });
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
@@ -38,6 +41,7 @@ class User {
       numSuccess: json['numSuccess'],
       numCancel: json['numCancel'],
       wallet: json['wallet'],
+      rating: json['rating'],
     );
   }
 }

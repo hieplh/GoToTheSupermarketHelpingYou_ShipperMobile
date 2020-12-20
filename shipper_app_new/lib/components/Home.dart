@@ -17,7 +17,7 @@ import 'OrderDetail.dart';
 import 'package:intl/intl.dart';
 import 'package:sweetalert/sweetalert.dart';
 import 'package:badges/badges.dart';
-
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 class MyHomeWidget extends StatefulWidget {
   final User userData;
   MyHomeWidget({Key key, this.userData}) : super(key: key);
@@ -66,7 +66,9 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
     // 'http://25.72.134.12:1234/smhu/api/shipper/98765/lat/10.800777/lng/106.732639'
     //http://192.168.43.81/smhu/api/shipper/98765/lat/10.779534/lng/106.631451
     await http
-        .get(GlobalVariable.API_ENDPOINT + "shipper/" + '${widget.userData.username}')
+        .get(GlobalVariable.API_ENDPOINT +
+            "shipper/" +
+            '${widget.userData.username}')
         .then((response) {
       print("Response don hang " + response.body);
       setState(() {
@@ -156,12 +158,12 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
             '${widget.userData.username}' +
             "/page/1")
         .then((response) {
-        if(response.body.length>0){
-          setState(() {
-            Iterable list = json.decode(response.body);
-            listHistory = list.map((model) => History.fromJson(model)).toList();
-          });
-        }
+      if (response.body.length > 0) {
+        setState(() {
+          Iterable list = json.decode(response.body);
+          listHistory = list.map((model) => History.fromJson(model)).toList();
+        });
+      }
     });
   }
 
@@ -236,7 +238,6 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
     _firebaseMessaging.getToken().then((token) {
       token_app = token.substring(2);
     });
-
 
     _firebaseMessaging.configure(
       onMessage: (message) async {
@@ -363,10 +364,6 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
       style: optionStyle,
     ),
     Text(
-      'Index 1: Business',
-      style: optionStyle,
-    ),
-    Text(
       'Index 2: School',
       style: optionStyle,
     ),
@@ -404,7 +401,6 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
               } else {
                 List<Widget> _widgetOptions = <Widget>[
                   _buildMap(),
-                  _buildNotify(),
                   _buildOrderReceive(),
                   _buildHistoryList(),
                   _buildInfo(),
@@ -422,12 +418,6 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                 Icons.location_on,
               ),
               title: Text('Bản Đồ'),
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.notifications,
-              ),
-              title: Text('Thông Báo'),
             ),
             BottomNavigationBarItem(
               icon: countbadges > 0
@@ -489,21 +479,21 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
     ));
   }
 
-  Widget _buildNotify() {
-    return Scaffold(
-      appBar: AppBar(
-          automaticallyImplyLeading: false,
-          title: Text("Thông báo"),
-          centerTitle: true,
-          backgroundColor: Colors.green),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[],
-        ),
-      ),
-    );
-  }
+  // Widget _buildNotify() {
+  //   return Scaffold(
+  //     appBar: AppBar(
+  //         automaticallyImplyLeading: false,
+  //         title: Text("Thông báo"),
+  //         centerTitle: true,
+  //         backgroundColor: Colors.green),
+  //     body: Center(
+  //       child: Column(
+  //         mainAxisAlignment: MainAxisAlignment.center,
+  //         children: <Widget>[],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildOrderReceive() {
     return Scaffold(
@@ -523,6 +513,15 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                       style:
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
                     ),
+                    subtitle: Text(
+                      utf8.decode(latin1.encode(listOrders[0].market.addr1),
+                          allowMalformed: true) + " " + utf8.decode(latin1.encode(listOrders[0].market.addr2),
+                          allowMalformed: true) + " " + utf8.decode(latin1.encode(listOrders[0].market.addr3),
+                          allowMalformed: true) + " " + utf8.decode(latin1.encode(listOrders[0].market.addr4),
+                          allowMalformed: true),
+                      style:
+                      TextStyle( fontSize: 17),
+                    )
                   ),
                 ),
                 ListView.builder(
@@ -581,7 +580,6 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                                           SweetAlert.show(context,
                                               title: "Đã xảy ra lỗi !",
                                               style: SweetAlertStyle.error);
-
                                         }
                                       });
                                     }
@@ -672,21 +670,38 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
                       ListTile(
-                        leading: Image.asset("assets/history.png"),
-                        title: Text(utf8.decode(
-                            latin1.encode(listHistory[index].id),
-                            allowMalformed: true)),
-                        subtitle: Text(utf8.decode(
+                        leading: Image.asset("assets/bxh.jpg"),
+                        title: Text(
+                            utf8.decode(
                                 latin1.encode(listHistory[index].marketName),
-                                allowMalformed: true) +
-                            '\n' +
-                            '${utf8.decode(latin1.encode(listHistory[index].addressDelivery), allowMalformed: true)}'),
+                                allowMalformed: true),
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold)),
+                        subtitle: Text(
+                            listHistory[index].createDate +
+                                " " +
+                                listHistory[index].createTime,
+                            style: TextStyle(fontSize: 16, color: Colors.red)),
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  HistoryDetail(orderID: listHistory[index].id),
+                              builder: (context) => HistoryDetail(
+                                  orderID: listHistory[index].id,
+                                  userId: widget.userData.username,
+                                  supAdd: utf8.decode(
+                                      latin1.encode(
+                                          listHistory[index].marketName),
+                                      allowMalformed: true),
+                                  deAdd: utf8.decode(
+                                      latin1.encode(
+                                          listHistory[index].addressDelivery),
+                                      allowMalformed: true),
+                                  costShipping: listHistory[index].costDelivery,
+                                  costShopping:
+                                      listHistory[index].costShopping,
+                                  totalCost: listHistory[index].totalCost,
+                              ),
                             ),
                           );
                         },
@@ -750,16 +765,20 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              subtitle: Text(
-                '${widget.userData.phone}',
-                style: TextStyle(
-                  fontFamily: 'Montserrat',
-                  fontSize: 15.0,
+              subtitle: RatingBar.builder(
+                initialRating: widget.userData.rating,
+                minRating: 1,
+                direction: Axis.horizontal,
+                allowHalfRating: true,
+                itemCount: 5,
+                itemPadding: EdgeInsets.symmetric(horizontal: 4.0),
+                itemBuilder: (context, _) => Icon(
+                  Icons.star,
+                  color: Colors.amber,
                 ),
+
               ),
-              onTap: () {
-                //Navigator.pop(context);
-              },
+
             ),
             ListTile(
               leading: Icon(
@@ -774,6 +793,20 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
               ),
               trailing: Text("0918681111"),
               onTap: () {},
+            ),
+            ListTile(
+              leading: Icon(
+                Icons.phone,
+                color: const Color.fromRGBO(0, 175, 82, 1),
+              ),
+              title: Text(
+                'Số điện thoại của tôi',
+                style: TextStyle(
+                  fontFamily: 'Montserrat',
+                ),
+              ),
+              trailing: Text(widget.userData.phone),
+
             ),
             ListTile(
               leading: Icon(

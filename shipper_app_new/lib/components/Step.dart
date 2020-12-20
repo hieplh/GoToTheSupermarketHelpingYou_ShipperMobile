@@ -41,7 +41,9 @@ class _StepsState extends State<Steps> {
 
   Future<String> _getOrders() async {
     await http
-        .get(GlobalVariable.API_ENDPOINT + "shipper/" + '${widget.userData.username}')
+        .get(GlobalVariable.API_ENDPOINT +
+            "shipper/" +
+            '${widget.userData.username}')
         .then((response) {
       print("Response don hang Step");
       if (response.body.isNotEmpty) {
@@ -200,7 +202,7 @@ class _StepsState extends State<Steps> {
         // Appbar
         appBar: AppBar(
           // Title
-          title: Text("Tiến Trình"),
+          title: Text("Sản phẩm cần mua"),
           backgroundColor: Colors.green,
           automaticallyImplyLeading: false,
           centerTitle: true,
@@ -429,20 +431,122 @@ class _CheckItemState extends State<CheckItem> {
     super.initState();
   }
 
+  _getNameFood(String foodId) {
+    switch (foodId) {
+      case "BACHIHEO":
+        {
+          // statements;
+          return 'Thịt Ba Chỉ Heo';
+        }
+        break;
+
+      case "BIHATDAU":
+        {
+          // statements;
+          return 'Bí Hạt Đậu';
+        }
+        break;
+
+      case "BONGCAIXANH":
+        {
+          // statements;
+          return 'Bông Cải Xanh';
+        }
+        break;
+      case "CAIDUNHUUCO":
+        {
+          // statements;
+          return 'Cải Dún Hữu Cơ';
+        }
+        break;
+      case "CUCAITRANG_1":
+        {
+          // statements;
+          return 'Củ Cái Trắng';
+        }
+        break;
+      case "DAUCOVE":
+        {
+          // statements;
+          return 'Đậu cove Đà Lạt';
+        }
+        break;
+      case "DAUHUCHIEN":
+        {
+          // statements;
+          return 'Đậu Hũ Chiên';
+        }
+        break;
+      case "DAUHUTRANG":
+        {
+          // statements;
+          return 'Đậu Hũ Trắng';
+        }
+        break;
+      case "DUIGA":
+        {
+          // statements;
+          return 'Đùi Gà';
+        }
+        break;
+      case "NAMBAONGUXAM":
+        {
+          // statements;
+          return 'Nấm Bào Ngư Xám';
+        }
+        break;
+      case "THANBO":
+        {
+          // statements;
+          return 'Thăn Bò';
+        }
+        break;
+      case "THITBAROI":
+        {
+          // statements;
+          return 'Thịt Ba Rọi';
+        }
+        break;
+      case "UCGATA":
+        {
+          // statements;
+          return 'Ức Gà Ta';
+        }
+        break;
+      case "UCGATAGACONG":
+        {
+          // statements;
+          return 'Ức Gà Ta Gò Công';
+        }
+        break;
+      case "XALACH_1":
+        {
+          // statements;
+          return 'Xà Lách';
+        }
+        break;
+      default:
+        {
+          return foodId;
+        }
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return CheckboxListTile(
-      title: Text(utf8.decode(
-          latin1.encode(widget.data['foodName'].toString() +
-              "     " +
-              utf8.decode(
-                  latin1.encode(widget.data['weight'].toString() + " kg"),
-                  allowMalformed: true)),
-          allowMalformed: true)),
+      title: Text(_getNameFood(widget.data['foodId']) +
+          "      " +
+          widget.data['weight'].toString() +
+          " kg"),
       value: _checked,
-      subtitle: Text(utf8.decode(
-          latin1.encode(oCcy.format(widget.data['priceOriginal']) + " vnd"),
-          allowMalformed: true)),
+      subtitle: Text(
+          utf8.decode(
+              latin1.encode(oCcy.format(widget.data['priceOriginal']) + " vnd"),
+              allowMalformed: true),
+          style: TextStyle(
+              fontSize: 14, fontWeight: FontWeight.bold, color: Colors.red)),
       activeColor: Colors.green,
       checkColor: Colors.white,
       onChanged: (bool value) {

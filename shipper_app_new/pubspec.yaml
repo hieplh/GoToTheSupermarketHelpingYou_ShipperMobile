@@ -52,6 +52,7 @@ dependencies:
   meet_network_image: ^0.1.2
   url_launcher: ^5.7.10
   http_parser: ^3.1.4
+  flutter_rating_bar: ^3.2.0+1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -80,6 +81,7 @@ flutter:
     - assets/order.jpg
     - assets/supermarket.png
     - assets/history.png
+    - assets/bxh.jpg
     
 
   # An image asset can refer to one or more resolution-specific "variants", see

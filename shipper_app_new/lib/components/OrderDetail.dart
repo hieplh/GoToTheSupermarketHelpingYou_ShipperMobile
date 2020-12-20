@@ -23,6 +23,108 @@ class DetailScreen extends StatefulWidget {
 }
 
 class DetailScreenState extends State<DetailScreen> {
+  _getNameFood(String foodId) {
+    switch (foodId) {
+      case "BACHIHEO":
+        {
+          // statements;
+          return 'Thịt Ba Chỉ Heo';
+        }
+        break;
+
+      case "BIHATDAU":
+        {
+          // statements;
+          return 'Bí Hạt Đậu';
+        }
+        break;
+
+      case "BONGCAIXANH":
+        {
+          // statements;
+          return 'Bông Cải Xanh';
+        }
+        break;
+      case "CAIDUNHUUCO":
+        {
+          // statements;
+          return 'Cải Dún Hữu Cơ';
+        }
+        break;
+      case "CUCAITRANG_1":
+        {
+          // statements;
+          return 'Củ Cái Trắng';
+        }
+        break;
+      case "DAUCOVE":
+        {
+          // statements;
+          return 'Đậu cove Đà Lạt';
+        }
+        break;
+      case "DAUHUCHIEN":
+        {
+          // statements;
+          return 'Đậu Hũ Chiên';
+        }
+        break;
+      case "DAUHUTRANG":
+        {
+          // statements;
+          return 'Đậu Hũ Trắng';
+        }
+        break;
+      case "DUIGA":
+        {
+          // statements;
+          return 'Đùi Gà';
+        }
+        break;
+      case "NAMBAONGUXAM":
+        {
+          // statements;
+          return 'Nấm Bào Ngư Xám';
+        }
+        break;
+      case "THANBO":
+        {
+          // statements;
+          return 'Thăn Bò';
+        }
+        break;
+      case "THITBAROI":
+        {
+          // statements;
+          return 'Thịt Ba Rọi';
+        }
+        break;
+      case "UCGATA":
+        {
+          // statements;
+          return 'Ức Gà Ta';
+        }
+        break;
+      case "UCGATAGACONG":
+        {
+          // statements;
+          return 'Ức Gà Ta Gò Công';
+        }
+        break;
+      case "XALACH_1":
+        {
+          // statements;
+          return 'Xà Lách';
+        }
+        break;
+      default:
+        {
+          return foodId;
+        }
+        break;
+    }
+  }
+
   updateOrders() async {
     List<Map<String, dynamic>> data = new List<Map<String, dynamic>>();
     for (Order orderInList in widget.list) {
@@ -137,17 +239,20 @@ class DetailScreenState extends State<DetailScreen> {
                               ? Image.network(
                                   widget.list[index].detail[indexList].image)
                               : Image.network(GlobalVariable.LAZY_IMAGE),
-                          title: Text(utf8.decode(
-                              latin1.encode(
-                                  widget.list[index].detail[indexList].foodName),
-                              allowMalformed: true)),
+                          title: Text(_getNameFood(
+                              widget.list[index].detail[indexList].foodId)),
                           trailing: Text(widget
                                   .list[index].detail[indexList].weight
                                   .toString() +
                               " kg"),
-                          subtitle: Text(oCcy.format(widget.list[index]
-                                  .detail[indexList].priceOriginal) +
-                              " vnd"),
+                          subtitle: Text(
+                              oCcy.format(widget.list[index].detail[indexList]
+                                      .priceOriginal) +
+                                  " vnd",
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red)),
                         );
                       },
                     ),

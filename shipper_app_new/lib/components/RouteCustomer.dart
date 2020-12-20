@@ -377,17 +377,17 @@ class RouteCustomerState extends State<RouteCustomer> {
                   ListTile(
                     leading: Image.asset(imagePath),
                     title: Text(orderIdFromMarker,
-                        style: TextStyle(fontSize: 16, color: Colors.green)),
+                        style: TextStyle(fontSize: 18, color: Colors.green)),
                     subtitle: Text(
                         utf8.decode(latin1.encode(addressNearby),
                             allowMalformed: true),
                         style: TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.bold)),
+                            fontSize: 18, fontWeight: FontWeight.bold)),
                     trailing: Text(
                         '${distanceToAddressDelivery.toStringAsFixed(2)}' +
                             " km",
                         style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 17,
                             color: Colors.orange,
                             fontWeight: FontWeight.bold)),
                   ),
@@ -530,8 +530,8 @@ class RouteCustomerState extends State<RouteCustomer> {
                         destinationLocation.longitude) <
                     0.05) {
                   await _updateOrder();
-
-                  Navigator.push(
+                  await _updateOrder();
+                  await Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) => Steps(
