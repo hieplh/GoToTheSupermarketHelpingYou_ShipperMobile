@@ -14,13 +14,11 @@ import 'package:http/http.dart' as http;
 import 'package:shipper_app_new/model/pin_pill_info.dart';
 import 'package:sweetalert/sweetalert.dart';
 
+import 'Home.dart';
 import 'Step.dart';
-import 'map_pin_pill.dart';
-
 const double CAMERA_ZOOM = 15;
-
 const LatLng SOURCE_LOCATION = LatLng(10.8414, 106.7462);
-// const LatLng DEST_LOCATION = LatLng(10.822787, 106.770953);
+
 
 class RouteSupermarket extends StatefulWidget {
   final List<OrderDetail> orderDetails;
@@ -54,6 +52,7 @@ class RouteSupermarketState extends State<RouteSupermarket> {
   LocationData currentLocation;
   LocationData destinationLocation;
   var listOrders = new List<Order>();
+  var listOrdersRemove = new List<String>();
   Location location;
   double pinPillPosition = -100;
   PinInformation currentlySelectedPin = PinInformation(
@@ -77,6 +76,14 @@ class RouteSupermarketState extends State<RouteSupermarket> {
           Iterable list = json.decode(response.body);
           listOrders = list.map((model) => Order.fromJson(model)).toList();
         });
+        if (listOrdersRemove.length > 0) {
+          for (var id in listOrdersRemove) {
+            setState(() {
+              listOrders.removeWhere((item) => item.id == id);
+            });
+          }
+        }
+
         if (listOrders.length > tmp.length) {
           _setNewListOrder();
           showDialog(
@@ -116,11 +123,21 @@ class RouteSupermarketState extends State<RouteSupermarket> {
         "details": [
           for (OrderDetail detail in orderInList.detail)
             {
-              "foodName": utf8.decode(latin1.encode("${detail.foodName}"),
-                  allowMalformed: true),
-              "foodId": "${detail.foodId}",
               "id": "${detail.id}",
-              "image": "${detail.image}",
+              "food": {
+                "id": "${detail.food.id}",
+                "name": "${detail.food.name}",
+                "image": "${detail.food.image}",
+                "description": "${detail.food.description}",
+                "price": detail.food.price,
+                "saleOff": {
+                  "startDate": "${detail.food.saleOff.startDate}",
+                  "endDate": "${detail.food.saleOff.endDate}",
+                  "startTime": "${detail.food.saleOff.startTime}",
+                  "endTime": "${detail.food.saleOff.endTime}",
+                  "saleOff": detail.food.saleOff.saleOff
+                }
+              },
               "priceOriginal": detail.priceOriginal,
               "pricePaid": detail.pricePaid,
               "saleOff": detail.saleOff,
@@ -174,33 +191,68 @@ class RouteSupermarketState extends State<RouteSupermarket> {
 
           await updatePinOnMap();
         }));
-    // _firebaseMessaging.configure(
-    //   onMessage: (message) async {
-    //     await _getOrders();
-    //     await _setNewListOrder();
-    //     await showDialog(
-    //         context: context,
-    //         builder: (_) => new AlertDialog(
-    //               title: new Text("Thông báo"),
-    //               content: new Text('Có đơn hàng mới'),
-    //               actions: <Widget>[
-    //                 FlatButton(
-    //                   child: Text('OK'),
-    //                   onPressed: () async {
-    //                     await Navigator.of(context).pop();
-    //
-    //                   },
-    //                 )
-    //               ],
-    //             ));
-    //   },
-    //   onResume: (message) async {
-    //     // setState(() {
-    //     //   title = message["data"]["title"];
-    //     //   helper = "You have open the application from notification";
-    //     // });
-    //   },
-    // );
+    _firebaseMessaging.configure(
+      onMessage: (message) async {
+        if (message['data']['isCancel'] == 'true') {
+          listOrdersRemove.add(message['data']['orderId']);
+          setState(() {
+            listOrders
+                .removeWhere((item) => item.id == message['data']['orderId']);
+          });
+
+          showDialog(
+              context: context,
+              builder: (_) => new AlertDialog(
+                    title: new Text("Thông báo"),
+                    content: new Text(
+                        'Đơn hàng ${message['data']['orderId']} đã bị hủy'),
+                    actions: <Widget>[
+                      FlatButton(
+                        child: Text('OK'),
+                        onPressed: () async {
+                          await Navigator.of(context).pop();
+                        },
+                      )
+                    ],
+                  ));
+
+          if (listOrders.length > 0) {
+            _setNewListOrder();
+          } else if (listOrders.length == 0) {
+            showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => new AlertDialog(
+                      title: new Text("Thông báo"),
+                      content: new Text(
+                        "Tất cả đơn hàng đã bị hủy",
+                        style: TextStyle(color: Colors.red, fontSize: 20),
+                      ),
+                      actions: <Widget>[
+                        FlatButton(
+                          child: Text('Quay về màn hình chính!'),
+                          onPressed: () {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (BuildContext context) =>
+                                      MyHomeWidget(userData: widget.userData)),
+                              ModalRoute.withName('/'),
+                            );
+                          },
+                        )
+                      ],
+                    ));
+          }
+        }
+      },
+      onResume: (message) async {
+        // setState(() {
+        //   title = message["data"]["title"];
+        //   helper = "You have open the application from notification";
+        // });
+      },
+    );
     getOrdersTimer = Timer.periodic(new Duration(seconds: 5), (timer) {
       _getOrders();
     });
@@ -382,16 +434,17 @@ class RouteSupermarketState extends State<RouteSupermarket> {
                       title: Text(widget.data[0]['market']['name'],
                           style: TextStyle(
                               fontSize: 18, fontWeight: FontWeight.bold)),
-                      subtitle: Text(widget.data[0]['market']['addr1'] +
-                          " " +
-                          widget.data[0]['market']['addr2'] +
-                          " " +
-                          widget.data[0]['market']['addr3'] +
-                          " " +
-                          widget.data[0]['market']['addr4'],
+                      subtitle: Text(
+                          widget.data[0]['market']['addr1'] +
+                              " " +
+                              widget.data[0]['market']['addr2'] +
+                              " " +
+                              widget.data[0]['market']['addr3'] +
+                              " " +
+                              widget.data[0]['market']['addr4'],
                           style: TextStyle(
-                              fontSize: 16, )
-                      ),
+                            fontSize: 16,
+                          )),
                       trailing: Text(
                           '${distanceToSupermarket.toStringAsFixed(2)}' + " km",
                           style: TextStyle(

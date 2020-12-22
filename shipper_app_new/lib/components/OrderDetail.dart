@@ -141,11 +141,21 @@ class DetailScreenState extends State<DetailScreen> {
         "details": [
           for (OrderDetail detail in orderInList.detail)
             {
-              "foodName": utf8.decode(latin1.encode("${detail.foodName}"),
-                  allowMalformed: true),
-              "foodId": "${detail.foodId}",
               "id": "${detail.id}",
-              "image": "${detail.image}",
+              "food": {
+                "id": "${detail.food.id}",
+                "name": "${detail.food.name}",
+                "image": "${detail.food.image}",
+                "description": "${detail.food.description}",
+                "price": detail.food.price,
+                "saleOff": {
+                  "startDate": "${detail.food.saleOff.startDate}",
+                  "endDate": "${detail.food.saleOff.endDate}",
+                  "startTime": "${detail.food.saleOff.startTime}",
+                  "endTime": "${detail.food.saleOff.endTime}",
+                  "saleOff": detail.food.saleOff.saleOff
+                }
+              },
               "priceOriginal": detail.priceOriginal,
               "pricePaid": detail.pricePaid,
               "saleOff": detail.saleOff,
@@ -234,20 +244,20 @@ class DetailScreenState extends State<DetailScreen> {
                       itemCount: widget.list[index].detail.length,
                       itemBuilder: (context, indexList) {
                         return ListTile(
-                          leading: widget.list[index].detail[indexList].image !=
+                          leading: widget.list[index].detail[indexList].food.image !=
                                   null
                               ? Image.network(
-                                  widget.list[index].detail[indexList].image)
+                                  widget.list[index].detail[indexList].food.image)
                               : Image.network(GlobalVariable.LAZY_IMAGE),
                           title: Text(_getNameFood(
-                              widget.list[index].detail[indexList].foodId)),
+                              widget.list[index].detail[indexList].food.id)),
                           trailing: Text(widget
                                   .list[index].detail[indexList].weight
                                   .toString() +
                               " kg"),
                           subtitle: Text(
                               oCcy.format(widget.list[index].detail[indexList]
-                                      .priceOriginal) +
+                                      .pricePaid) +
                                   " vnd",
                               style: TextStyle(
                                   fontSize: 14,

@@ -108,21 +108,70 @@ class AddressDelivery {
   }
 }
 
+class Food {
+  String description;
+  String id;
+  String image;
+  String name;
+  double price;
+  SaleOff saleOff;
+
+  Food(
+      {this.description,
+      this.id,
+      this.image,
+      this.name,
+      this.price,
+      this.saleOff});
+
+  factory Food.fromJson(Map<String, dynamic> json) {
+    return Food(
+      description: json['description'],
+      id: json['id'],
+      image: json['image'],
+      name: json['name'],
+      price: json['price'],
+      saleOff: SaleOff.fromJson(json['saleOff']),
+    );
+  }
+}
+
+class SaleOff {
+  String endDate;
+  String endTime;
+  int saleOff;
+  String startDate;
+  String startTime;
+
+  SaleOff({
+    this.endDate,
+    this.endTime,
+    this.saleOff,
+    this.startDate,
+    this.startTime,
+  });
+  factory SaleOff.fromJson(Map<String, dynamic> json) {
+    return SaleOff(
+      endDate: json['endDate'],
+      endTime: json['endTime'],
+      saleOff: json['saleOff'],
+      startDate: json['startDate'],
+      startTime: json['startTime'],
+    );
+  }
+}
+
 class OrderDetail {
   String id;
-  String foodId;
-  String foodName;
-  String image;
+  Food food;
   double priceOriginal;
   double pricePaid;
-  double weight;
   int saleOff;
+  double weight;
 
   OrderDetail({
     this.id,
-    this.foodId,
-    this.foodName,
-    this.image,
+    this.food,
     this.priceOriginal,
     this.pricePaid,
     this.weight,
@@ -132,9 +181,7 @@ class OrderDetail {
   factory OrderDetail.fromJson(Map<String, dynamic> json) {
     return OrderDetail(
       id: json['id'],
-      foodId: json['foodId'],
-      foodName: json['foodName'],
-      image: json['image'],
+      food: Food.fromJson(json['food']),
       priceOriginal: json['priceOriginal'],
       pricePaid: json['pricePaid'],
       weight: json['weight'],
@@ -144,9 +191,7 @@ class OrderDetail {
 
   Map toJson() => {
         "id": id,
-        "foodId": foodId,
-        "foodName": foodName,
-        "image": image,
+        "food": food,
         "priceOriginal": priceOriginal,
         "pricePaid": pricePaid,
         "weight": weight,

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
@@ -36,6 +37,7 @@ class RouteCustomerState extends State<RouteCustomer> {
   Completer<GoogleMapController> _controller = Completer();
   Set<Marker> _markers = Set<Marker>();
   double distanceToAddressDelivery = 0.00;
+  FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
 // for my drawn routes on the map
   var listOrders = new List<Order>();
   Set<Polyline> _polylines = Set<Polyline>();
@@ -90,6 +92,84 @@ class RouteCustomerState extends State<RouteCustomer> {
     getOrdersTimer = Timer.periodic(new Duration(seconds: 5), (timer) {
       _getOrders();
     });
+
+    _firebaseMessaging.configure(
+      onMessage: (message) async {
+        if (message['data']['isCancel'] == 'true') {
+          if (orderIdFromMarker == message['data']['orderId']) {
+            widget.data.removeWhere(
+                (element) => element.values.toList()[6] == orderIdFromMarker);
+
+            if (widget.data.length > 0) {
+              _setNewPin();
+              if (_markers.length == 1) {
+                polylineCoordinates.clear();
+                setState(() {
+                  pinPillPosition = -150;
+                });
+              }
+            } else if (widget.data.length == 0) {
+              showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) => new AlertDialog(
+                        title: new Text("Thông báo"),
+                        content: new Text(
+                          "Tất cả đơn hàng đã bị hủy",
+                          style: TextStyle(color: Colors.red, fontSize: 20),
+                        ),
+                        actions: <Widget>[
+                          FlatButton(
+                            child: Text('Quay về màn hình chính!'),
+                            onPressed: () {
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (BuildContext context) =>
+                                        MyHomeWidget(
+                                            userData: widget.userData)),
+                                ModalRoute.withName('/'),
+                              );
+                            },
+                          )
+                        ],
+                      ));
+            }
+          }
+
+          else if (orderIdFromMarker != message['data']['orderId']){
+           setState(() {
+             _markers.removeWhere((element) => element.markerId.value == message['data']['orderId']);
+
+           });
+           widget.data.removeWhere(
+                   (element) => element.values.toList()[6] == message['data']['orderId']);
+          }
+
+          showDialog(
+              context: context,
+              builder: (_) => new AlertDialog(
+                    title: new Text("Thông báo"),
+                    content: new Text(
+                        'Đơn hàng ${message['data']['orderId']} đã bị hủy'),
+                    actions: <Widget>[
+                      FlatButton(
+                        child: Text('OK'),
+                        onPressed: () async {
+                          await Navigator.of(context).pop();
+                        },
+                      )
+                    ],
+                  ));
+        }
+      },
+      onResume: (message) async {
+        // setState(() {
+        //   title = message["data"]["title"];
+        //   helper = "You have open the application from notification";
+        // });
+      },
+    );
   }
 
   _showDialogNewOrder() async {
@@ -165,11 +245,21 @@ class RouteCustomerState extends State<RouteCustomer> {
         "details": [
           for (OrderDetail detail in orderInList.detail)
             {
-              "foodName": utf8.decode(latin1.encode("${detail.foodId}"),
-                  allowMalformed: true),
-              "foodId": "${detail.foodId}",
               "id": "${detail.id}",
-              "image": "${detail.image}",
+              "food": {
+                "id": "${detail.food.id}",
+                "name": "${detail.food.name}",
+                "image": "${detail.food.image}",
+                "description": "${detail.food.description}",
+                "price": detail.food.price,
+                "saleOff": {
+                  "startDate": "${detail.food.saleOff.startDate}",
+                  "endDate": "${detail.food.saleOff.endDate}",
+                  "startTime": "${detail.food.saleOff.startTime}",
+                  "endTime": "${detail.food.saleOff.endTime}",
+                  "saleOff": detail.food.saleOff.saleOff
+                }
+              },
               "priceOriginal": detail.priceOriginal,
               "pricePaid": detail.pricePaid,
               "saleOff": detail.saleOff,
@@ -423,7 +513,7 @@ class RouteCustomerState extends State<RouteCustomer> {
                                           if (_markers.length == 1) {
                                             polylineCoordinates.clear();
                                             setState(() {
-                                              pinPillPosition = -130;
+                                              pinPillPosition = -150;
                                             });
                                           }
                                         } else if (widget.data.length == 0) {
@@ -501,6 +591,7 @@ class RouteCustomerState extends State<RouteCustomer> {
                     .where((marker) => marker.markerId.value != 'sourcePin')
                     .toList();
                 if (listmarkers.length == 0) {
+                  getOrdersTimer.cancel();
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(
@@ -529,6 +620,7 @@ class RouteCustomerState extends State<RouteCustomer> {
                         destinationLocation.latitude,
                         destinationLocation.longitude) <
                     0.05) {
+                  getOrdersTimer.cancel();
                   await _updateOrder();
                   await _updateOrder();
                   await Navigator.push(
@@ -678,7 +770,8 @@ class RouteCustomerState extends State<RouteCustomer> {
                         encoding: Encoding.getByName("utf-8"),
                         body: '[' + jsonEncode(od) + ']',
                       );
-                      print("Loi la ${response.statusCode}"+"${response.body}");
+                      print(
+                          "Loi la ${response.statusCode}" + "${response.body}");
                       if (response.statusCode == 200) {
                         Navigator.of(context).pop();
                         Navigator.push(

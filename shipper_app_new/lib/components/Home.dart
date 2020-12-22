@@ -18,6 +18,11 @@ import 'package:intl/intl.dart';
 import 'package:sweetalert/sweetalert.dart';
 import 'package:badges/badges.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+
+import 'RouteCustomer.dart';
+import 'RouteSupermarket.dart';
+import 'Step.dart';
+
 class MyHomeWidget extends StatefulWidget {
   final User userData;
   MyHomeWidget({Key key, this.userData}) : super(key: key);
@@ -40,7 +45,10 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   Future<List<Orders>> futureOrders;
   int _selectedIndex = 0;
   var listOrders = new List<Order>();
+  var currentList = new List<Order>();
   var listHistory = new List<History>();
+  List<Map<String, dynamic>> data = new List<Map<String, dynamic>>();
+  List<OrderDetail> oD = new List<OrderDetail>();
   Completer<GoogleMapController> _controller = Completer();
   Set<Marker> markers = Set();
   // Position _currentPosition;
@@ -57,14 +65,145 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
     () => 'Data Loaded',
   );
 
+  setOrderToMove(List<Order> listOrderstmp) async {
+    for (Order orderInList in listOrderstmp) {
+      Map<String, dynamic> order = {
+        "costDelivery": orderInList.costDelivery,
+        "addressDelivery": {
+          "address": '${orderInList.addressDelivery.address}',
+          "lng": '${orderInList.addressDelivery.lng}',
+          "lat": '${orderInList.addressDelivery.lat}',
+        },
+        "costShopping": orderInList.costShopping,
+        "cust": '${orderInList.cust}',
+        "dateDelivery": "${orderInList.dateDelivery}",
+        "details": [
+          for (OrderDetail detail in orderInList.detail)
+            {
+              "id": "${detail.id}",
+              "food": {
+                "id": "${detail.food.id}",
+                "name": "${detail.food.name}",
+                "image": "${detail.food.image}",
+                "description": "${detail.food.description}",
+                "price": detail.food.price,
+                "saleOff": {
+                  "startDate": "${detail.food.saleOff.startDate}",
+                  "endDate": "${detail.food.saleOff.endDate}",
+                  "startTime": "${detail.food.saleOff.startTime}",
+                  "endTime": "${detail.food.saleOff.endTime}",
+                  "saleOff": detail.food.saleOff.saleOff
+                }
+              },
+              "priceOriginal": detail.priceOriginal,
+              "pricePaid": detail.pricePaid,
+              "saleOff": detail.saleOff,
+              "weight": detail.weight
+            },
+        ],
+        "id": "${orderInList.id}",
+        "market": {
+          "addr1": utf8.decode(latin1.encode("${orderInList.market.addr1}"),
+              allowMalformed: true),
+          "addr2": utf8.decode(latin1.encode("${orderInList.market.addr2}"),
+              allowMalformed: true),
+          "addr3": utf8.decode(latin1.encode("${orderInList.market.addr3}"),
+              allowMalformed: true),
+          "addr4": utf8.decode(latin1.encode("${orderInList.market.addr4}"),
+              allowMalformed: true),
+          "id": "${orderInList.market.id}",
+          "lat": "${orderInList.market.lat}",
+          "lng": "${orderInList.market.lng}",
+          "name": utf8.decode(latin1.encode("${orderInList.market.name}"),
+              allowMalformed: true),
+        },
+        "note": "phuong nguyen",
+        "shipper": widget.userData.username,
+        "status": 21,
+        "timeDelivery": "12:12:12",
+        "totalCost": orderInList.totalCost
+      };
+      data.add(order);
+    }
+
+    for (Order orders in listOrderstmp) {
+      for (OrderDetail detail in orders.detail) {
+        oD.add(detail);
+      }
+    }
+
+    // If the server did return a 200 OK response,
+  }
+
+  Future<String> _getLastSreens() async {
+    await http
+        .get(GlobalVariable.API_ENDPOINT +
+            "shipper/" +
+            '${widget.userData.username}')
+        .then((response) {
+      if (response.body.isNotEmpty) {
+        List mapRes = new List();
+        mapRes = json.decode(response.body);
+
+        switch (mapRes[0]['status']) {
+          case 21:
+            Iterable listTmp = json.decode(response.body);
+            currentList =
+                listTmp.map((model) => Order.fromJson(model)).toList();
+            setOrderToMove(currentList);
+            Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                    builder: (context) => RouteSupermarket(
+                        orderDetails: oD,
+                        data: data,
+                        userData: widget.userData)),
+                (Route<dynamic> route) => false);
+            break;
+
+          case 22:
+            {
+              Iterable listTmp = json.decode(response.body);
+              currentList =
+                  listTmp.map((model) => Order.fromJson(model)).toList();
+              setOrderToMove(currentList);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => Steps(
+                          item: oD,
+                          data: data,
+                          userData: widget.userData,
+                        )),
+              );
+            }
+            break;
+          case 23:
+            {
+              Iterable listTmp = json.decode(response.body);
+              currentList =
+                  listTmp.map((model) => Order.fromJson(model)).toList();
+              setOrderToMove(currentList);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        RouteCustomer(data: data, userData: widget.userData)),
+              );
+            }
+            break;
+
+          default:
+            {
+              //statements;
+            }
+            break;
+        }
+      } else {}
+    });
+    return 'Success';
+  }
+
   Future<String> _getOrders() async {
-    // print(GlobalVariable.API_ENDPOINT + "shipper/" + '${widget.userData.id}');
-    // print(API_ENDPOINT +
-    // "shipper/" +
-    // '${widget.userData.id}' +
-    // "/lat/10.847440/lng/106.796640");
-    // 'http://25.72.134.12:1234/smhu/api/shipper/98765/lat/10.800777/lng/106.732639'
-    //http://192.168.43.81/smhu/api/shipper/98765/lat/10.779534/lng/106.631451
     await http
         .get(GlobalVariable.API_ENDPOINT +
             "shipper/" +
@@ -96,11 +235,21 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
         "details": [
           for (OrderDetail detail in orderInList.detail)
             {
-              "foodName": utf8.decode(latin1.encode("${detail.foodId}"),
-                  allowMalformed: true),
-              "foodId": "${detail.foodId}",
               "id": "${detail.id}",
-              "image": "${detail.image}",
+              "food": {
+                "id": "${detail.food.id}",
+                "name": "${detail.food.name}",
+                "image": "${detail.food.image}",
+                "description": "${detail.food.description}",
+                "price": detail.food.price,
+                "saleOff": {
+                  "startDate": "${detail.food.saleOff.startDate}",
+                  "endDate": "${detail.food.saleOff.endDate}",
+                  "startTime": "${detail.food.saleOff.startTime}",
+                  "endTime": "${detail.food.saleOff.endTime}",
+                  "saleOff": detail.food.saleOff.saleOff
+                }
+              },
               "priceOriginal": detail.priceOriginal,
               "pricePaid": detail.pricePaid,
               "saleOff": detail.saleOff,
@@ -160,46 +309,36 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
         .then((response) {
       if (response.body.length > 0) {
         setState(() {
-          Iterable list = json.decode(response.body);
-          listHistory = list.map((model) => History.fromJson(model)).toList();
+          // Iterable list = json.decode(response.body);
+          // listHistory = list.map((model) => History.fromJson(model)).toList();
         });
       }
     });
   }
 
   void showMarker() {
-    // get a LatLng for the source location
-    // from the LocationData currentLocation object
+
     var pinPosition =
         LatLng(currentLocation.latitude, currentLocation.longitude);
-    // get a LatLng out of the LocationData object
-
     markers.add(Marker(
         markerId: MarkerId('currentLocation'),
         position: pinPosition,
         icon: BitmapDescriptor.defaultMarker));
-    // destination pin
   }
 
   void updateMarkerOnMap() async {
-    // create a new CameraPosition instance
-    // every time the location changes, so the camera
-    // follows the pin as it moves with an animation
+
     CameraPosition cPosition = CameraPosition(
       zoom: 16,
       target: LatLng(currentLocation.latitude, currentLocation.longitude),
     );
     final GoogleMapController controller = await _controller.future;
     controller.animateCamera(CameraUpdate.newCameraPosition(cPosition));
-    // do this inside the setState() so Flutter gets notified
-    // that a widget update is due
     setState(() {
-      // updated position
       var pinPosition =
           LatLng(currentLocation.latitude, currentLocation.longitude);
 
-      // the trick is to remove the marker (by id)
-      // and add it again at the updated location
+
       markers.removeWhere((m) => m.markerId.value == 'currentLocation');
       markers.add(Marker(
           markerId: MarkerId('currentLocation'),
@@ -226,7 +365,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   @override
   void initState() {
     super.initState();
-
+    _getLastSreens();
     location = new Location();
     _getCurrentLocation();
     location.onLocationChanged().listen((LocationData cLoc) async {
@@ -314,6 +453,26 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
               _timer.cancel();
             }
           });
+        } else if (message['data']['isCancel'] == 'true') {
+          setState(() {
+            listOrders
+                .removeWhere((item) => item.id == message['data']['orderId']);
+          });
+          showDialog(
+              context: context,
+              builder: (_) => new AlertDialog(
+                    title: new Text("Thông báo"),
+                    content: new Text(
+                        'Đơn hàng ${message['data']['orderId']} đã bị hủy'),
+                    actions: <Widget>[
+                      FlatButton(
+                        child: Text('OK'),
+                        onPressed: () async {
+                          await Navigator.of(context).pop();
+                        },
+                      )
+                    ],
+                  ));
         }
       },
       onResume: (message) async {
@@ -379,7 +538,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
 
   void _onItemTapped(int index) {
     setState(() {
-      if (index == 2) {
+      if (index == 1) {
         countbadges = 0;
       }
       _selectedIndex = index;
@@ -507,22 +666,29 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
               children: <Widget>[
                 Card(
                   child: ListTile(
-                    title: Text(
-                      utf8.decode(latin1.encode(listOrders[0].market.name),
-                          allowMalformed: true),
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-                    ),
-                    subtitle: Text(
-                      utf8.decode(latin1.encode(listOrders[0].market.addr1),
-                          allowMalformed: true) + " " + utf8.decode(latin1.encode(listOrders[0].market.addr2),
-                          allowMalformed: true) + " " + utf8.decode(latin1.encode(listOrders[0].market.addr3),
-                          allowMalformed: true) + " " + utf8.decode(latin1.encode(listOrders[0].market.addr4),
-                          allowMalformed: true),
-                      style:
-                      TextStyle( fontSize: 17),
-                    )
-                  ),
+                      title: Text(
+                        utf8.decode(latin1.encode(listOrders[0].market.name),
+                            allowMalformed: true),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 20),
+                      ),
+                      subtitle: Text(
+                        utf8.decode(latin1.encode(listOrders[0].market.addr1),
+                                allowMalformed: true) +
+                            " " +
+                            utf8.decode(
+                                latin1.encode(listOrders[0].market.addr2),
+                                allowMalformed: true) +
+                            " " +
+                            utf8.decode(
+                                latin1.encode(listOrders[0].market.addr3),
+                                allowMalformed: true) +
+                            " " +
+                            utf8.decode(
+                                latin1.encode(listOrders[0].market.addr4),
+                                allowMalformed: true),
+                        style: TextStyle(fontSize: 17),
+                      )),
                 ),
                 ListView.builder(
                   physics: NeverScrollableScrollPhysics(),
@@ -653,7 +819,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   }
 
   Widget _buildHistoryList() {
-    _getHistory();
+    // _getHistory();
 
     return Scaffold(
       appBar: AppBar(
@@ -687,20 +853,19 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => HistoryDetail(
-                                  orderID: listHistory[index].id,
-                                  userId: widget.userData.username,
-                                  supAdd: utf8.decode(
-                                      latin1.encode(
-                                          listHistory[index].marketName),
-                                      allowMalformed: true),
-                                  deAdd: utf8.decode(
-                                      latin1.encode(
-                                          listHistory[index].addressDelivery),
-                                      allowMalformed: true),
-                                  costShipping: listHistory[index].costDelivery,
-                                  costShopping:
-                                      listHistory[index].costShopping,
-                                  totalCost: listHistory[index].totalCost,
+                                orderID: listHistory[index].id,
+                                userId: widget.userData.username,
+                                supAdd: utf8.decode(
+                                    latin1
+                                        .encode(listHistory[index].marketName),
+                                    allowMalformed: true),
+                                deAdd: utf8.decode(
+                                    latin1.encode(
+                                        listHistory[index].addressDelivery),
+                                    allowMalformed: true),
+                                costShipping: listHistory[index].costDelivery,
+                                costShopping: listHistory[index].costShopping,
+                                totalCost: listHistory[index].totalCost,
                               ),
                             ),
                           );
@@ -776,9 +941,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                   Icons.star,
                   color: Colors.amber,
                 ),
-
               ),
-
             ),
             ListTile(
               leading: Icon(
@@ -806,7 +969,19 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                 ),
               ),
               trailing: Text(widget.userData.phone),
-
+            ),
+            ListTile(
+              leading: Icon(
+                Icons.format_list_numbered,
+                color: const Color.fromRGBO(0, 175, 82, 1),
+              ),
+              title: Text(
+                'Biển số xe',
+                style: TextStyle(
+                  fontFamily: 'Montserrat',
+                ),
+              ),
+              trailing: Text(widget.userData.vin),
             ),
             ListTile(
               leading: Icon(

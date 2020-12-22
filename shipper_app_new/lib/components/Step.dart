@@ -36,6 +36,7 @@ class _StepsState extends State<Steps> {
   Timer getOrdersTimer;
   int countChecked = 0;
   var listOrders = new List<Order>();
+  var listOrdersRemove = new List<String>();
   List<Map<String, dynamic>> tmp = new List();
   int totalItem = 0;
 
@@ -51,6 +52,13 @@ class _StepsState extends State<Steps> {
           Iterable list = json.decode(response.body);
           listOrders = list.map((model) => Order.fromJson(model)).toList();
         });
+        if (listOrdersRemove.length > 0) {
+          for (var id in listOrdersRemove) {
+            setState(() {
+              listOrders.removeWhere((item) => item.id == id);
+            });
+          }
+        }
         if (listOrders.length > tmp.length) {
           _setNewListOrder();
           showDialog(
@@ -89,11 +97,21 @@ class _StepsState extends State<Steps> {
         "details": [
           for (OrderDetail detail in orderInList.detail)
             {
-              "foodName": utf8.decode(latin1.encode("${detail.foodName}"),
-                  allowMalformed: true),
-              "foodId": "${detail.foodId}",
               "id": "${detail.id}",
-              "image": "${detail.image}",
+              "food": {
+                "id": "${detail.food.id}",
+                "name": "${detail.food.name}",
+                "image": "${detail.food.image}",
+                "description": "${detail.food.description}",
+                "price": detail.food.price,
+                "saleOff": {
+                  "startDate": "${detail.food.saleOff.startDate}",
+                  "endDate": "${detail.food.saleOff.endDate}",
+                  "startTime": "${detail.food.saleOff.startTime}",
+                  "endTime": "${detail.food.saleOff.endTime}",
+                  "saleOff": detail.food.saleOff.saleOff
+                }
+              },
               "priceOriginal": detail.priceOriginal,
               "pricePaid": detail.pricePaid,
               "saleOff": detail.saleOff,
@@ -136,50 +154,67 @@ class _StepsState extends State<Steps> {
     totalItem = widget.item.length;
     _getTotalCost();
 
-    // _firebaseMessaging.configure(
-    //   onMessage: (message) async {
-    //     await _getOrders();
-    //     await _setNewListOrder();
-    //     await showDialog(
-    //         context: context,
-    //         builder: (_) => new AlertDialog(
-    //               title: new Text("Thông báo"),
-    //               content: new Text('Có đơn hàng mới'),
-    //               actions: <Widget>[
-    //                 FlatButton(
-    //                   child: Text('OK'),
-    //                   onPressed: () async {
-    //                     await Navigator.of(context).pop();
-    //                     // var url = GlobalVariable.API_ENDPOINT + 'orders/update';
-    //                     // var response = await http.put(
-    //                     //   Uri.encodeFull(url),
-    //                     //   headers: {
-    //                     //     'Content-type': 'application/json',
-    //                     //     "Accept": "application/json",
-    //                     //   },
-    //                     //   encoding: Encoding.getByName("utf-8"),
-    //                     //   body: '[' + jsonEncode(od) + ']',
-    //                     // );
-    //                     // print("Loi la ${response.statusCode}");
-    //                     // if (response.statusCode == 200) {
-    //                     //   Navigator.of(context).pop();
-    //                     //   Navigator.push(
-    //                     //       context,
-    //                     //       MaterialPageRoute(
-    //                     //           builder: (context) => CameraScreen()));
-    //                     // } else {}
-    //                   },
-    //                 )
-    //               ],
-    //             ));
-    //   },
-    //   onResume: (message) async {
-    //     // setState(() {
-    //     //   title = message["data"]["title"];
-    //     //   helper = "You have open the application from notification";
-    //     // });
-    //   },
-    // );
+    _firebaseMessaging.configure(
+      onMessage: (message) async {
+        if (message['data']['isCancel'] == 'true') {
+          listOrdersRemove.add(message['data']['orderId']);
+          setState(() {
+            listOrders
+                .removeWhere((item) => item.id == message['data']['orderId']);
+          });
+
+          showDialog(
+              context: context,
+              builder: (_) => new AlertDialog(
+                    title: new Text("Thông báo"),
+                    content: new Text(
+                        'Đơn hàng ${message['data']['orderId']} đã bị hủy'),
+                    actions: <Widget>[
+                      FlatButton(
+                        child: Text('OK'),
+                        onPressed: () async {
+                          await Navigator.of(context).pop();
+                        },
+                      )
+                    ],
+                  ));
+          if (listOrders.length > 0) {
+            _setNewListOrder();
+          } else if (listOrders.length == 0) {
+            showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => new AlertDialog(
+                      title: new Text("Thông báo"),
+                      content: new Text(
+                        "Tất cả đơn hàng đã bị hủy",
+                        style: TextStyle(color: Colors.red, fontSize: 20),
+                      ),
+                      actions: <Widget>[
+                        FlatButton(
+                          child: Text('Quay về màn hình chính!'),
+                          onPressed: () {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (BuildContext context) =>
+                                      MyHomeWidget(userData: widget.userData)),
+                              ModalRoute.withName('/'),
+                            );
+                          },
+                        )
+                      ],
+                    ));
+          }
+        }
+      },
+      onResume: (message) async {
+        // setState(() {
+        //   title = message["data"]["title"];
+        //   helper = "You have open the application from notification";
+        // });
+      },
+    );
 
     getOrdersTimer = Timer.periodic(new Duration(seconds: 5), (timer) {
       _getOrders();
@@ -251,6 +286,8 @@ class _StepsState extends State<Steps> {
                                           widget.userData.username)
                                       .then((response) {
                                     if (response.statusCode == 200) {
+                                      listOrdersRemove.add(
+                                          tmp[indexSwipper].values.toList()[6]);
                                       setState(() {
                                         tmp.removeWhere((element) =>
                                             element.values.toList()[6] ==
@@ -536,7 +573,7 @@ class _CheckItemState extends State<CheckItem> {
   @override
   Widget build(BuildContext context) {
     return CheckboxListTile(
-      title: Text(_getNameFood(widget.data['foodId']) +
+      title: Text(_getNameFood(widget.data['food']['id']) +
           "      " +
           widget.data['weight'].toString() +
           " kg"),
@@ -560,9 +597,9 @@ class _CheckItemState extends State<CheckItem> {
           _checked = value;
         });
       },
-      secondary: widget.data['image'] == 'null'
+      secondary: widget.data['food']['image'] == 'null'
           ? Image.network(GlobalVariable.LAZY_IMAGE)
-          : Image.network(widget.data['image']),
+          : Image.network(widget.data['food']['image']),
       controlAffinity: ListTileControlAffinity.trailing,
     );
   }

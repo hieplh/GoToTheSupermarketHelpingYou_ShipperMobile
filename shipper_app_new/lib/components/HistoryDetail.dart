@@ -213,8 +213,8 @@ class _HistoryDetailState extends State<HistoryDetail> {
               itemCount: listOrderDetail.length,
               itemBuilder: (context, indexList) {
                 return ListTile(
-                  leading: Image.network(listOrderDetail[indexList].image),
-                  title: Text(_getNameFood(listOrderDetail[indexList].foodId)),
+                  leading: Image.network(listOrderDetail[indexList].food.image),
+                  title: Text(_getNameFood(listOrderDetail[indexList].food.id)),
                   trailing: Text(
                       listOrderDetail[indexList].weight.toString() + " kg"),
                   subtitle: Text(

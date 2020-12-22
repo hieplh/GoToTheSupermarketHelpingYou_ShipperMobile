@@ -11,10 +11,10 @@ class User {
   int numCancel;
   double wallet;
   double rating;
+  String vin;
 
   User(
-      {
-      this.username,
+      {this.username,
       this.firstName,
       this.middleName,
       this.lastName,
@@ -25,23 +25,23 @@ class User {
       this.numSuccess,
       this.numCancel,
       this.wallet,
-      this.rating
-      });
+      this.rating,
+      this.vin});
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      username: json['username'],
-      firstName: json['firstName'],
-      middleName: json['middleName'],
-      lastName: json['lastName'],
-      email: json['email'],
-      phone: json['phone'],
-      dob: json['dob'],
-      role: json['role'],
-      numSuccess: json['numSuccess'],
-      numCancel: json['numCancel'],
-      wallet: json['wallet'],
-      rating: json['rating'],
-    );
+        username: json['username'],
+        firstName: json['firstName'],
+        middleName: json['middleName'],
+        lastName: json['lastName'],
+        email: json['email'],
+        phone: json['phone'],
+        dob: json['dob'],
+        role: json['role'],
+        numSuccess: json['numSuccess'],
+        numCancel: json['numCancel'],
+        wallet: json['wallet'],
+        rating: json['rating'],
+        vin: json['vin']);
   }
 }
