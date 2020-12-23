@@ -131,10 +131,10 @@ class RouteSupermarketState extends State<RouteSupermarket> {
                 "description": "${detail.food.description}",
                 "price": detail.food.price,
                 "saleOff": {
-                  "startDate": "${detail.food.saleOff.startDate}",
-                  "endDate": "${detail.food.saleOff.endDate}",
-                  "startTime": "${detail.food.saleOff.startTime}",
-                  "endTime": "${detail.food.saleOff.endTime}",
+                  "startDate": detail.food.saleOff.startDate,
+                  "endDate": detail.food.saleOff.endDate,
+                  "startTime": detail.food.saleOff.startTime,
+                  "endTime": detail.food.saleOff.endTime,
                   "saleOff": detail.food.saleOff.saleOff
                 }
               },

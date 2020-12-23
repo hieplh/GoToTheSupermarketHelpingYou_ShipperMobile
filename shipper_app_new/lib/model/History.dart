@@ -1,9 +1,12 @@
+import 'package:shipper_app_new/model/Orders.dart';
+import 'package:shipper_app_new/model/User.dart';
+
 class History {
   String id;
   String addressDelivery;
-  String marketName;
+  Market market;
   String note;
-  String shipper;
+  User shipper;
   int status;
   String createDate;
   String createTime;
@@ -16,7 +19,7 @@ class History {
   History(
       {this.id,
       this.addressDelivery,
-      this.marketName,
+      this.market,
       this.note,
       this.shipper,
       this.status,
@@ -32,9 +35,9 @@ class History {
     return History(
       id: json['id'],
       addressDelivery: json['addressDelivery'],
-      marketName: json['marketName'],
+      market: Market.fromJson(json['market']),
       note: json['note'],
-      shipper: json['shipper'],
+      shipper: User.fromJson(json['shipper']),
       status: json['status'],
       createDate: json['createDate'],
       createTime: json['createTime'],

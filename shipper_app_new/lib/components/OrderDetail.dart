@@ -149,10 +149,10 @@ class DetailScreenState extends State<DetailScreen> {
                 "description": "${detail.food.description}",
                 "price": detail.food.price,
                 "saleOff": {
-                  "startDate": "${detail.food.saleOff.startDate}",
-                  "endDate": "${detail.food.saleOff.endDate}",
-                  "startTime": "${detail.food.saleOff.startTime}",
-                  "endTime": "${detail.food.saleOff.endTime}",
+                  "startDate": detail.food.saleOff.startDate,
+                  "endDate": detail.food.saleOff.endDate,
+                  "startTime": detail.food.saleOff.startTime,
+                  "endTime": detail.food.saleOff.endTime,
                   "saleOff": detail.food.saleOff.saleOff
                 }
               },
@@ -244,11 +244,12 @@ class DetailScreenState extends State<DetailScreen> {
                       itemCount: widget.list[index].detail.length,
                       itemBuilder: (context, indexList) {
                         return ListTile(
-                          leading: widget.list[index].detail[indexList].food.image !=
-                                  null
-                              ? Image.network(
-                                  widget.list[index].detail[indexList].food.image)
-                              : Image.network(GlobalVariable.LAZY_IMAGE),
+                          leading:
+                              widget.list[index].detail[indexList].food.image !=
+                                      null
+                                  ? Image.network(widget
+                                      .list[index].detail[indexList].food.image)
+                                  : Image.network(GlobalVariable.LAZY_IMAGE),
                           title: Text(_getNameFood(
                               widget.list[index].detail[indexList].food.id)),
                           trailing: Text(widget

@@ -18,7 +18,7 @@ import 'package:intl/intl.dart';
 import 'package:sweetalert/sweetalert.dart';
 import 'package:badges/badges.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-
+import 'package:numberpicker/numberpicker.dart';
 import 'RouteCustomer.dart';
 import 'RouteSupermarket.dart';
 import 'Step.dart';
@@ -33,8 +33,13 @@ class MyHomeWidget extends StatefulWidget {
 
 /// This is the private State class that goes with MyStatefulWidget.
 class _MyHomeWidgetState extends State<MyHomeWidget> {
-  String title = "Title";
-  String helper = "helper";
+  TextEditingController _c;
+  String oldPass;
+  String newPass;
+  String validatePass;
+  TextEditingController oldController = TextEditingController();
+  TextEditingController newController = TextEditingController();
+  TextEditingController validController = TextEditingController();
   int _counter = 0;
   int countbadges = 0;
   final oCcy = new NumberFormat("#,##0", "en_US");
@@ -50,10 +55,12 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   List<Map<String, dynamic>> data = new List<Map<String, dynamic>>();
   List<OrderDetail> oD = new List<OrderDetail>();
   Completer<GoogleMapController> _controller = Completer();
+  final _formKey = GlobalKey<FormState>();
   Set<Marker> markers = Set();
   // Position _currentPosition;
   LocationData currentLocation;
   Timer _clockTimer;
+  int maxOrderAccept;
 
   var listOrderDetails = new List();
   _getCurrentLocation() async {
@@ -88,10 +95,10 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                 "description": "${detail.food.description}",
                 "price": detail.food.price,
                 "saleOff": {
-                  "startDate": "${detail.food.saleOff.startDate}",
-                  "endDate": "${detail.food.saleOff.endDate}",
-                  "startTime": "${detail.food.saleOff.startTime}",
-                  "endTime": "${detail.food.saleOff.endTime}",
+                  "startDate": detail.food.saleOff.startDate,
+                  "endDate": detail.food.saleOff.endDate,
+                  "startTime": detail.food.saleOff.startTime,
+                  "endTime": detail.food.saleOff.endTime,
                   "saleOff": detail.food.saleOff.saleOff
                 }
               },
@@ -243,10 +250,10 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                 "description": "${detail.food.description}",
                 "price": detail.food.price,
                 "saleOff": {
-                  "startDate": "${detail.food.saleOff.startDate}",
-                  "endDate": "${detail.food.saleOff.endDate}",
-                  "startTime": "${detail.food.saleOff.startTime}",
-                  "endTime": "${detail.food.saleOff.endTime}",
+                  "startDate": detail.food.saleOff.startDate,
+                  "endDate": detail.food.saleOff.endDate,
+                  "startTime": detail.food.saleOff.startTime,
+                  "endTime": detail.food.saleOff.endTime,
                   "saleOff": detail.food.saleOff.saleOff
                 }
               },
@@ -309,15 +316,14 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
         .then((response) {
       if (response.body.length > 0) {
         setState(() {
-          // Iterable list = json.decode(response.body);
-          // listHistory = list.map((model) => History.fromJson(model)).toList();
+          Iterable list = json.decode(response.body);
+          listHistory = list.map((model) => History.fromJson(model)).toList();
         });
       }
     });
   }
 
   void showMarker() {
-
     var pinPosition =
         LatLng(currentLocation.latitude, currentLocation.longitude);
     markers.add(Marker(
@@ -327,7 +333,6 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   }
 
   void updateMarkerOnMap() async {
-
     CameraPosition cPosition = CameraPosition(
       zoom: 16,
       target: LatLng(currentLocation.latitude, currentLocation.longitude),
@@ -337,7 +342,6 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
     setState(() {
       var pinPosition =
           LatLng(currentLocation.latitude, currentLocation.longitude);
-
 
       markers.removeWhere((m) => m.markerId.value == 'currentLocation');
       markers.add(Marker(
@@ -366,6 +370,8 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   void initState() {
     super.initState();
     _getLastSreens();
+    maxOrderAccept = widget.userData.maxOrder;
+    _c = new TextEditingController();
     location = new Location();
     _getCurrentLocation();
     location.onLocationChanged().listen((LocationData cLoc) async {
@@ -819,7 +825,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   }
 
   Widget _buildHistoryList() {
-    // _getHistory();
+    _getHistory();
 
     return Scaffold(
       appBar: AppBar(
@@ -839,7 +845,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                         leading: Image.asset("assets/bxh.jpg"),
                         title: Text(
                             utf8.decode(
-                                latin1.encode(listHistory[index].marketName),
+                                latin1.encode(listHistory[index].market.name),
                                 allowMalformed: true),
                             style: TextStyle(
                                 fontSize: 18, fontWeight: FontWeight.bold)),
@@ -857,7 +863,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                                 userId: widget.userData.username,
                                 supAdd: utf8.decode(
                                     latin1
-                                        .encode(listHistory[index].marketName),
+                                        .encode(listHistory[index].market.name),
                                     allowMalformed: true),
                                 deAdd: utf8.decode(
                                     latin1.encode(
@@ -985,6 +991,60 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
             ),
             ListTile(
               leading: Icon(
+                Icons.assignment_ind,
+                color: const Color.fromRGBO(0, 175, 82, 1),
+              ),
+              title: Text(
+                'Đơn hàng nhận được tối đa',
+                style: TextStyle(
+                  fontFamily: 'Montserrat',
+                ),
+              ),
+              subtitle: Text(
+                maxOrderAccept.toString(),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              ),
+              trailing: TextButton(
+                onPressed: () {
+                  showDialog<int>(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return new NumberPickerDialog.integer(
+                          minValue: 1,
+                          maxValue: 3,
+                          title: new Text("Chọn số lượng"),
+                          initialIntegerValue: 1,
+                        );
+                      }).then((int value) async {
+                    var bodyPut = {
+                      "maxNumOrder": value,
+                      "role": "shipper",
+                      "username": widget.userData.username
+                    };
+                    var url =
+                        GlobalVariable.API_ENDPOINT + 'account/maxnumorder';
+                    var response = await http.put(
+                      Uri.encodeFull(url),
+                      headers: {
+                        'Content-type': 'application/json',
+                        "Accept": "application/json",
+                      },
+                      encoding: Encoding.getByName("utf-8"),
+                      body: jsonEncode(bodyPut),
+                    );
+                    print(response.statusCode.toString() + " max order");
+                    if (response.statusCode == 200) {
+                      setState(() {
+                        maxOrderAccept = value;
+                      });
+                    }
+                  });
+                },
+                child: Text('Thay đổi'),
+              ),
+            ),
+            ListTile(
+              leading: Icon(
                 Icons.account_balance_wallet,
                 color: const Color.fromRGBO(0, 175, 82, 1),
               ),
@@ -1011,6 +1071,171 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
               trailing: Icon(
                 Icons.keyboard_arrow_right,
                 color: const Color.fromRGBO(0, 175, 82, 1),
+              ),
+              onTap: () {},
+            ),
+            ListTile(
+              leading: Icon(
+                Icons.security,
+                color: const Color.fromRGBO(0, 175, 82, 1),
+              ),
+              title: Text(
+                'Mật Khẩu',
+                style: TextStyle(
+                  fontFamily: 'Montserrat',
+                ),
+              ),
+              trailing: TextButton(
+                child: Text('Thay đổi'),
+                onPressed: () {
+                  showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          content: Stack(
+                            overflow: Overflow.visible,
+                            children: <Widget>[
+                              Positioned(
+                                right: -40.0,
+                                top: -40.0,
+                                child: InkResponse(
+                                  onTap: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: CircleAvatar(
+                                    child: Icon(Icons.close),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                ),
+                              ),
+                              Form(
+                                key: _formKey,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: <Widget>[
+                                    Padding(
+                                      padding: EdgeInsets.all(8.0),
+                                      child: TextField(
+                                        decoration: InputDecoration(
+                                          labelText: 'Mật khẩu hiện tại',
+                                          icon: Icon(Icons.security),
+                                        ),
+                                        controller: oldController,
+                                        onChanged: (val) {
+                                          // (val) is looking at the value in the textbox.
+                                          oldPass = val;
+                                        },
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.all(8.0),
+                                      child: TextField(
+                                        decoration: InputDecoration(
+                                          labelText: 'Mật khẩu mới',
+                                          icon: Icon(Icons.security),
+                                        ),
+                                        controller: newController,
+                                        onChanged: (val) {
+                                          // (val) is looking at the value in the textbox.
+                                          newPass = val;
+                                        },
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.all(8.0),
+                                      child: TextField(
+                                        decoration: InputDecoration(
+                                          labelText: 'Xác nhận mật khẩu mới',
+                                          icon: Icon(Icons.security),
+                                        ),
+                                        controller: validController,
+                                        onChanged: (val) {
+                                          // (val) is looking at the value in the textbox.
+                                          validatePass = val;
+                                        },
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: RaisedButton(
+                                        child: Text("Xác nhận"),
+                                        onPressed: () async {
+                                          if (validatePass != newPass) {
+                                            showDialog(
+                                                context: context,
+                                                builder: (_) => new AlertDialog(
+                                                      title: new Text("Lỗi"),
+                                                      content: new Text(
+                                                          "Mật khẩu mới chưa đúng !"),
+                                                      actions: <Widget>[
+                                                        FlatButton(
+                                                          child: Text('Ok'),
+                                                          onPressed: () {
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop();
+                                                          },
+                                                        )
+                                                      ],
+                                                    ));
+                                          } else {
+                                            var bodyUpdatePass = {
+                                              "amount": 0,
+                                              "newPwd": newPass,
+                                              "oldPwd": oldPass,
+                                              "role": "shipper",
+                                              "username":
+                                                  widget.userData.username,
+                                            };
+
+                                            var url =
+                                                GlobalVariable.API_ENDPOINT +
+                                                    'account/password';
+                                            var response = await http.put(
+                                              Uri.encodeFull(url),
+                                              headers: {
+                                                'Content-type':
+                                                    'application/json',
+                                                "Accept": "application/json",
+                                              },
+                                              encoding:
+                                                  Encoding.getByName("utf-8"),
+                                              body: jsonEncode(bodyUpdatePass),
+                                            );
+                                            if (response.statusCode == 200) {
+                                              showDialog(
+                                                  context: context,
+                                                  builder: (_) =>
+                                                      new AlertDialog(
+                                                        title: new Text(
+                                                            "Thông báo"),
+                                                        content: new Text(
+                                                            "Cập nhật mật khẩu thành công !"),
+                                                        actions: <Widget>[
+                                                          FlatButton(
+                                                            child: Text('Ok'),
+                                                            onPressed: () {
+                                                              Navigator.of(
+                                                                      context)
+                                                                  .pop();
+                                                            },
+                                                          )
+                                                        ],
+                                                      ));
+                                              
+                                            }
+                                          }
+                                        },
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      });
+                },
               ),
               onTap: () {},
             ),

@@ -12,6 +12,7 @@ class User {
   double wallet;
   double rating;
   String vin;
+  int maxOrder;
 
   User(
       {this.username,
@@ -26,7 +27,9 @@ class User {
       this.numCancel,
       this.wallet,
       this.rating,
-      this.vin});
+      this.vin,
+      this.maxOrder
+      });
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
@@ -42,6 +45,8 @@ class User {
         numCancel: json['numCancel'],
         wallet: json['wallet'],
         rating: json['rating'],
-        vin: json['vin']);
+        vin: json['vin'],
+        maxOrder: json['maxOrder'],
+    );
   }
 }
