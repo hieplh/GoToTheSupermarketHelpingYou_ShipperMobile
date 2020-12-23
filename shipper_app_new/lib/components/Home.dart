@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:shipper_app_new/components/CustomerDetail.dart';
 import 'package:shipper_app_new/components/RestarApp.dart';
 import 'package:shipper_app_new/model/History.dart';
 import 'package:shipper_app_new/model/Orders.dart';
@@ -1116,6 +1115,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                                     Padding(
                                       padding: EdgeInsets.all(8.0),
                                       child: TextField(
+                                        obscureText: true,
                                         decoration: InputDecoration(
                                           labelText: 'Mật khẩu hiện tại',
                                           icon: Icon(Icons.security),
@@ -1130,6 +1130,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                                     Padding(
                                       padding: EdgeInsets.all(8.0),
                                       child: TextField(
+                                        obscureText: true,
                                         decoration: InputDecoration(
                                           labelText: 'Mật khẩu mới',
                                           icon: Icon(Icons.security),
@@ -1144,6 +1145,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                                     Padding(
                                       padding: EdgeInsets.all(8.0),
                                       child: TextField(
+                                        obscureText: true,
                                         decoration: InputDecoration(
                                           labelText: 'Xác nhận mật khẩu mới',
                                           icon: Icon(Icons.security),
@@ -1222,7 +1224,6 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                                                           )
                                                         ],
                                                       ));
-                                              
                                             }
                                           }
                                         },

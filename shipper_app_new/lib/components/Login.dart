@@ -110,38 +110,9 @@ class _State extends State<LoginPage> {
                     //forgot password screen
                   },
                   textColor: Colors.blue,
-                  child: Text('Forgot Password'),
+
                 ),
-                FlatButton(
-                  onPressed: () {
-                    //forgot password screen
-                    showDialog(
-                        child: new Dialog(
-                          child: new Column(
-                            children: <Widget>[
-                              new TextField(
-                                decoration:
-                                    new InputDecoration(hintText: "Update IP"),
-                                controller: _c,
-                              ),
-                              new FlatButton(
-                                child: new Text("Save"),
-                                onPressed: () {
-                                  setState(() {
-                                    this._text = _c.text;
-                                  });
-                                  GlobalVariable.API_ENDPOINT = this._text;
-                                  Navigator.pop(context);
-                                },
-                              )
-                            ],
-                          ),
-                        ),
-                        context: context);
-                  },
-                  textColor: Colors.blue,
-                  child: Text('Update IP'),
-                ),
+
                 Container(
                     height: 50,
                     padding: EdgeInsets.fromLTRB(10, 0, 10, 0),

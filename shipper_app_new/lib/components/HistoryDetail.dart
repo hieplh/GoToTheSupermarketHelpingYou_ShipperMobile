@@ -1,9 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:shipper_app_new/constant/constant.dart';
+import 'package:shipper_app_new/model/Feedback.dart';
+
 import 'package:shipper_app_new/model/Orders.dart';
 
 import 'CustomerDetail.dart';
@@ -32,6 +35,7 @@ class HistoryDetail extends StatefulWidget {
 }
 
 class _HistoryDetailState extends State<HistoryDetail> {
+  FeedbackOrder feedback = null;
   List<OrderDetail> listOrderDetail;
   final oCcy = new NumberFormat("#,##0", "en_US");
   Future<OrderDetail> futureOrderDetails;
@@ -148,16 +152,21 @@ class _HistoryDetailState extends State<HistoryDetail> {
     }
   }
 
+  _getFeecBack() async {
+
+    var responseFeedBack = await http
+        .get(GlobalVariable.API_ENDPOINT + "feedback/${widget.orderID}");
+    if (responseFeedBack.statusCode == 200) {
+      feedback = FeedbackOrder.fromJson(jsonDecode(responseFeedBack.body));
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     listOrderDetail = new List();
     _getDetails();
-    print("${GlobalVariable.API_ENDPOINT}" +
-        "image/" +
-        "${widget.orderID}" +
-        "_1.png/shipper/" +
-        "${widget.userId}");
+    _getFeecBack();
   }
 
   @override
@@ -251,6 +260,31 @@ class _HistoryDetailState extends State<HistoryDetail> {
                     fontSize: 16,
                   )),
             ),
+            ListTile(
+                leading: Text('Rating từ khách',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                trailing: feedback == null
+                    ? Text('Chưa có')
+                    : RatingBar.builder(
+                        initialRating: double.parse(feedback.rating.toString()),
+                        minRating: 1,
+                        direction: Axis.horizontal,
+                        allowHalfRating: true,
+                        itemCount: 5,
+                        itemPadding: EdgeInsets.symmetric(horizontal: 4.0),
+                        itemBuilder: (context, _) => Icon(
+                          Icons.star,
+                          color: Colors.amber,
+                        ),
+                      )),
+            ListTile(
+                leading: Text('Feedback từ khách',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                trailing: feedback == null
+                    ? Text('Chưa có')
+                    : Text(feedback.feedback)),
             ListTile(
               leading: Text('Hình xác nhận',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),

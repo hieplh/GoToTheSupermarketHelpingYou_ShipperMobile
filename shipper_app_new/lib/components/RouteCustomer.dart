@@ -135,15 +135,13 @@ class RouteCustomerState extends State<RouteCustomer> {
                         ],
                       ));
             }
-          }
-
-          else if (orderIdFromMarker != message['data']['orderId']){
-           setState(() {
-             _markers.removeWhere((element) => element.markerId.value == message['data']['orderId']);
-
-           });
-           widget.data.removeWhere(
-                   (element) => element.values.toList()[6] == message['data']['orderId']);
+          } else if (orderIdFromMarker != message['data']['orderId']) {
+            setState(() {
+              _markers.removeWhere((element) =>
+                  element.markerId.value == message['data']['orderId']);
+            });
+            widget.data.removeWhere((element) =>
+                element.values.toList()[6] == message['data']['orderId']);
           }
 
           showDialog(
@@ -440,208 +438,216 @@ class RouteCustomerState extends State<RouteCustomer> {
           target: LatLng(currentLocation.latitude, currentLocation.longitude),
           zoom: CAMERA_ZOOM);
     }
-    return Scaffold(
-      body: Stack(
-        children: <Widget>[
-          GoogleMap(
-              myLocationEnabled: true,
-              compassEnabled: true,
-              tiltGesturesEnabled: false,
-              markers: _markers,
-              polylines: _polylines,
-              mapType: MapType.normal,
-              initialCameraPosition: initialCameraPosition,
-              onMapCreated: (GoogleMapController controller) {
-                _controller.complete(controller);
-              }),
-          AnimatedPositioned(
-            top: pinPillPosition + 10,
-            right: 0,
-            left: 0,
-            duration: Duration(milliseconds: 200),
-            child: Card(
-              margin: EdgeInsets.only(top: 10.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                children: <Widget>[
-                  ListTile(
-                    leading: Image.asset(imagePath),
-                    title: Text(orderIdFromMarker,
-                        style: TextStyle(fontSize: 18, color: Colors.green)),
-                    subtitle: Text(
-                        utf8.decode(latin1.encode(addressNearby),
-                            allowMalformed: true),
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold)),
-                    trailing: Text(
-                        '${distanceToAddressDelivery.toStringAsFixed(2)}' +
-                            " km",
-                        style: TextStyle(
-                            fontSize: 17,
-                            color: Colors.orange,
-                            fontWeight: FontWeight.bold)),
-                  ),
-                  hasNewOrder == false
-                      ? Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: <Widget>[
-                            TextButton(
-                              child: Text('HỦY',
-                                  style: TextStyle(
-                                      fontSize: 14, color: Colors.red)),
-                              onPressed: () {
-                                SweetAlert.show(context,
-                                    title: "Chú ý",
-                                    subtitle: "Bạn có muốn hủy đơn hàng ? ",
-                                    style: SweetAlertStyle.confirm,
-                                    showCancelButton: true,
-                                    onPress: (bool isConfirm) {
-                                  if (isConfirm) {
-                                    http
-                                        .delete(GlobalVariable.API_ENDPOINT +
-                                            'delete/' +
-                                            orderIdFromMarker +
-                                            '/shipper/' +
-                                            widget.userData.username)
-                                        .then((response) {
-                                      if (response.statusCode == 200) {
-                                        widget.data.removeWhere((element) =>
-                                            element.values.toList()[6] ==
-                                            orderIdFromMarker);
-                                        if (widget.data.length > 0) {
-                                          _setNewPin();
-                                          if (_markers.length == 1) {
-                                            polylineCoordinates.clear();
-                                            setState(() {
-                                              pinPillPosition = -150;
-                                            });
-                                          }
-                                        } else if (widget.data.length == 0) {
-                                          showDialog(
-                                              context: context,
-                                              barrierDismissible: false,
-                                              builder: (_) => new AlertDialog(
-                                                    title:
-                                                        new Text("Thông báo"),
-                                                    content: new Text(
-                                                      "Tất cả đơn hàng đã bị hủy",
-                                                      style: TextStyle(
-                                                          color: Colors.red,
-                                                          fontSize: 20),
-                                                    ),
-                                                    actions: <Widget>[
-                                                      FlatButton(
-                                                        child: Text(
-                                                            'Quay về màn hình chính!'),
-                                                        onPressed: () {
-                                                          Navigator
-                                                              .pushAndRemoveUntil(
-                                                            context,
-                                                            MaterialPageRoute(
-                                                                builder: (BuildContext
-                                                                        context) =>
-                                                                    MyHomeWidget(
-                                                                        userData:
-                                                                            widget.userData)),
-                                                            ModalRoute.withName(
-                                                                '/'),
-                                                          );
-                                                        },
-                                                      )
-                                                    ],
-                                                  ));
-                                        }
-                                      } else {}
+    return WillPopScope(
+        onWillPop: () => Future.value(false),
+        child: Scaffold(
+          body: Stack(
+            children: <Widget>[
+              GoogleMap(
+                  myLocationEnabled: true,
+                  compassEnabled: true,
+                  tiltGesturesEnabled: false,
+                  markers: _markers,
+                  polylines: _polylines,
+                  mapType: MapType.normal,
+                  initialCameraPosition: initialCameraPosition,
+                  onMapCreated: (GoogleMapController controller) {
+                    _controller.complete(controller);
+                  }),
+              AnimatedPositioned(
+                top: pinPillPosition + 10,
+                right: 0,
+                left: 0,
+                duration: Duration(milliseconds: 200),
+                child: Card(
+                  margin: EdgeInsets.only(top: 10.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    children: <Widget>[
+                      ListTile(
+                        leading: Image.asset(imagePath),
+                        title: Text(orderIdFromMarker,
+                            style:
+                                TextStyle(fontSize: 18, color: Colors.green)),
+                        subtitle: Text(
+                            utf8.decode(latin1.encode(addressNearby),
+                                allowMalformed: true),
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold)),
+                        trailing: Text(
+                            '${distanceToAddressDelivery.toStringAsFixed(2)}' +
+                                " km",
+                            style: TextStyle(
+                                fontSize: 17,
+                                color: Colors.orange,
+                                fontWeight: FontWeight.bold)),
+                      ),
+                      hasNewOrder == false
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: <Widget>[
+                                TextButton(
+                                  child: Text('HỦY',
+                                      style: TextStyle(
+                                          fontSize: 14, color: Colors.red)),
+                                  onPressed: () {
+                                    SweetAlert.show(context,
+                                        title: "Chú ý",
+                                        subtitle: "Bạn có muốn hủy đơn hàng ? ",
+                                        style: SweetAlertStyle.confirm,
+                                        showCancelButton: true,
+                                        onPress: (bool isConfirm) {
+                                      if (isConfirm) {
+                                        http
+                                            .delete(
+                                                GlobalVariable.API_ENDPOINT +
+                                                    'delete/' +
+                                                    orderIdFromMarker +
+                                                    '/shipper/' +
+                                                    widget.userData.username)
+                                            .then((response) {
+                                          if (response.statusCode == 200) {
+                                            widget.data.removeWhere((element) =>
+                                                element.values.toList()[6] ==
+                                                orderIdFromMarker);
+                                            if (widget.data.length > 0) {
+                                              _setNewPin();
+                                              if (_markers.length == 1) {
+                                                polylineCoordinates.clear();
+                                                setState(() {
+                                                  pinPillPosition = -150;
+                                                });
+                                              }
+                                            } else if (widget.data.length ==
+                                                0) {
+                                              showDialog(
+                                                  context: context,
+                                                  barrierDismissible: false,
+                                                  builder:
+                                                      (_) => new AlertDialog(
+                                                            title: new Text(
+                                                                "Thông báo"),
+                                                            content: new Text(
+                                                              "Tất cả đơn hàng đã bị hủy",
+                                                              style: TextStyle(
+                                                                  color: Colors
+                                                                      .red,
+                                                                  fontSize: 20),
+                                                            ),
+                                                            actions: <Widget>[
+                                                              FlatButton(
+                                                                child: Text(
+                                                                    'Quay về màn hình chính!'),
+                                                                onPressed: () {
+                                                                  Navigator
+                                                                      .pushAndRemoveUntil(
+                                                                    context,
+                                                                    MaterialPageRoute(
+                                                                        builder:
+                                                                            (BuildContext context) =>
+                                                                                MyHomeWidget(userData: widget.userData)),
+                                                                    ModalRoute
+                                                                        .withName(
+                                                                            '/'),
+                                                                  );
+                                                                },
+                                                              )
+                                                            ],
+                                                          ));
+                                            }
+                                          } else {}
+                                        });
+                                      }
                                     });
-                                  }
-                                });
-                              },
-                            ),
-                            SizedBox(width: 8),
-                            TextButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => CustomerPage(
-                                                orderID: orderIdFromMarker,
-                                              )));
-                                },
-                                child: Text("Thông tin khách hàng",
-                                    style: TextStyle(color: Colors.green))),
-                            SizedBox(width: 8),
-                          ],
-                        )
-                      : Row(),
-                ],
-              ),
-            ),
-          )
-          // MapPinPillComponent(
-          //     pinPillPosition: 0, currentlySelectedPin: currentlySelectedPin),
-        ],
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: hasNewOrder == false
-          ? FloatingActionButton.extended(
-              onPressed: () {
-                // print(widget.orderDetails.length.toString());
-                // _updateOrder();
-                List<Marker> listmarkers = _markers
-                    .where((marker) => marker.markerId.value != 'sourcePin')
-                    .toList();
-                if (listmarkers.length == 0) {
-                  getOrdersTimer.cancel();
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                        builder: (BuildContext context) => SuccessScreen(
-                              userData: widget.userData,
-                              data: widget.data,
-                            )),
-                    ModalRoute.withName('/'),
-                  );
-                } else {
-                  SweetAlert.show(context,
-                      title: "Chưa đến điểm giao hàng !",
-                      style: SweetAlertStyle.error);
-                }
-              },
-              label: Text('Hoàn Tất Giao Hàng'),
-              backgroundColor: Colors.green,
-            )
-          : FloatingActionButton.extended(
-              onPressed: () async {
-                // print(widget.orderDetails.length.toString());
-                // _updateOrder();
-                if (calculateDistance(
-                        currentLocation.latitude,
-                        currentLocation.longitude,
-                        destinationLocation.latitude,
-                        destinationLocation.longitude) <
-                    0.05) {
-                  getOrdersTimer.cancel();
-                  await _updateOrder();
-                  await _updateOrder();
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => Steps(
-                              item: tmpDetail,
-                              data: tmpList,
-                              userData: widget.userData,
-                            )),
-                  );
-                } else {
-                  SweetAlert.show(context,
-                      title: "Chưa đi đến siêu thị !",
-                      style: SweetAlertStyle.error);
-                }
-              },
-              label: Text('Đi siêu thị hoàn tất'),
-              backgroundColor: Colors.green,
-            ),
-    );
+                                  },
+                                ),
+                                SizedBox(width: 8),
+                                TextButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  CustomerPage(
+                                                    orderID: orderIdFromMarker,
+                                                  )));
+                                    },
+                                    child: Text("Thông tin khách hàng",
+                                        style: TextStyle(color: Colors.green))),
+                                SizedBox(width: 8),
+                              ],
+                            )
+                          : Row(),
+                    ],
+                  ),
+                ),
+              )
+              // MapPinPillComponent(
+              //     pinPillPosition: 0, currentlySelectedPin: currentlySelectedPin),
+            ],
+          ),
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerFloat,
+          floatingActionButton: hasNewOrder == false
+              ? FloatingActionButton.extended(
+                  onPressed: () {
+                    // print(widget.orderDetails.length.toString());
+                    // _updateOrder();
+                    List<Marker> listmarkers = _markers
+                        .where((marker) => marker.markerId.value != 'sourcePin')
+                        .toList();
+                    if (listmarkers.length == 0) {
+                      getOrdersTimer.cancel();
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                            builder: (BuildContext context) => SuccessScreen(
+                                  userData: widget.userData,
+                                  data: widget.data,
+                                )),
+                        ModalRoute.withName('/'),
+                      );
+                    } else {
+                      SweetAlert.show(context,
+                          title: "Chưa đến điểm giao hàng !",
+                          style: SweetAlertStyle.error);
+                    }
+                  },
+                  label: Text('Hoàn Tất Giao Hàng'),
+                  backgroundColor: Colors.green,
+                )
+              : FloatingActionButton.extended(
+                  onPressed: () async {
+                    // print(widget.orderDetails.length.toString());
+                    // _updateOrder();
+                    if (calculateDistance(
+                            currentLocation.latitude,
+                            currentLocation.longitude,
+                            destinationLocation.latitude,
+                            destinationLocation.longitude) <
+                        0.05) {
+                      getOrdersTimer.cancel();
+                      await _updateOrder();
+                      await _updateOrder();
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => Steps(
+                                  item: tmpDetail,
+                                  data: tmpList,
+                                  userData: widget.userData,
+                                )),
+                      );
+                    } else {
+                      SweetAlert.show(context,
+                          title: "Chưa đi đến siêu thị !",
+                          style: SweetAlertStyle.error);
+                    }
+                  },
+                  label: Text('Đi siêu thị hoàn tất'),
+                  backgroundColor: Colors.green,
+                ),
+        ));
   }
 
   Future<String> showPinsOnMap() async {

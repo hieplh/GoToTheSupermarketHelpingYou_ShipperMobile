@@ -9,38 +9,41 @@ class SuccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-          child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset('assets/shipper.png'),
-          SizedBox(
-            height: 50,
+    return WillPopScope(
+        onWillPop: () => Future.value(false),
+        child: Scaffold(
+          body: Center(
+              child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset('assets/shipper.png'),
+              SizedBox(
+                height: 50,
+              ),
+              Text(
+                "GIAO HÀNG THÀNH CÔNG",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          )),
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                    builder: (BuildContext context) =>
+                        MyHomeWidget(userData: userData)),
+                ModalRoute.withName('/'),
+              );
+            },
+            label: Text('Quay về màn hình chính'),
+            backgroundColor: Colors.green,
           ),
-          Text(
-            "GIAO HÀNG THÀNH CÔNG",
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      )),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(
-                builder: (BuildContext context) =>
-                    MyHomeWidget(userData: userData)),
-            ModalRoute.withName('/'),
-          );
-        },
-        label: Text('Quay về màn hình chính'),
-        backgroundColor: Colors.green,
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-    );
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerFloat,
+        ));
   }
 }
