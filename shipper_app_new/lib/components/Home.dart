@@ -398,6 +398,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
               builder: (BuildContext builderContext) {
                 dialogContext = context;
                 _timer = Timer(Duration(seconds: 10), () {
+                  rejectOrder();
                   Navigator.of(context).pop();
                 });
 
@@ -448,6 +449,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                     TextButton(
                       child: Text('Từ chối '),
                       onPressed: () {
+                        rejectOrder();
                         Navigator.pop(dialogContext);
                       },
                     ),
@@ -614,6 +616,14 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
         ),
       ),
     );
+  }
+
+  rejectOrder() async {
+    var response = await http.get(GlobalVariable.API_ENDPOINT +
+        "shipper/${widget.userData.username}/reject");
+    if (response.statusCode == 200) {
+      print("Reject done");
+    }
   }
 
   Widget _buildMap() {

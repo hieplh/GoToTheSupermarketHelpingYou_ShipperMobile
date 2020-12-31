@@ -284,7 +284,8 @@ class _HistoryDetailState extends State<HistoryDetail> {
                         TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 trailing: feedback == null
                     ? Text('Chưa có')
-                    : Text(feedback.feedback)),
+                    : Text( utf8.decode(latin1.encode(feedback.feedback),
+                    allowMalformed: true))),
             ListTile(
               leading: Text('Hình xác nhận',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),

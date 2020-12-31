@@ -583,11 +583,11 @@ class _CheckItemState extends State<CheckItem> {
               latin1.encode(oCcy.format(widget.data['priceOriginal']) + " vnd"),
               allowMalformed: true),
           style: TextStyle(
-              fontSize: 14, fontWeight: FontWeight.bold, color: Colors.red)),
+              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.red)),
       activeColor: Colors.green,
       checkColor: Colors.white,
       onChanged: (bool value) {
-        print("Image network la ${widget.data['image']}");
+
         setState(() {
           if (value == false) {
             Global.number--;

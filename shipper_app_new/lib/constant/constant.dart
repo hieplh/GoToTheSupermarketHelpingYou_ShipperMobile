@@ -1,5 +1,5 @@
 class GlobalVariable {
-  static String API_ENDPOINT = "http://192.168.1.5:1234/shm4/api/";
+  static String API_ENDPOINT = "http://192.168.1.2:1234/shm4/api/";
   static bool IS_LOG_OUT = false;
   static double ZOOM_VALUE = 16;
 
@@ -9,6 +9,4 @@ class GlobalVariable {
   RegExp regex = RegExp(r"([.]*0)(?!.*\d)");
   static String LAZY_IMAGE =
       "https://breakthrough.org/wp-content/uploads/2018/10/default-placeholder-image.png";
-
-
 }
