@@ -1,52 +1,46 @@
 class User {
   String username;
-  String firstName;
-  String middleName;
-  String lastName;
-  String email;
-  String phone;
+  String fullname;
   String dob;
   String role;
-  int numSuccess;
+  int numDelivery;
   int numCancel;
   double wallet;
+  int maxOrder;
+  double lat;
+  double lng;
   double rating;
   String vin;
-  int maxOrder;
 
-  User(
-      {this.username,
-      this.firstName,
-      this.middleName,
-      this.lastName,
-      this.email,
-      this.phone,
-      this.dob,
-      this.role,
-      this.numSuccess,
-      this.numCancel,
-      this.wallet,
-      this.rating,
-      this.vin,
-      this.maxOrder
-      });
+  User({
+    this.username,
+    this.fullname,
+    this.dob,
+    this.role,
+    this.numDelivery,
+    this.numCancel,
+    this.wallet,
+    this.maxOrder,
+    this.lat,
+    this.lng,
+    this.rating,
+    this.vin,
+  });
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-        username: json['username'],
-        firstName: json['firstName'],
-        middleName: json['middleName'],
-        lastName: json['lastName'],
-        email: json['email'],
-        phone: json['phone'],
-        dob: json['dob'],
-        role: json['role'],
-        numSuccess: json['numSuccess'],
-        numCancel: json['numCancel'],
-        wallet: json['wallet'],
-        rating: json['rating'],
-        vin: json['vin'],
-        maxOrder: json['maxOrder'],
+      username: json['username'],
+      fullname: json['fullname'],
+      dob: json['dob'],
+      role: json['role'],
+      numDelivery: json['numDelivery'],
+      numCancel: json['numCancel'],
+      wallet: json['wallet'],
+      maxOrder: json['maxOrder'],
+      lat: json['lat'],
+      lng: json['lng'],
+      rating: json['rating'],
+      vin: json['vin'],
     );
   }
 }

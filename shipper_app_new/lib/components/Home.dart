@@ -40,6 +40,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   TextEditingController newController = TextEditingController();
   TextEditingController validController = TextEditingController();
   int _counter = 0;
+
   int countbadges = 0;
   final oCcy = new NumberFormat("#,##0", "en_US");
   StreamController<int> _events;
@@ -49,6 +50,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
   Future<List<Orders>> futureOrders;
   int _selectedIndex = 0;
   var listOrders = new List<Order>();
+  var listOrdersFirst = new List<Order>();
   var currentList = new List<Order>();
   var listHistory = new List<History>();
   List<Map<String, dynamic>> data = new List<Map<String, dynamic>>();
@@ -225,6 +227,21 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
     return 'Success';
   }
 
+  Future<String> _getOrdersFirst() async {
+    await http
+        .get(GlobalVariable.API_ENDPOINT +
+            "shipper/" +
+            '${widget.userData.username}')
+        .then((response) {
+      print("Response don hang " + response.body);
+      setState(() {
+        Iterable list = json.decode(response.body);
+        listOrdersFirst = list.map((model) => Order.fromJson(model)).toList();
+      });
+    });
+    return 'Success';
+  }
+
   updateOrders() async {
     List<Map<String, dynamic>> data = new List<Map<String, dynamic>>();
     for (Order orderInList in listOrders) {
@@ -306,20 +323,19 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
     }
   }
 
-  _getHistory() {
-    http
-        .get(GlobalVariable.API_ENDPOINT +
-            "histories/shipper/" +
-            '${widget.userData.username}' +
-            "/page/1")
-        .then((response) {
-      if (response.body.length > 0) {
-        setState(() {
-          Iterable list = json.decode(response.body);
-          listHistory = list.map((model) => History.fromJson(model)).toList();
-        });
-      }
-    });
+  _getHistory() async {
+    var response = await http.get(GlobalVariable.API_ENDPOINT +
+        "histories/shipper/" +
+        '${widget.userData.username}' +
+        "/page/1");
+
+    if (response.body.isNotEmpty) {
+      setState(() {
+        Iterable list = json.decode(response.body);
+        listHistory = list.map((model) => History.fromJson(model)).toList();
+      });
+    }
+    ;
   }
 
   void showMarker() {
@@ -386,6 +402,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
     _firebaseMessaging.configure(
       onMessage: (message) async {
         print(message);
+        _getOrdersFirst();
         if (message['data']['compulsory'] == 'false') {
           _events = new StreamController<int>();
           _events.add(10);
@@ -398,7 +415,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
               builder: (BuildContext builderContext) {
                 dialogContext = context;
                 _timer = Timer(Duration(seconds: 10), () {
-                  rejectOrder();
+                  // rejectOrder();
                   Navigator.of(context).pop();
                 });
 
@@ -409,31 +426,68 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                       builder:
                           (BuildContext context, AsyncSnapshot<int> snapshot) {
                         return Container(
-                            height: 300,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: <Widget>[
-                                Text("Có đơn hàng mới gần đây"),
-                                Text("Bạn có muốn tiếp nhận ?"),
-                                Image.asset(
-                                  'assets/veget.png',
-                                  height: 150,
-                                  width: 150,
-                                ),
-                                new Expanded(
-                                    child: new Align(
-                                        alignment: Alignment.bottomCenter,
-                                        child: new Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
+                            height: MediaQuery.of(context)
+                                .size
+                                .height, // Change as per your requirement
+                            width: MediaQuery.of(context)
+                                .size
+                                .width, // Change as per your requirement
+                            child: SingleChildScrollView(
+                              physics: ScrollPhysics(),
+                              child: Column(
+                                children: [
+                                  Card(
+                                      child: Column(
+                                          mainAxisSize: MainAxisSize.min,
                                           children: <Widget>[
-                                            Text('${snapshot.data.toString()}',
+                                        ListTile(
+                                            leading: Icon(Icons.home),
+                                            title: Text(
+                                                utf8.decode(
+                                                    latin1.encode(
+                                                        listOrdersFirst
+                                                            .first.market.name),
+                                                    allowMalformed: true),
                                                 style: TextStyle(
-                                                    color: Colors.red,
-                                                    fontSize: 30)),
-                                          ],
-                                        ))),
-                              ],
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.green,
+                                                )),
+                                            subtitle: RichText(
+                                              text: TextSpan(
+                                                text: 'Số lượng đơn hàng :  ',
+                                                style:
+                                                    DefaultTextStyle.of(context)
+                                                        .style,
+                                                children: <TextSpan>[
+                                                  TextSpan(
+                                                      text:
+                                                          '${listOrdersFirst.length}',
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold)),
+                                                ],
+                                              ),
+                                            )),
+                                      ])),
+                                  ListTile(
+                                      leading: Text('Thời gian chấp nhận : '),
+                                      trailing: Text(
+                                          '${snapshot.data.toString()}',
+                                          style: TextStyle(
+                                              color: Colors.red,
+                                              fontSize: 20))),
+                                  ListView.builder(
+                                    physics: NeverScrollableScrollPhysics(),
+                                    shrinkWrap: true,
+                                    itemCount: listOrdersFirst.length,
+                                    itemBuilder:
+                                        (BuildContext context, int index) {
+                                      return OrderInfo(
+                                          data: listOrdersFirst[index]);
+                                    },
+                                  ),
+                                ],
+                              ),
                             ));
                       }),
                   actions: <Widget>[
@@ -449,7 +503,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                     TextButton(
                       child: Text('Từ chối '),
                       onPressed: () {
-                        rejectOrder();
+                        // rejectOrder();
                         Navigator.pop(dialogContext);
                       },
                     ),
@@ -934,10 +988,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                     "https://toppng.com/uploads/preview/roger-berry-avatar-placeholder-11562991561rbrfzlng6h.png"),
               ),
               title: Text(
-                utf8.decode(
-                    latin1.encode('${widget.userData.lastName} ' +
-                        '${widget.userData.middleName} ' +
-                        '${widget.userData.firstName} '),
+                utf8.decode(latin1.encode('${widget.userData.fullname} '),
                     allowMalformed: true),
                 style: TextStyle(
                   fontFamily: 'Montserrat',
@@ -983,7 +1034,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                   fontFamily: 'Montserrat',
                 ),
               ),
-              trailing: Text(widget.userData.phone),
+              trailing: Text(widget.userData.username),
             ),
             ListTile(
               leading: Icon(
@@ -1286,4 +1337,55 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
 
 class SignOut {
   static bool number = false;
+}
+
+class OrderInfo extends StatefulWidget {
+  final Order data;
+  OrderInfo({Key key, this.data}) : super(key: key);
+
+  @override
+  _OrderInfoState createState() => _OrderInfoState();
+}
+
+class _OrderInfoState extends State<OrderInfo> {
+  final oCcy = new NumberFormat("#,##0", "en_US");
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        ListTile(
+            leading:Text('Mã đơn hàng : ',style: TextStyle(fontWeight: FontWeight.bold))
+          ,
+            title: Text(
+          '${widget.data.id}',
+          style: TextStyle(color: Colors.red,fontSize: 14,fontWeight: FontWeight.bold),
+        )),
+
+        Card(
+          child: ListTile(
+            leading: Text('Số món'),
+            trailing: Text(oCcy.format(widget.data.detail.length)),
+          ),
+        ),
+        Card(
+          child: ListTile(
+            leading: Text('Tiền công mua hàng'),
+            trailing: Text(oCcy.format(widget.data.costShopping) + " vnd"),
+          ),
+        ),
+        Card(
+          child: ListTile(
+            leading: Text('Tiền ship'),
+            trailing: Text(oCcy.format(widget.data.costDelivery) + " vnd"),
+          ),
+        ),
+        Card(
+          child: ListTile(
+            leading: Text('Tổng tiền'),
+            trailing: Text(oCcy.format(widget.data.totalCost) + " vnd"),
+          ),
+        ),
+      ],
+    );
+  }
 }

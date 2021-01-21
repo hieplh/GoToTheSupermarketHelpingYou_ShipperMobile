@@ -258,8 +258,8 @@ class DetailScreenState extends State<DetailScreen> {
                               " kg"),
                           subtitle: Text(
                               oCcy.format(widget.list[index].detail[indexList]
-                                      .pricePaid) +
-                                  " vnd",
+                                      .priceOriginal) +
+                                  " vnd/1kg",
                               style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
@@ -300,7 +300,7 @@ class DetailScreenState extends State<DetailScreen> {
                         leading: Icon(Icons.money),
                         title: Text('Tổng tiền Sản Phẩm '),
                         trailing: Text(
-                            oCcy.format(widget.list[index].totalCost) + ' vnd'),
+                              '10,000 vnd'),
                       ),
                     ),
                     Card(
