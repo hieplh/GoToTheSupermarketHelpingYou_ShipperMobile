@@ -219,12 +219,16 @@ class DetailScreenState extends State<DetailScreen> {
   @override
   Widget build(BuildContext context) {
     List<double> listTotalWeight = new List<double>();
+    List<double> listTotalCost = new List<double>();
     for (Order orders in widget.list) {
       double total = 0;
+      double costTotal = 0;
       for (OrderDetail details in orders.detail) {
         total += details.weight;
+        costTotal += details.weight * details.priceOriginal;
       }
       listTotalWeight.add(total);
+      listTotalCost.add(costTotal);
     }
 
     // List<double> listTotalWeight = listOrderDetails.map((e.weight) => e.weight);
@@ -299,8 +303,7 @@ class DetailScreenState extends State<DetailScreen> {
                       child: ListTile(
                         leading: Icon(Icons.money),
                         title: Text('Tổng tiền Sản Phẩm '),
-                        trailing: Text(
-                              '10,000 vnd'),
+                        trailing: Text(oCcy.format(listTotalCost[index]) + " vnd"),
                       ),
                     ),
                     Card(

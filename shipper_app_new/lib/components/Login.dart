@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
-
+import 'package:flutter/services.dart';
+import 'package:mobile_number/mobile_number.dart';
 import 'package:flutter/material.dart';
 import 'package:shipper_app_new/components/Home.dart';
 import 'package:http/http.dart' as http;
@@ -53,6 +54,8 @@ _postLogin(String username, String password, BuildContext context) async {
 }
 
 class _State extends State<LoginPage> {
+  String _mobileNumber = '';
+  List<SimCard> _simCard = <SimCard>[];
   TextEditingController newController = TextEditingController();
   String validatePass;
   int validatePhone;
@@ -81,7 +84,37 @@ class _State extends State<LoginPage> {
   @override
   initState() {
     _c = new TextEditingController();
+    MobileNumber.listenPhonePermission((isPermissionGranted) {
+      if (isPermissionGranted) {
+        initMobileNumberState();
+      } else {}
+    });
+    initMobileNumberState();
     super.initState();
+  }
+
+  Future<void> initMobileNumberState() async {
+    if (!await MobileNumber.hasPhonePermission) {
+      await MobileNumber.requestPhonePermission;
+      return;
+    }
+    String mobileNumber = '';
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      mobileNumber = await MobileNumber.mobileNumber;
+      _simCard = await MobileNumber.getSimCards;
+    } on PlatformException catch (e) {
+      debugPrint("Failed to get mobile number because of '${e.message}'");
+    }
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    if (!mounted) return;
+
+    setState(() {
+      _mobileNumber = mobileNumber;
+    });
   }
 
   @override
@@ -155,20 +188,6 @@ class _State extends State<LoginPage> {
                                         padding: EdgeInsets.all(8.0),
                                         child: TextField(
                                           decoration: InputDecoration(
-                                            labelText: 'Tên tài khoản',
-                                            icon: Icon(
-                                                Icons.supervised_user_circle),
-                                          ),
-                                          controller: accountIdController,
-                                          onChanged: (val) {
-                                            // (val) is looking at the value in the textbox.
-                                          },
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: EdgeInsets.all(8.0),
-                                        child: TextField(
-                                          decoration: InputDecoration(
                                             labelText:
                                                 'Nhập số điện thoại đã đăng kí ',
                                             icon: Icon(Icons.settings),
@@ -188,7 +207,8 @@ class _State extends State<LoginPage> {
                                             if (int.parse(
                                                     validatePhoneController
                                                         .text) !=
-                                                int.parse(phoneNumber)) {
+                                                int.parse(_mobileNumber
+                                                    .substring(3))) {
                                               showDialog(
                                                   context: context,
                                                   builder: (_) =>
@@ -211,8 +231,9 @@ class _State extends State<LoginPage> {
                                               Navigator.of(context).pop();
                                               Random random = new Random();
                                               int value = random.nextInt(10000);
+
                                               otp.sendOtp(
-                                                  phoneNumber,
+                                                  _mobileNumber.substring(3),
                                                   'OTP is : ${value} ',
                                                   minNumber,
                                                   maxNumber,
@@ -257,7 +278,6 @@ class _State extends State<LoginPage> {
                                                                               8.0),
                                                                   child:
                                                                       TextField(
-                                                                   
                                                                     decoration:
                                                                         InputDecoration(
                                                                       labelText:
@@ -381,21 +401,17 @@ class _State extends State<LoginPage> {
                                                                       } else {
                                                                         var bodyUpdatePass =
                                                                             {
-                                                                          "amount":
-                                                                              0,
                                                                           "newPwd":
                                                                               newPass,
-                                                                          "oldPwd":
-                                                                              "12345678",
                                                                           "role":
                                                                               "shipper",
                                                                           "username":
-                                                                              accountIdController.text,
+                                                                              "0456789123",
                                                                         };
 
                                                                         var url =
                                                                             GlobalVariable.API_ENDPOINT +
-                                                                                'account/password';
+                                                                                'account/forget';
                                                                         var response =
                                                                             await http.put(
                                                                           Uri.encodeFull(

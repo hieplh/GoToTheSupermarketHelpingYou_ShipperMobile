@@ -3,6 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:shipper_app_new/components/RestarApp.dart';
+import 'package:shipper_app_new/components/Wallet.dart';
 import 'package:shipper_app_new/model/History.dart';
 import 'package:shipper_app_new/model/Orders.dart';
 import 'package:http/http.dart' as http;
@@ -415,7 +416,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
               builder: (BuildContext builderContext) {
                 dialogContext = context;
                 _timer = Timer(Duration(seconds: 10), () {
-                  // rejectOrder();
+                  rejectOrder();
                   Navigator.of(context).pop();
                 });
 
@@ -503,7 +504,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                     TextButton(
                       child: Text('Từ chối '),
                       onPressed: () {
-                        // rejectOrder();
+                        rejectOrder();
                         Navigator.pop(dialogContext);
                       },
                     ),
@@ -1114,8 +1115,17 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                   fontFamily: 'Montserrat',
                 ),
               ),
-              trailing: Text(oCcy.format(widget.userData.wallet) + " vnd"),
-              onTap: () {},
+              trailing: Text("Xem chi tiết"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => Wallet(
+                            userPhone: widget.userData.username,
+                            totalCostInWallet: widget.userData.wallet,
+                          )),
+                );
+              },
             ),
             ListTile(
               leading: Icon(
@@ -1354,16 +1364,16 @@ class _OrderInfoState extends State<OrderInfo> {
     return Column(
       children: <Widget>[
         ListTile(
-            leading:Text('Mã đơn hàng : ',style: TextStyle(fontWeight: FontWeight.bold))
-          ,
+            leading: Text('Mã đơn hàng : ',
+                style: TextStyle(fontWeight: FontWeight.bold)),
             title: Text(
-          '${widget.data.id}',
-          style: TextStyle(color: Colors.red,fontSize: 14,fontWeight: FontWeight.bold),
-        )),
-
+              '${widget.data.id}',
+              style: TextStyle(
+                  color: Colors.red, fontSize: 14, fontWeight: FontWeight.bold),
+            )),
         Card(
           child: ListTile(
-            leading: Text('Số món'),
+            leading: Text('Số lượng thực phẩm'),
             trailing: Text(oCcy.format(widget.data.detail.length)),
           ),
         ),
