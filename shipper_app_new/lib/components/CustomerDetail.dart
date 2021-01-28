@@ -72,7 +72,7 @@ class CustomerPageState extends State<CustomerPage> {
                     title: Text(
                       utf8.decode(
                           latin1.encode(
-                              '${snapshot.data.firstName} ${snapshot.data.middleName} ${snapshot.data.lastName}'),
+                              '${snapshot.data.fullname}'),
                           allowMalformed: true),
                       style: TextStyle(
                         fontFamily: 'Montserrat',
@@ -81,7 +81,7 @@ class CustomerPageState extends State<CustomerPage> {
                       ),
                     ),
                     subtitle: Text(
-                      '${snapshot.data.username}',
+                      '${snapshot.data.dob}',
                       style: TextStyle(
                         fontFamily: 'Montserrat',
                         fontSize: 15.0,
@@ -102,9 +102,9 @@ class CustomerPageState extends State<CustomerPage> {
                         fontFamily: 'Montserrat',
                       ),
                     ),
-                    trailing: Text("${snapshot.data.phone}"),
+                    trailing: Text("${snapshot.data.username}"),
                     onTap: () {
-                      _makingPhoneCall("${snapshot.data.phone}");
+                      _makingPhoneCall("${snapshot.data.username}");
                     },
                   ),
                   ListTile(

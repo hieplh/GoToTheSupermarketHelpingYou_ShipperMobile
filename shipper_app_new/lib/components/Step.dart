@@ -428,7 +428,7 @@ class _StepsState extends State<Steps> {
     // final patternFormat = new NumberFormat("#,##0", "en_US");
     var arrayOrderDetail = tmp[indexListDetail].values.toList()[5];
     double sum = arrayOrderDetail
-        .map((expense) => expense['priceOriginal'] * expense['weight'])
+        .map((expense) => expense['pricePaid'] * expense['weight'])
         .fold(0, (prev, amount) => prev + amount);
     return RichText(
       text: TextSpan(
@@ -581,7 +581,7 @@ class _CheckItemState extends State<CheckItem> {
       subtitle: Text(
           utf8.decode(
               latin1.encode(
-                  oCcy.format(widget.data['priceOriginal']) + " vnd/1kg"),
+                  oCcy.format(widget.data['pricePaid']) + " vnd/1kg"),
               allowMalformed: true),
           style: TextStyle(
               fontSize: 16, fontWeight: FontWeight.bold, color: Colors.red)),

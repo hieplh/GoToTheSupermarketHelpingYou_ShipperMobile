@@ -1,14 +1,11 @@
-import 'dart:async';
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shipper_app_new/constant/constant.dart';
 import 'package:shipper_app_new/model/Record.dart';
-
 import 'package:syncfusion_flutter_charts/charts.dart';
-import 'package:syncfusion_flutter_charts/sparkcharts.dart';
 import 'package:direct_select/direct_select.dart';
+import 'package:month_picker_dialog/month_picker_dialog.dart';
 
 import 'package:intl/intl.dart';
 
@@ -25,6 +22,7 @@ class Wallet extends StatefulWidget {
 }
 
 class _WalletState extends State<Wallet> {
+  DateTime selectedDate = DateTime.now();
   var recordMonth = new StatisticMonth();
   final oCcy = new NumberFormat("#,##0", "en_US");
   var listRecords = new List<Record>();
@@ -57,7 +55,7 @@ class _WalletState extends State<Wallet> {
 
   fetchRecord() async {
     var response = await http.get(GlobalVariable.API_ENDPOINT +
-        'trans/${widget.userPhone}/${currentMonth.toString()}');
+        'trans/${widget.userPhone}/${DateFormat('MM-yyyy').format(selectedDate)}');
 
     if (response.statusCode == 200) {
       recordMonth = StatisticMonth.fromJson(jsonDecode(response.body));
@@ -69,6 +67,9 @@ class _WalletState extends State<Wallet> {
       throw Exception('Failed to load album');
     }
   }
+
+
+
 
   @override
   void initState() {
@@ -86,6 +87,8 @@ class _WalletState extends State<Wallet> {
     return new Scaffold(
       appBar: new AppBar(
         title: new Text('Ví của tôi'),
+        backgroundColor: Colors.green,
+        centerTitle: true,
       ),
       body: listRecords == null
           ? CircularProgressIndicator()
@@ -98,34 +101,49 @@ class _WalletState extends State<Wallet> {
                     Card(
                         child: ListTile(
                       leading: Icon(Icons.payment),
-                      title: Text('Tổng số dư trong ví'),
-                      trailing:
-                          Text(oCcy.format(widget.totalCostInWallet) + " vnd"),
-                    )),
-                    Padding(
-                      padding: EdgeInsets.only(left: 10.0, top: 10.0),
-                      child: Text(
-                        "Chọn tháng",
+                      title: Text(
+                        'Tổng số dư trong ví',
+                        style: (TextStyle(fontSize: 18)),
+                      ),
+                      trailing: Text(
+                        oCcy.format(widget.totalCostInWallet) + " vnd",
                         style: TextStyle(
-                            color: Colors.grey, fontWeight: FontWeight.w500),
+                            fontWeight: FontWeight.bold, fontSize: 20),
+                      ),
+                    )),
+                    ListTile(
+                      leading: Text(
+                        'Chọn thời gian để xem thống kê',
+                        style: (TextStyle(fontSize: 18)),
                       ),
                     ),
-                    DirectSelect(
-                        itemExtent: 40.0,
-                        selectedIndex: selectedIndex1,
-                        backgroundColor: Colors.white,
-                        child: MySelectionItem(
-                          isForList: false,
-                          title: elements1[selectedIndex1],
-                        ),
-                        onSelectedItemChanged: (index) {
-                          setState(() {
-                            selectedIndex1 = index;
-                            currentMonth = int.parse(elements1[index]);
+                    Card(
+                        child: ListTile(
+                      title: Text(
+                        DateFormat('MM-yyyy').format(selectedDate),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, color: Colors.green),
+                      ),
+                      trailing: RaisedButton(
+                        child: Text("Thay đổi"),
+                        onPressed: () {
+                          showMonthPicker(
+                            context: context,
+                            firstDate: DateTime(DateTime.now().year - 1, 5),
+                            lastDate: DateTime(DateTime.now().year + 1, 9),
+                            initialDate: selectedDate,
+                            locale: Locale("en"),
+                          ).then((date) {
+                            if (date != null) {
+                              setState(() {
+                                selectedDate = date;
+                              });
+                              fetchRecord();
+                            }
                           });
-                          fetchRecord();
                         },
-                        items: _buildItems1()),
+                      ),
+                    )),
                     Center(
                         child: Container(
                             child: SfCartesianChart(
@@ -133,28 +151,38 @@ class _WalletState extends State<Wallet> {
                                 // Initialize category axis
 
                                 primaryXAxis: CategoryAxis(
+                                    labelStyle: ChartTextStyle(
+                                      color: Colors.deepOrange,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                     labelIntersectAction:
                                         AxisLabelIntersectAction.multipleRows),
                                 title: ChartTitle(
-                                    text:
-                                        'Thống kê thu nhập trong tháng ${currentMonth}\n '),
+                                    text: 'Thống kê thu nhập trong tháng ${DateFormat('MM-yyyy').format(selectedDate)}'),
                                 tooltipBehavior: TooltipBehavior(enable: true),
                                 legend: Legend(
+                                    textStyle: ChartTextStyle(
+
+                                        fontSize: 15,
+
+                                        fontWeight: FontWeight.w900),
                                     isVisible: true,
                                     position: LegendPosition.bottom),
                                 series: <CartesianSeries>[
                           ColumnSeries<Record, String>(
-                              name: "Tiền lời (vnd)",
+                              color: Colors.green,
+                              name: "Tiền thu nhập (vnd)",
                               dataSource: listRecords,
                               xValueMapper: (Record data, _) =>
                                   "Ngày " + data.fromdate,
                               yValueMapper: (Record data, _) =>
-                                  data.amountEarned,
+                                  data.amountEarned.round(),
                               dataLabelSettings: DataLabelSettings(
                                   // Renders the data label
                                   isVisible: true)),
                           ColumnSeries<Record, String>(
-                              name: "Tiền bỏ ra (vnd)",
+                              name: "Tiền bị trừ vì hủy đơn (vnd)",
                               dataSource: listRecords,
                               xValueMapper: (Record data, _) =>
                                   "Ngày " + data.fromdate,
@@ -164,6 +192,38 @@ class _WalletState extends State<Wallet> {
                                   // Renders the data label
                                   isVisible: true)),
                         ]))),
+                    Card(child: ListTile(title: Text('Thu Chi'))),
+                    ListTile(
+                      leading: Icon(Icons.countertops_outlined),
+                      title: Text('Tổng'),
+                      trailing: Text(recordMonth.amount != null
+                          ? oCcy.format(recordMonth.amount.amountTotal) + " vnd"
+                          : "0"),
+                    ),
+                    ListTile(
+                      leading: Icon(Icons.backup),
+                      title: Text('Tiền mua hàng'),
+                      trailing: Text(recordMonth.amount != null
+                          ? oCcy.format(recordMonth.amount.amountRefund) +
+                              " vnd"
+                          : "0"),
+                    ),
+                    ListTile(
+                      leading: Icon(Icons.assignment),
+                      title: Text('Tiền thu nhập'),
+                      trailing: Text(recordMonth.amount != null
+                          ? oCcy.format(recordMonth.amount.amountEarned) +
+                              " vnd"
+                          : "0"),
+                    ),
+                    ListTile(
+                      leading: Icon(Icons.local_atm),
+                      title: Text('Tiền bị trừ vì hủy đơn'),
+                      trailing: Text(recordMonth.amount != null
+                          ? oCcy.format(recordMonth.amount.amountCharged) +
+                              " vnd"
+                          : "0"),
+                    ),
                     Card(child: ListTile(title: Text('Đơn hàng'))),
                     ListTile(
                       leading: Icon(Icons.border_all),
@@ -193,38 +253,8 @@ class _WalletState extends State<Wallet> {
                           ? recordMonth.numberOrders.numDone.toString()
                           : "0"),
                     ),
-                    Card(child: ListTile(title: Text('Thu Chi'))),
-                    ListTile(
-                      leading: Icon(Icons.countertops_outlined),
-                      title: Text('Tổng'),
-                      trailing: Text(recordMonth.amount != null
-                          ? oCcy.format(recordMonth.amount.amountTotal) + " vnd"
-                          : "0"),
-                    ),
-                    ListTile(
-                      leading: Icon(Icons.backup),
-                      title: Text('Tiền hệ thống hoàn trả'),
-                      trailing: Text(recordMonth.amount != null
-                          ? oCcy.format(recordMonth.amount.amountRefund) +
-                              " vnd"
-                          : "0"),
-                    ),
-                    ListTile(
-                      leading: Icon(Icons.assignment),
-                      title: Text('Tiền lời'),
-                      trailing: Text(recordMonth.amount != null
-                          ? oCcy.format(recordMonth.amount.amountEarned) +
-                              " vnd"
-                          : "0"),
-                    ),
-                    ListTile(
-                      leading: Icon(Icons.local_atm),
-                      title: Text('Tiền bị trừ'),
-                      trailing: Text(recordMonth.amount != null
-                          ? oCcy.format(recordMonth.amount.amountCharged) +
-                              " vnd"
-                          : "0"),
-                    ),
+                    SizedBox(height: 50),
+
                   ])),
     );
   }

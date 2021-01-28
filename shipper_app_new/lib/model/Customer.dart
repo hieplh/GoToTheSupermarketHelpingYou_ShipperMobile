@@ -1,11 +1,8 @@
 class Customer {
-  String id;
   String username;
-  String firstName;
-  String middleName;
-  String lastName;
-  String email;
-  String phone;
+
+  String fullname;
+
   String dob;
   String role;
   int numSuccess;
@@ -14,13 +11,8 @@ class Customer {
   String addresses;
 
   Customer(
-      {this.id,
-      this.username,
-      this.firstName,
-      this.middleName,
-      this.lastName,
-      this.email,
-      this.phone,
+      {this.username,
+      this.fullname,
       this.dob,
       this.role,
       this.numSuccess,
@@ -30,13 +22,8 @@ class Customer {
 
   factory Customer.fromJson(Map<String, dynamic> json) {
     return Customer(
-      id: json['id'],
       username: json['username'],
-      firstName: json['firstName'],
-      middleName: json['middleName'],
-      lastName: json['lastName'],
-      email: json['email'],
-      phone: json['phone'],
+      fullname: json['fullname'],
       dob: json['dob'],
       role: json['role'],
       numSuccess: json['numSuccess'],

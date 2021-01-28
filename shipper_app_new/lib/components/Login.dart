@@ -237,7 +237,7 @@ class _State extends State<LoginPage> {
                                                   'OTP is : ${value} ',
                                                   minNumber,
                                                   maxNumber,
-                                                  countryCode);
+                                                  "+1");
 
                                               showDialog(
                                                   context: context,

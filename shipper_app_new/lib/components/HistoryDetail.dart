@@ -50,6 +50,14 @@ class _HistoryDetailState extends State<HistoryDetail> {
     });
   }
 
+  double getTotalCostInOrderDetail(List<OrderDetail> details) {
+    double result = 0;
+    for (OrderDetail detail in details) {
+      result += detail.weight * detail.pricePaid;
+    }
+    return result;
+  }
+
   _getNameFood(String foodId) {
     switch (foodId) {
       case "BACHIHEO":
@@ -153,7 +161,6 @@ class _HistoryDetailState extends State<HistoryDetail> {
   }
 
   _getFeecBack() async {
-
     var responseFeedBack = await http
         .get(GlobalVariable.API_ENDPOINT + "feedback/${widget.orderID}");
     if (responseFeedBack.statusCode == 200) {
@@ -213,6 +220,25 @@ class _HistoryDetailState extends State<HistoryDetail> {
               ),
             ),
             ListTile(
+              leading: Text(
+                "Thông tin khách hàng",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              trailing: TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              CustomerPage(orderID: widget.orderID)),
+                    );
+                  },
+                  child: Text(
+                    'Xem Thông tin',
+                    style: TextStyle(color: Colors.green),
+                  )),
+            ),
+            ListTile(
               leading: Text('Mặt hàng',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
@@ -225,7 +251,8 @@ class _HistoryDetailState extends State<HistoryDetail> {
                   leading: Image.network(listOrderDetail[indexList].food.image),
                   title: Text(_getNameFood(listOrderDetail[indexList].food.id)),
                   trailing: Text(
-                      listOrderDetail[indexList].weight.toString() + " kg"),
+                      listOrderDetail[indexList].weight.toInt().toString() +
+                          " x"),
                   subtitle: Text(
                       oCcy.format(listOrderDetail[indexList].priceOriginal) +
                           " vnd",
@@ -253,9 +280,12 @@ class _HistoryDetailState extends State<HistoryDetail> {
                   )),
             ),
             ListTile(
-              leading: Text('Tổng tiền đơn hàng',
+              leading: Text('Tổng tiền sản phẩm',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              trailing: Text(oCcy.format(widget.totalCost) + " " + " vnd",
+              trailing: Text(
+                  oCcy.format(getTotalCostInOrderDetail(listOrderDetail)) +
+                      " " +
+                      " vnd",
                   style: TextStyle(
                     fontSize: 16,
                   )),
@@ -284,8 +314,8 @@ class _HistoryDetailState extends State<HistoryDetail> {
                         TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 trailing: feedback == null
                     ? Text('Chưa có')
-                    : Text( utf8.decode(latin1.encode(feedback.feedback),
-                    allowMalformed: true))),
+                    : Text(utf8.decode(latin1.encode(feedback.feedback),
+                        allowMalformed: true))),
             ListTile(
               leading: Text('Hình xác nhận',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -299,25 +329,7 @@ class _HistoryDetailState extends State<HistoryDetail> {
                 height: 150,
                 width: 200,
                 fit: BoxFit.fill),
-            ListTile(
-              leading: Text(
-                "Thông tin khách hàng",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              trailing: TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              CustomerPage(orderID: widget.orderID)),
-                    );
-                  },
-                  child: Text(
-                    'Xem Thông tin',
-                    style: TextStyle(color: Colors.green),
-                  )),
-            ),
+            SizedBox(height: 50),
           ],
         ),
       ),

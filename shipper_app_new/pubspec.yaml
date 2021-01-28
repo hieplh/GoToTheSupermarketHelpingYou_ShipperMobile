@@ -58,6 +58,7 @@ dependencies:
   syncfusion_flutter_charts: ^18.4.35
   direct_select: ^1.1.0
   mobile_number: ^1.0.3
+  month_picker_dialog: ^0.3.3
 dev_dependencies:
   flutter_test:
     sdk: flutter

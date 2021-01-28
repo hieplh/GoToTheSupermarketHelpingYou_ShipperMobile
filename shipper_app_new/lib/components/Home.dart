@@ -369,7 +369,7 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
 
   Timer _timer;
   void _startTimer() {
-    _counter = 10;
+    _counter = 60;
     if (_timer != null) {
       _timer.cancel();
     }
@@ -403,139 +403,141 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
     _firebaseMessaging.configure(
       onMessage: (message) async {
         print(message);
-        _getOrdersFirst();
-        if (message['data']['compulsory'] == 'false') {
-          _events = new StreamController<int>();
-          _events.add(10);
-          _startTimer();
-          Timer _timer;
-          BuildContext dialogContext;
-          showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (BuildContext builderContext) {
-                dialogContext = context;
-                _timer = Timer(Duration(seconds: 10), () {
-                  rejectOrder();
-                  Navigator.of(context).pop();
-                });
+        _getOrdersFirst().then((value) {
+          if (message['data']['compulsory'] == 'false') {
+            _events = new StreamController<int>();
+            _events.add(60);
+            _startTimer();
+            Timer _timer;
+            BuildContext dialogContext;
+            showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (BuildContext builderContext) {
+                  dialogContext = context;
+                  _timer = Timer(Duration(seconds: 60), () {
+                    rejectOrder();
+                    Navigator.of(context).pop();
+                  });
 
-                return AlertDialog(
-                  title: Text("Thông báo"),
-                  content: StreamBuilder<int>(
-                      stream: _events.stream,
-                      builder:
-                          (BuildContext context, AsyncSnapshot<int> snapshot) {
-                        return Container(
-                            height: MediaQuery.of(context)
-                                .size
-                                .height, // Change as per your requirement
-                            width: MediaQuery.of(context)
-                                .size
-                                .width, // Change as per your requirement
-                            child: SingleChildScrollView(
-                              physics: ScrollPhysics(),
-                              child: Column(
-                                children: [
-                                  Card(
-                                      child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: <Widget>[
-                                        ListTile(
-                                            leading: Icon(Icons.home),
-                                            title: Text(
-                                                utf8.decode(
-                                                    latin1.encode(
-                                                        listOrdersFirst
-                                                            .first.market.name),
-                                                    allowMalformed: true),
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.green,
-                                                )),
-                                            subtitle: RichText(
-                                              text: TextSpan(
-                                                text: 'Số lượng đơn hàng :  ',
-                                                style:
-                                                    DefaultTextStyle.of(context)
-                                                        .style,
-                                                children: <TextSpan>[
-                                                  TextSpan(
-                                                      text:
-                                                          '${listOrdersFirst.length}',
-                                                      style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold)),
-                                                ],
-                                              ),
-                                            )),
-                                      ])),
-                                  ListTile(
-                                      leading: Text('Thời gian chấp nhận : '),
-                                      trailing: Text(
-                                          '${snapshot.data.toString()}',
-                                          style: TextStyle(
-                                              color: Colors.red,
-                                              fontSize: 20))),
-                                  ListView.builder(
-                                    physics: NeverScrollableScrollPhysics(),
-                                    shrinkWrap: true,
-                                    itemCount: listOrdersFirst.length,
-                                    itemBuilder:
-                                        (BuildContext context, int index) {
-                                      return OrderInfo(
-                                          data: listOrdersFirst[index]);
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ));
-                      }),
-                  actions: <Widget>[
-                    TextButton(
-                      child: Text('Chấp nhận'),
-                      onPressed: () async {
-                        await _getOrders().then((value) {
-                          updateOrders();
-                        });
-                        await Navigator.pop(dialogContext);
-                      },
-                    ),
-                    TextButton(
-                      child: Text('Từ chối '),
-                      onPressed: () {
-                        rejectOrder();
-                        Navigator.pop(dialogContext);
-                      },
-                    ),
-                  ],
-                );
-              }).then((val) {
-            if (_timer.isActive) {
-              _timer.cancel();
-            }
-          });
-        } else if (message['data']['isCancel'] == 'true') {
-          setState(() {
-            listOrders
-                .removeWhere((item) => item.id == message['data']['orderId']);
-          });
-          showDialog(
-              context: context,
-              builder: (_) => new AlertDialog(
-                    title: new Text("Thông báo"),
-                    content: new Text(
-                        'Đơn hàng ${message['data']['orderId']} đã bị hủy'),
+                  return AlertDialog(
+                    title: Text("Thông báo"),
+                    content: StreamBuilder<int>(
+                        stream: _events.stream,
+                        builder: (BuildContext context,
+                            AsyncSnapshot<int> snapshot) {
+                          return Container(
+                              height: MediaQuery.of(context)
+                                  .size
+                                  .height, // Change as per your requirement
+                              width: MediaQuery.of(context)
+                                  .size
+                                  .width, // Change as per your requirement
+                              child: SingleChildScrollView(
+                                physics: ScrollPhysics(),
+                                child: Column(
+                                  children: [
+                                    Card(
+                                        child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: <Widget>[
+                                          ListTile(
+                                              leading: Icon(Icons.home),
+                                              title: Text(
+                                                  utf8.decode(
+                                                      latin1.encode(
+                                                          listOrdersFirst.first
+                                                              .market.name),
+                                                      allowMalformed: true),
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.green,
+                                                  )),
+                                              subtitle: RichText(
+                                                text: TextSpan(
+                                                  text: 'Số lượng đơn hàng :  ',
+                                                  style: DefaultTextStyle.of(
+                                                          context)
+                                                      .style,
+                                                  children: <TextSpan>[
+                                                    TextSpan(
+                                                        text:
+                                                            '${listOrdersFirst.length}',
+                                                        style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold)),
+                                                  ],
+                                                ),
+                                              )),
+                                        ])),
+                                    ListTile(
+                                        leading: Text('Thời gian chấp nhận : '),
+                                        trailing: Text(
+                                            '${snapshot.data.toString()}',
+                                            style: TextStyle(
+                                                color: Colors.red,
+                                                fontSize: 20))),
+                                    ListView.builder(
+                                      physics: NeverScrollableScrollPhysics(),
+                                      shrinkWrap: true,
+                                      itemCount: listOrdersFirst.length,
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        return OrderInfo(
+                                            data: listOrdersFirst[index]);
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ));
+                        }),
                     actions: <Widget>[
-                      FlatButton(
-                        child: Text('OK'),
+                      TextButton(
+                        child: Text('Chấp nhận'),
                         onPressed: () async {
-                          await Navigator.of(context).pop();
+                          await _getOrders().then((value) {
+                            updateOrders();
+                          });
+                          await Navigator.pop(dialogContext);
                         },
-                      )
+                      ),
+                      TextButton(
+                        child: Text('Từ chối '),
+                        onPressed: () {
+                          rejectOrder();
+                          Navigator.pop(dialogContext);
+                        },
+                      ),
                     ],
-                  ));
-        }
+                  );
+                }).then((val) {
+              if (_timer.isActive) {
+                _timer.cancel();
+              }
+            });
+          } else if (message['data']['isCancel'] == 'true') {
+            setState(() {
+              listOrders
+                  .removeWhere((item) => item.id == message['data']['orderId']);
+            });
+            showDialog(
+                context: context,
+                builder: (_) => new AlertDialog(
+                      title: new Text("Thông báo"),
+                      content: new Text(
+                          'Đơn hàng ${message['data']['orderId']} đã bị hủy'),
+                      actions: <Widget>[
+                        FlatButton(
+                          child: Text('OK'),
+                          onPressed: () async {
+                            await Navigator.of(context).pop();
+                          },
+                        )
+                      ],
+                    ));
+          }
+        });
       },
       onResume: (message) async {
         // setState(() {
@@ -681,6 +683,14 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
     }
   }
 
+  double getTotalCostInOrderDetail(List<OrderDetail> details) {
+    double result = 0;
+    for (OrderDetail detail in details) {
+      result += detail.weight * detail.pricePaid;
+    }
+    return result;
+  }
+
   Widget _buildMap() {
     CameraPosition initialCameraPosition =
         CameraPosition(zoom: 16, target: LatLng(10.8414, 106.7462));
@@ -772,9 +782,10 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                           ListTile(
                             leading: Image.asset("assets/order.jpg"),
                             title: Text(listOrders[indexList].id),
-                            trailing: Text(
-                                oCcy.format(listOrders[indexList].totalCost) +
-                                    " vnd"),
+                            trailing: Text(oCcy.format(
+                                    getTotalCostInOrderDetail(
+                                        listOrders[indexList].detail)) +
+                                " vnd"),
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
@@ -940,8 +951,10 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                             ),
                           );
                         },
-                        trailing: Text(
-                            oCcy.format(listHistory[index].totalCost) + " vnd"),
+                        trailing: Text(oCcy.format(
+                                listHistory[index].costShopping +
+                                    listHistory[index].status) +
+                            " vnd"),
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
@@ -1115,17 +1128,19 @@ class _MyHomeWidgetState extends State<MyHomeWidget> {
                   fontFamily: 'Montserrat',
                 ),
               ),
-              trailing: Text("Xem chi tiết"),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => Wallet(
-                            userPhone: widget.userData.username,
-                            totalCostInWallet: widget.userData.wallet,
-                          )),
-                );
-              },
+              trailing: TextButton(
+                child: Text("Xem chi tiết"),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => Wallet(
+                              userPhone: widget.userData.username,
+                              totalCostInWallet: widget.userData.wallet,
+                            )),
+                  );
+                },
+              ),
             ),
             ListTile(
               leading: Icon(
@@ -1361,6 +1376,11 @@ class _OrderInfoState extends State<OrderInfo> {
   final oCcy = new NumberFormat("#,##0", "en_US");
   @override
   Widget build(BuildContext context) {
+    double costTotal = 0;
+    for (OrderDetail detail in widget.data.detail) {
+      costTotal += detail.weight * detail.pricePaid;
+    }
+
     return Column(
       children: <Widget>[
         ListTile(
@@ -1379,22 +1399,27 @@ class _OrderInfoState extends State<OrderInfo> {
         ),
         Card(
           child: ListTile(
-            leading: Text('Tiền công mua hàng'),
-            trailing: Text(oCcy.format(widget.data.costShopping) + " vnd"),
+            leading: Text('Tổng tiền mua hàng'),
+            trailing: Text(oCcy.format(costTotal) + " vnd"),
           ),
         ),
         Card(
           child: ListTile(
-            leading: Text('Tiền ship'),
-            trailing: Text(oCcy.format(widget.data.costDelivery) + " vnd"),
+            leading: Text('Tổng tiền thu nhập '),
+            trailing: Text(oCcy.format(
+                    widget.data.costShopping + widget.data.costDelivery) +
+                " vnd"),
           ),
         ),
-        Card(
-          child: ListTile(
-            leading: Text('Tổng tiền'),
-            trailing: Text(oCcy.format(widget.data.totalCost) + " vnd"),
-          ),
+        ListTile(
+          leading: Text('Địa chỉ giao hàng',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
         ),
+        ListTile(
+            leading: Text(
+                utf8.decode(latin1.encode(widget.data.addressDelivery.address),
+                    allowMalformed: true),
+                style: TextStyle(fontSize: 14)))
       ],
     );
   }

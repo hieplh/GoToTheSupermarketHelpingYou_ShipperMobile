@@ -225,7 +225,7 @@ class DetailScreenState extends State<DetailScreen> {
       double costTotal = 0;
       for (OrderDetail details in orders.detail) {
         total += details.weight;
-        costTotal += details.weight * details.priceOriginal;
+        costTotal += details.weight * details.pricePaid;
       }
       listTotalWeight.add(total);
       listTotalCost.add(costTotal);
@@ -257,12 +257,12 @@ class DetailScreenState extends State<DetailScreen> {
                           title: Text(_getNameFood(
                               widget.list[index].detail[indexList].food.id)),
                           trailing: Text(widget
-                                  .list[index].detail[indexList].weight
+                                  .list[index].detail[indexList].weight.toInt()
                                   .toString() +
-                              " kg"),
+                              "x"),
                           subtitle: Text(
                               oCcy.format(widget.list[index].detail[indexList]
-                                      .priceOriginal) +
+                                      .pricePaid) +
                                   " vnd/1kg",
                               style: TextStyle(
                                   fontSize: 14,
@@ -303,7 +303,8 @@ class DetailScreenState extends State<DetailScreen> {
                       child: ListTile(
                         leading: Icon(Icons.money),
                         title: Text('Tổng tiền Sản Phẩm '),
-                        trailing: Text(oCcy.format(listTotalCost[index]) + " vnd"),
+                        trailing:
+                            Text(oCcy.format(listTotalCost[index]) + " vnd"),
                       ),
                     ),
                     Card(
@@ -327,11 +328,10 @@ class DetailScreenState extends State<DetailScreen> {
                     Card(
                       child: ListTile(
                         leading: Icon(Icons.receipt),
-                        title: Text('Tiền được nhận '),
+                        title: Text('Tiền thu nhập '),
                         trailing: Text(oCcy.format(
                                 ((widget.list[index].costShopping +
-                                        widget.list[index].costDelivery) /
-                                    2)) +
+                                    widget.list[index].costDelivery))) +
                             ' vnd'),
                       ),
                     ),
@@ -378,6 +378,7 @@ class DetailScreenState extends State<DetailScreen> {
                         subtitle: Text(widget.list[index].timeDelivery),
                       ),
                     ),
+                    SizedBox(height: 50),
                   ],
                 ),
               ),
