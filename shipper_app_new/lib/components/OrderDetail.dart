@@ -251,13 +251,18 @@ class DetailScreenState extends State<DetailScreen> {
                           leading:
                               widget.list[index].detail[indexList].food.image !=
                                       null
-                                  ? Image.network(widget
-                                      .list[index].detail[indexList].food.image)
+                                  ? Image.network(
+                                      widget.list[index].detail[indexList].food
+                                          .image,
+                                      height: 150,
+                                      width: 150,
+                                    )
                                   : Image.network(GlobalVariable.LAZY_IMAGE),
                           title: Text(_getNameFood(
                               widget.list[index].detail[indexList].food.id)),
                           trailing: Text(widget
-                                  .list[index].detail[indexList].weight.toInt()
+                                  .list[index].detail[indexList].weight
+                                  .toInt()
                                   .toString() +
                               "x"),
                           subtitle: Text(
@@ -335,14 +340,7 @@ class DetailScreenState extends State<DetailScreen> {
                             ' vnd'),
                       ),
                     ),
-                    Card(
-                      child: ListTile(
-                        leading: Icon(Icons.shop),
-                        title: Text('Tổng khối lượng '),
-                        trailing:
-                            Text(oCcy.format(listTotalWeight[index]) + " kg"),
-                      ),
-                    ),
+
                     // Card(
                     //   child: ListTile(
                     //     leading: Icon(Icons.directions_train),

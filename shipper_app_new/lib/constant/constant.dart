@@ -1,5 +1,5 @@
 class GlobalVariable {
-  static String API_ENDPOINT = "http://192.168.1.2:1234/shm4/api/";
+  static String API_ENDPOINT = "http://smhu.ddns.net:8084/smhu/api/";
   static bool IS_LOG_OUT = false;
   static double ZOOM_VALUE = 16;
 

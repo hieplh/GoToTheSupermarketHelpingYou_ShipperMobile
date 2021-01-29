@@ -576,12 +576,11 @@ class _CheckItemState extends State<CheckItem> {
       title: Text(_getNameFood(widget.data['food']['id']) +
           "      " +
           widget.data['weight'].toString() +
-          " kg"),
+          " x"),
       value: _checked,
       subtitle: Text(
           utf8.decode(
-              latin1.encode(
-                  oCcy.format(widget.data['pricePaid']) + " vnd/1kg"),
+              latin1.encode(oCcy.format(widget.data['pricePaid']) + " vnd/1kg"),
               allowMalformed: true),
           style: TextStyle(
               fontSize: 16, fontWeight: FontWeight.bold, color: Colors.red)),
@@ -598,8 +597,16 @@ class _CheckItemState extends State<CheckItem> {
         });
       },
       secondary: widget.data['food']['image'] == 'null'
-          ? Image.network(GlobalVariable.LAZY_IMAGE)
-          : Image.network(widget.data['food']['image']),
+          ? Image.network(
+              GlobalVariable.LAZY_IMAGE,
+              height: 150,
+              width: 150,
+            )
+          : Image.network(
+              widget.data['food']['image'],
+              height: 150,
+              width: 150,
+            ),
       controlAffinity: ListTileControlAffinity.trailing,
     );
   }
